@@ -1,4 +1,4 @@
-# Copilot Skills & Agents Collection
+# Copilot Skills, Hooks & Agents Collection
 
 ![Version](https://img.shields.io/badge/version-7.0-blue)
 ![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen)
@@ -8,13 +8,15 @@
 ![Audit](https://img.shields.io/badge/audit-passing-brightgreen)
 ![Agents](https://img.shields.io/badge/agents-12-blue)
 ![Skills](https://img.shields.io/badge/skills-22-blue)
+![Hooks](https://img.shields.io/badge/hooks-8-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 **Architect:** Karim Bhalwani  
 **Version:** 7.0 | **Updated:** 2026-04-12  
 **Scope:** Data + AI Engineering
 
-> **New here?** Start with [USER-GUIDE.md](USER-GUIDE.md) (7 min setup, 30 min to productive)
+> **New here?** Start with [USER-GUIDE.md](USER-GUIDE.md)
+> **Python setup** → [UV-GUIDE.md](UV-GUIDE.md) (install UV, create projects, manage deps)
 > **Agent catalog** → [MEGA-MINIONS.md](MEGA-MINIONS.md)
 > **Copy-paste examples** → [PROMPT-CHEATSHEET.md](PROMPT-CHEATSHEET.md)
 > **Architecture deep dive** → [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -22,13 +24,13 @@
 
 ### Reading Order by Audience
 
-| Audience | Start Here | Then Read | Reference |
-|----------|-----------|-----------|-----------|
-| **New user** | [USER-GUIDE.md](USER-GUIDE.md) | [MEGA-MINIONS.md](MEGA-MINIONS.md) | [PROMPT-CHEATSHEET.md](PROMPT-CHEATSHEET.md) |
-| **Skill/agent builder** | [ARCHITECTURE.md](ARCHITECTURE.md) | [guide/DESIGN-GUIDE.md](guide/DESIGN-GUIDE.md) | [guide/SKILLS-GUIDE.md](guide/SKILLS-GUIDE.md), [guide/AGENT-GUIDE.md](guide/AGENT-GUIDE.md) |
-| **Architect/lead** | [CORE_PRINCIPLES.md](CORE_PRINCIPLES.md) | [ARCHITECTURE.md](ARCHITECTURE.md) | [guide/CONTEXT-ENGINEERING-GUIDE.md](guide/CONTEXT-ENGINEERING-GUIDE.md), [guide/HARNESS-ENGINEERING-GUIDE.md](guide/HARNESS-ENGINEERING-GUIDE.md) |
-| **Routing decisions** | [guide/DELEGATION-GUIDE.md](guide/DELEGATION-GUIDE.md) |  -  |  -  |
-| **Wiki feature** | [LLM-MEM-GUIDE.md](LLM-MEM-GUIDE.md) |  -  |  -  |
+| Audience                | Start Here                               | Then Read                                                     | Reference                                                         |
+| ----------------------- | ---------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **New user**            | [USER-GUIDE.md](USER-GUIDE.md)           | [MEGA-MINIONS.md](MEGA-MINIONS.md)                            | [PROMPT-CHEATSHEET.md](PROMPT-CHEATSHEET.md)                      |
+| **Skill/agent builder** | [ARCHITECTURE.md](ARCHITECTURE.md)       | Review skills in `skills/` folder                             | See [ARCHITECTURE.md](ARCHITECTURE.md) for design patterns        |
+| **Architect/lead**      | [CORE_PRINCIPLES.md](CORE_PRINCIPLES.md) | [ARCHITECTURE.md](ARCHITECTURE.md)                            | Review [ARCHITECTURE.md](ARCHITECTURE.md) for engineering details |
+| **Routing decisions**   | See task-routing skill                   | Consult [MEGA-MINIONS.md](MEGA-MINIONS.md) for handoff chains | -                                                                 |
+| **Mem feature**         | [LLM-MEM-GUIDE.md](LLM-MEM-GUIDE.md)     | -                                                             | -                                                                 |
 
 A curated collection of VS Code Copilot **custom agents** (`.agent.md`), **custom instructions** (`.instructions.md`), **skills** (`SKILL.md`), and **prompt files** (`.prompt.md`) designed to create an autonomous, multi-agent development workflow. Agents delegate to each other via handoffs and subagents, load domain-specific skills on demand, and follow a shared global instruction rulebook.
 
@@ -41,19 +43,15 @@ A curated collection of VS Code Copilot **custom agents** (`.agent.md`), **custo
 - [Repository Structure](#repository-structure)
 - [Agents](#agents)
   - [Agent Registry](#agent-registry)
-  - [Agent File Format](#agent-file-format)
   - [Agent Interactions](#agent-interactions)
 - [Skills](#skills)
   - [Skill Registry](#skill-registry)
-  - [Skill File Format](#skill-file-format)
 - [Prompt Files](#prompt-files)
   - [Prompt File Registry](#prompt-file-registry)
-  - [Prompt File Format](#prompt-file-format)
 - [Global Instructions](#global-instructions)
 - [Design Principles](#design-principles)
 - [Conventions & Standards](#conventions--standards)
 - [Installation & Setup](#installation--setup)
-- [Modification Guide](#modification-guide)
 - [VS Code Documentation References](#vs-code-documentation-references)
 
 ---
@@ -73,14 +71,15 @@ The system follows a **Spec-Before-Code** philosophy: the Architect designs, the
 
 ## How It Works in VS Code
 
-VS Code Copilot supports three customization mechanisms used by this project:
+VS Code Copilot supports five customization mechanisms used by this project:
 
-| Mechanism               | File Extension     | Location                  | Applied                                       |
-| ----------------------- | ------------------ | ------------------------- | --------------------------------------------- |
-| **Custom Agents**       | `.agent.md`        | `prompts/` (user profile) | When selected from agents dropdown            |
-| **Prompt Files**        | `.prompt.md`       | `prompts/` (user profile) | Via `/prompt-name` slash command              |
-| **Custom Instructions** | `.instructions.md` | `prompts/` (user profile) | Automatically via `applyTo` glob              |
-| **Skills**              | `SKILL.md`         | `~/.copilot/skills/`      | On-demand, loaded by agents when task matches |
+| Mechanism               | File Extension       | Location                  | Applied                                                            |
+| ----------------------- | -------------------- | ------------------------- | ------------------------------------------------------------------ |
+| **Custom Agents**       | `.agent.md`          | `prompts/` (user profile) | When selected from agents dropdown                                 |
+| **Prompt Files**        | `.prompt.md`         | `prompts/` (user profile) | Via `/prompt-name` slash command                                   |
+| **Custom Instructions** | `.instructions.md`   | `prompts/` (user profile) | Automatically via `applyTo` glob                                   |
+| **Skills**              | `SKILL.md`           | `~/.copilot/skills/`      | On-demand, loaded by agents when task matches                      |
+| **Hooks**               | `.ps1`, `hooks.json` | `~/.copilot/hooks/`       | Automatically at agent lifecycle events (SessionStart, Stop, etc.) |
 
 ### Key Concepts
 
@@ -88,6 +87,7 @@ VS Code Copilot supports three customization mechanisms used by this project:
 - **Subagents** run in isolated context windows. The main agent delegates subtasks, receives only the summary, keeping its own context clean. Multiple subagents can run in parallel.
 - **Handoffs** create guided sequential workflows between agents with suggested next-step buttons after each response.
 - **Skills** are loaded via `read_file` when an agent determines the task matches a skill's domain. Multiple skills can be combined.
+- **Hooks** run automatically at VS Code agent lifecycle events (SessionStart, PreToolUse, Stop, etc.). They enforce quality contracts at the platform level, outside the model, providing deterministic enforcement that instruction-based guidance cannot guarantee.
 
 ---
 
@@ -100,13 +100,7 @@ copilot-skills-agents/
 ├── CORE_PRINCIPLES.md                     # Design philosophy & core principles
 ├── MEGA-MINIONS.md                        # Friendly team guide ("The Mega Minions")
 ├── PROMPT-CHEATSHEET.md                   # Copy-paste prompt examples for every agent
-├── audit.py                               # Skill & agent validation script
 ├── pyproject.toml                         # Python project metadata
-├── guide/
-│   ├── AUDIT-REPORT.md                    # Agent & skill audit results
-│   ├── DELEGATION-GUIDE.md                # When to delegate vs. do it yourself
-│   ├── DESIGN-GUIDE.md                    # VS Code customization design reference
-│   └── SKILLS-GUIDE.md                    # Skills reference guide
 ├── prompts/                               # Agent, instruction & prompt file definitions
 │   ├── copilot-instruction.instructions.md  # Global rulebook (applyTo: **)
 │   ├── architect.agent.md                 # System design & specs
@@ -135,6 +129,17 @@ copilot-skills-agents/
 │   ├── mem-lint.prompt.md                # /mem-lint → health check the project mem
 │   ├── sprint-contract.prompt.md          # /sprint-contract → pre-work negotiation
 │   └── retrospective.prompt.md            # /retrospective → pipeline retrospective
+├── hooks/                                 # Hook harness (copy to ~/.copilot/hooks/)
+│   ├── hooks.json                         # Hook registration config for VS Code
+│   ├── quality-gate.ps1                   # Stop: blocks agent finish with ruff/ty errors
+│   ├── block-destructive.ps1              # PreToolUse: blocks rm -rf, DROP TABLE, git push --force
+│   ├── lint-on-write.ps1                  # PreToolUse: denies .py writes until ruff passes
+│   ├── auto-format.ps1                    # PostToolUse: formats every file the agent writes
+│   ├── session-context.ps1                # SessionStart: injects branch, venv, Project Bible status
+│   ├── scan-secrets.ps1                   # Stop: scans modified files for leaked credentials
+│   ├── pre-compact-save.ps1               # PreCompact: saves session state before compaction
+│   ├── subagent-context.ps1               # SubagentStart: injects context into subagent sessions
+│   └── INSTALL.md                         # Team install guide
 └── skills/                                # Domain-specific skill references
     ├── architect/
     │   ├── SKILL.md                       # Black-box design, Scope Challenge, Error & Rescue Maps
@@ -211,61 +216,22 @@ copilot-skills-agents/
 
 ### Agent Registry
 
-| Agent                    | Role                                                   | Preferred Model(s)                  | Hands Off To                                               |
-| ------------------------ | ------------------------------------------------------ | ----------------------------------- | ---------------------------------------------------------- |
-| **architect**            | System design, API contracts, module boundaries, specs | Claude Opus 4.6, Claude Sonnet 4.5  | data-engineer, ai-engineer, senior-developer, data-analyst |
-| **senior-developer**     | Implementation, features, bug fixes, refactoring       | Claude Opus 4.6, GPT-5.3-Codex      | guardian                                                   |
-| **ai-engineer**          | RAG pipelines, LLM agents, embeddings, LLMOps          | Claude Opus 4.6, GPT-5.3-Codex      | guardian                                                   |
-| **data-engineer**        | PySpark pipelines, Delta Lake, dbt, Airflow            | Claude Opus 4.6, GPT-5.3-Codex      | guardian                                                   |
-| **data-analyst**         | NL-to-SQL, Azure SQL, Data Vault querying, T-SQL       | Claude Opus 4.6, GPT-5.3-Codex      | guardian, data-engineer, architect                         |
-| **guardian**             | Code review, security audit, performance profiling     | Claude Opus 4.6, GPT-5.3-Codex      | release-manager (PASS); senior-developer, data-engineer, ai-engineer (NEEDS WORK) |
-| **debug-detective**      | Root cause analysis, hypothesis-driven investigation   | GPT-5.3-Codex, Claude Opus 4.6      | architect, senior-developer, data-engineer, ai-engineer    |
-| **brownfield-discovery** | Map undocumented brownfield codebases                  | Claude Opus 4.6, Claude Sonnet 4.5  | architect                                                  |
-| **greenfield-interview** | Interview users for greenfield Project Bible           | Claude Opus 4.6, Claude Sonnet 4.5  | architect                                                  |
-| **release-manager**      | CI/CD pipelines, deployment, changelogs, quality gates | Claude Sonnet 4.5, Claude Haiku 4.5 | senior-developer (for gate failures)                       |
-| **prompt-builder**       | Refine rough prompts into polished versions            | Claude Haiku 4.5, Gemini 3 Flash    | (standalone, no handoffs)                                  |
-| **researcher**           | Fact-checking, docs retrieval, syntax validation       | Claude Haiku 4.5, Claude Sonnet 4.5 | (hidden, never user-invoked)                               |
+| Agent                    | Role                                                   | Hands Off To                                               |
+| ------------------------ | ------------------------------------------------------ | ---------------------------------------------------------- |
+| **architect**            | System design, API contracts, module boundaries, specs | data-engineer, ai-engineer, senior-developer, data-analyst |
+| **senior-developer**     | Implementation, features, bug fixes, refactoring       | guardian                                                   |
+| **ai-engineer**          | RAG pipelines, LLM agents, embeddings, LLMOps          | guardian                                                   |
+| **data-engineer**        | PySpark pipelines, Delta Lake, dbt, Airflow            | guardian                                                   |
+| **data-analyst**         | NL-to-SQL, Azure SQL, Data Vault querying, T-SQL       | guardian, data-engineer, architect                         |
+| **guardian**             | Code review, security audit, performance profiling     | release-manager (PASS); senior-developer, data-engineer, ai-engineer (NEEDS WORK) |
+| **debug-detective**      | Root cause analysis, hypothesis-driven investigation   | architect, senior-developer, data-engineer, ai-engineer    |
+| **brownfield-discovery** | Map undocumented brownfield codebases                  | architect                                                  |
+| **greenfield-interview** | Interview users for greenfield Project Bible           | architect                                                  |
+| **release-manager**      | CI/CD pipelines, deployment, changelogs, quality gates | senior-developer (for gate failures)                       |
+| **prompt-builder**       | Refine rough prompts into polished versions            | (standalone, no handoffs)                                  |
+| **researcher**           | Fact-checking, docs retrieval, syntax validation       | (hidden, never user-invoked)                               |
 
 > **Note:** Most agents omit `tools` in frontmatter for full default access. Exceptions: `researcher` uses `tools: [web, search]` (restricted to read-only web and search), and `guardian` has an explicit tools list enforcing its read-only audit role. Other behavioral constraints (e.g., no code editing for Guardian) are enforced via agent instructions.
-
-### Agent File Format
-
-Each agent is a `.agent.md` file with YAML frontmatter and Markdown body:
-
-```markdown
----
-name: agent-name
-description: Brief description shown in UI
-target: vscode
-model:
-  - "Claude Opus 4.6 (copilot)"
-  - "Claude Sonnet 4.5 (copilot)"
-agents:
-  - researcher # Allowed subagents
-handoffs:
-  - label: Button Text
-    agent: target-agent
-    prompt: "Context to pass"
-    send: false # false = user must confirm
----
-
-# Agent Title
-
-System prompt instructions...
-```
-
-> **Note:** Most agents omit the `tools` property for full default access. The `researcher` agent uses `tools: [web, search]` (scoped to read-only web fetching). The `guardian` agent declares an explicit tools list enforcing its read-only review role. Tools can be restricted per-agent for scoped access.
-
-**Frontmatter fields used in this project:**
-
-- `name`: Agent identifier (lowercase, hyphenated)
-- `description`: One-line purpose statement
-- `tools`: Array of tool names the agent can access (omit for default full access)
-- `agents`: Array of agent names available as subagents
-- `model`: Preferred model(s) as a prioritized list
-- `handoffs`: Sequential workflow transitions with UI buttons
-- `user-invocable`: Set to `false` for internal-only agents (researcher)
-- `disable-model-invocation`: Set to `true` to prevent auto-invocation by other models
 
 ### Agent Interactions
 
@@ -331,7 +297,7 @@ System prompt instructions...
 | **holdout-validation**             | Holdout scenario authorship and evaluation, test separation discipline   | architect (authorship), guardian (eval)                | Yes         |
 | **implementer**                    | TDD, clean code, type safety, Python standards                           | senior-developer agent                                 |             |
 | **llm-app-patterns**               | RAG pipelines, agent architectures, prompt engineering, LLMOps           | ai-engineer agent                                      |             |
-| **llm-mem**                       | Knowledge compilation: ingest sources, query wiki, lint health, persist durable knowledge | all agents (post-task), senior-developer, guardian      |             |
+| **llm-mem**                       | Knowledge compilation: ingest sources, query mem, lint health, persist durable knowledge | all agents (post-task), senior-developer, guardian      |             |
 | **ops**                            | GitHub Actions, Docker, deployment patterns, IaC                         | release-manager agent                                  |             |
 | **prompt-library**                 | Prompt templates, role-based patterns, analysis frameworks               | prompt-builder agent                                   |             |
 | **subagent-execution**             | Orchestrating multi-task plans via subagents, context isolation, two-stage review, status protocol | senior-developer, data-engineer, ai-engineer, architect |             |
@@ -342,51 +308,6 @@ System prompt instructions...
 | **verification-before-completion** | Evidence-before-claims gate, fresh verification required                 | all agents (before completion)                         | Yes         |
 
 > **Background skills** have `user-invocable: false`. They are loaded automatically by agents when relevant and cannot be invoked manually via slash commands.
-
-### Skill File Format
-
-Each skill is a `SKILL.md` file with YAML frontmatter:
-
-```markdown
----
-name: skill-name
-description: When to use this skill
----
-
-# Skill Title
-
-## Overview
-
-## Core Principles
-
-## Workflow
-
-## Standards & Best Practices
-
-## Constraints
-
-## Common Pitfalls
-
-## Integration Points
-```
-
-**Supported frontmatter fields:** `name`, `description`, `argument-hint`, `compatibility`, `disable-model-invocation`, `license`, `metadata`, `user-invocable`
-
-**Key conventions:**
-
-- `references/` subdirectories contain templates and examples used by the skill
-- Skills define `constraints` (what they do NOT do) to prevent scope creep
-
-### Skill Loading Protocol
-
-Agents load skills by reading the `SKILL.md` file before starting work:
-
-1. Agent receives a task
-2. Agent checks which skills match the domain
-3. Agent reads the relevant `SKILL.md` file(s) via `read_file`
-4. Agent follows the skill's workflow and constraints
-
-Skills are stored at `~/.copilot/skills/` on the user's machine. This repository provides the source of truth; files are synced to the user profile location.
 
 ---
 
@@ -409,52 +330,10 @@ Prompt files are **parameterized slash-command templates** that invoke a specifi
 | `quick-fix.prompt.md`              | `/quick-fix`               | `senior-developer`     | Fast lane for small, low-risk changes          |
 | `retrospective.prompt.md`          | `/retrospective`           | `architect`            | Pipeline retrospective and improvement cycle   |
 | `sprint-contract.prompt.md`        | `/sprint-contract`         | `architect`            | Pre-work negotiation between builder & Guardian |
-| `mem-ingest.prompt.md`            | `/mem-ingest`             | `ai-engineer`          | Ingest source into project knowledge wiki      |
+| `mem-ingest.prompt.md`            | `/mem-ingest`             | `ai-engineer`          | Ingest source into project knowledge mem      |
 | `mem-query.prompt.md`             | `/mem-query`              | `ai-engineer`          | Query accumulated project mem knowledge       |
 | `mem-lint.prompt.md`              | `/mem-lint`               | `guardian`             | Health check the project mem                  |
-
-### Prompt File Format
-
-Each prompt file is a `.prompt.md` file with YAML frontmatter:
-
-```markdown
----
-agent: agent                   # ask | agent | plan | or custom agent name
-argument-hint: "[description of what to pass after the slash command]"
-tools:
-  - read
-  - search
----
-
-# Prompt Instructions
-
-You are tasked with ${input:parameterName}.
-
-## Context
-
-- File: ${file}
-- Selection: ${selection}
-
-## Requirements
-
-{Detailed requirements}
-
-## Output Format
-
-{Expected deliverables}
-```
-
-**Frontmatter fields used in this project:**
-
-- `agent`: Agent mode - `ask`, `agent`, `plan`, or a custom agent name (e.g., `guardian`)
-- `argument-hint`: Shown in Chat input to guide users on what to provide
-- `tools`: Tool access for this prompt (overrides agent default if both specified)
-
-**Key conventions:**
-
-- Prompt files are stored alongside agents in `prompts/` (same user profile directory)
-- Use `${input:variableName}` for parameterized inputs; `${selection}` for editor selection
-- The `agent` field typically names the agent, routing the prompt to that agent directly
+| `pre-mortem.prompt.md`            | `/pre-mortem`             | `guardian`             | Fragility analysis: fictional post-mortems for bugs that haven't happened yet |
 
 ---
 
@@ -537,6 +416,10 @@ The system uses 12 specialized agents rather than fewer generalist agents. This 
 
 The system tracks its own effectiveness through retrospectives and rework tracking. When agents hit 3-strike escalations, when Guardian sends work back, or when holdout scenarios fail, these events are recorded as specification health signals. After every 5 workflows, the system audits whether each agent is adding value proportional to its coordination cost.
 
+### 13. Structural Enforcement Layer (Hooks)
+
+Quality contracts enforced by instructions are probabilistic. An agent under context pressure may skip a lint check even when instructed never to do so. The hook harness enforces quality invariants at the platform level, outside the model: a Stop hook running `ruff check .` blocks the session from closing until ruff passes. No amount of context pressure, competing priorities, or model drift can override it. Instructions handle judgment; hooks handle invariants.
+
 ---
 
 ## Conventions & Standards
@@ -602,6 +485,25 @@ Examples: `## **Senior Developer**: Implementing auth service`, `## **Guardian**
 
 - VS Code 1.106+ (custom agents support)
 - GitHub Copilot extension
+- [UV](UV-GUIDE.md) (Python package manager, no admin required)
+
+### New Project Setup
+
+Before calling Greenfield Interview or Brownfield Discovery agents, set up your Python project with UV:
+
+```powershell
+# Install UV (one-time, no admin needed)
+irm https://astral.sh/uv/install.ps1 | iex
+
+# Create a new project
+uv init my-project
+cd my-project
+
+# Add dev tools
+uv add --dev ruff ty pytest
+```
+
+See [UV-GUIDE.md](UV-GUIDE.md) for the full command reference, migration from pip, and CI/CD integration.
 
 ### Install Agents & Instructions
 
@@ -626,121 +528,19 @@ New-Item -ItemType Directory -Path $skillsPath -Force
 Copy-Item -Path ".\skills\*" -Destination $skillsPath -Recurse -Force
 ```
 
-### VS Code Settings
+### Install Hooks
 
-Add the following to your VS Code `settings.json` for optimal behavior:
+Copy the `hooks/` directory to `~/.copilot/hooks/`:
 
-```jsonc
-{
-  // Enable custom agents and instructions
-  "chat.useAgentsMdFile": true,
-  "chat.includeApplyingInstructions": true,
-  "chat.includeReferencedInstructions": true,
-
-  // Agent and prompt file locations (if using non-default paths)
-  "chat.agentFilesLocations": [".github/agents"],
-  "chat.promptFilesLocations": [".github/prompts"],
-  "chat.instructionsFilesLocations": [".github/instructions"],
-}
+```powershell
+# Windows
+$hooksPath = "$env:USERPROFILE\.copilot\hooks"
+New-Item -ItemType Directory -Path $hooksPath -Force
+Copy-Item -Path ".\hooks\*" -Destination $hooksPath -Force
 ```
-
----
-
-## Modification Guide
-
-### Adding a New Prompt File
-
-1. Create `prompts/<purpose>.prompt.md` following the [prompt file format](#prompt-file-format)
-2. Set `agent` to the target agent name (e.g., `guardian`, `data-analyst`) or `ask`/`agent`/`plan`
-3. Set `argument-hint` to guide users on what to type after the slash command
-4. Add `tools` array if different from the target agent's defaults
-5. Write the prompt body using `${input:variableName}` for parameters and `${selection}` for editor context
-
-### Adding a New Agent
-
-1. Create `prompts/<name>.agent.md` following the [agent file format](#agent-file-format)
-2. Define the YAML frontmatter: `name`, `description`, `tools`, `agents`, `handoffs`
-3. Write the Markdown body with: Personas, Requirements (mandatory pre-work), Process Overview (phased), Core Principles, Response Format, Delegation table, Conflict Resolution
-4. Register the agent in the global instruction rulebook (Section 9: Agent Registry)
-5. If the agent needs domain knowledge, create or reference a matching skill
-
-### Adding a New Skill
-
-1. Create `skills/<name>/SKILL.md` following the [skill file format](#skill-file-format)
-2. Define the YAML frontmatter: `name`, `description` (supported: `argument-hint`, `compatibility`, `license`, `metadata`)
-3. Write sections: Overview, Core Principles, Workflow, Standards, Constraints, Common Pitfalls, Integration Points
-4. Add `references/` subdirectory with templates or examples if needed
-5. Reference the skill in relevant agent files (in "Skills to Load" section)
-
-### Modifying an Existing Agent
-
-- **Adding tools**: Update the `tools` array in frontmatter. Available tools: `read`, `edit`, `search`, `test`, `terminal`, `fetch`, `agent`
-- **Adding handoffs**: Add entries to the `handoffs` array with `label`, `agent`, `prompt`, `send`
-- **Adding subagents**: Add agent names to the `agents` array (requires `agent` in tools)
-- **Changing personas**: Add new persona section in the Markdown body with activation trigger
-- **Updating process phases**: Modify phased workflow while maintaining the phase numbering pattern
-
-### Modifying Global Instructions
-
-Edit [prompts/copilot-instruction.instructions.md](prompts/copilot-instruction.instructions.md). Key sections:
-
-- Section 4 (Coding Style): language-specific rules
-- Section 9 (Agent Registry): add/remove agent delegation rules
-- Section 10 (Project Context Protocol): how agents discover project context
-
-### Style Consistency Checklist
-
-When adding or modifying files, verify:
-
-- [ ] Agent has YAML frontmatter with `name`, `description`, `tools`
-- [ ] Agent defines at least one persona (default + optional specialized)
-- [ ] Agent includes a **mandatory pre-work** section (dialogue or checklist)
-- [ ] Agent lists "Skills to Load" in Requirements
-- [ ] Agent follows phased process (Phase 0: Initialize, Phase 1..N, Phase N+1: Verify)
-- [ ] Agent includes Response Format with persona-prefixed headers
-- [ ] Agent includes Delegation table (when to hand off)
-- [ ] Agent includes Conflict Resolution: Safety > Correctness > Brevity
-- [ ] Skill has YAML frontmatter with `name`, `description`, `license`, `compatibility`, `metadata`
-- [ ] Skill defines `Constraints` (what it does NOT do)
-- [ ] Skill with `references/` has a `## References` section linking to those files
-- [ ] Prompt file has `agent`, `argument-hint`, and clear `## Output Format` section
-
----
-
-## VS Code Documentation References
-
-- [Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents) - `.agent.md` file format, frontmatter (`model`, `agents`, `handoffs`, `argument-hint`, `disable-model-invocation`), tools
-- [Subagents](https://code.visualstudio.com/docs/copilot/agents/subagents) - Isolated context execution, parallel subagents, coordinator-worker orchestration patterns
-- [Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills) - `SKILL.md` format, progressive disclosure, `/skills` slash commands, `user-invokable`, `disable-model-invocation`
-- [Agent Skills Specification](https://agentskills.io/) - Open standard for portable skills across AI agents
-- [Custom Instructions](https://code.visualstudio.com/docs/copilot/customization/custom-instructions) - `.instructions.md` files, `applyTo` globs, priority order
-- [Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files) - `.prompt.md` files, slash commands, variables
-- [Customization Overview](https://code.visualstudio.com/docs/copilot/customization/overview) - Custom instructions, agents, skills, prompt files, MCP, hooks
-- [Troubleshooting & Diagnostics](https://code.visualstudio.com/docs/copilot/troubleshooting) - Chat customization diagnostics view for debugging agent/skill loading
-- [Awesome Copilot](https://github.com/github/awesome-copilot) - Community-contributed agents, skills, and examples
-- [Anthropic Reference Skills](https://github.com/anthropics/skills) - Reference skill implementations
-
-### Key VS Code Settings
-
-| Setting                                                | Purpose                                                |
-| ------------------------------------------------------ | ------------------------------------------------------ |
-| `chat.agentFilesLocations`                             | Additional directories to search for `.agent.md` files |
-| `chat.agentSkillsLocations`                            | Additional directories to search for skills            |
-| `github.copilot.chat.organizationCustomAgents.enabled` | Enable organization-wide custom agents                 |
-
-### Quick Commands
-
-- Type `/` in chat to invoke skills and prompt files as slash commands
-- Type `/agents` to open the Configure Custom Agents menu
-- Type `/skills` to open the Configure Skills menu
-- Type `/init` to generate workspace instructions automatically
 
 ---
 
 ## License
 
 This is a personal productivity toolkit. See individual files for any specific licensing.
-
-
-
-

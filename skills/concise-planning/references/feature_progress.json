@@ -1,0 +1,28 @@
+{
+  "$schema": "Feature Progress Tracker v1.0",
+  "feature": "",
+  "branch": "",
+  "created": "YYYY-MM-DD",
+  "updated": "YYYY-MM-DD",
+  "spec": ".copilot/specs/SPEC.md",
+  "status": "planning",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "",
+      "agent": "",
+      "status": "not-started",
+      "depends_on": [],
+      "started": null,
+      "completed": null,
+      "notes": ""
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "not_started": 0,
+    "in_progress": 0,
+    "completed": 0,
+    "blocked": 0
+  }
+}

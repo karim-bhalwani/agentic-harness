@@ -324,7 +324,7 @@ Skills are the **silent workers behind the scenes**. They are not agents you tal
 | **guardian**                       | Three-phase review checklist, security audit patterns, testing pyramid, perf profiling |
 | **implementer**                    | TDD workflows, clean code principles, Python type safety, refactoring patterns      |
 | **llm-app-patterns**               | RAG pipeline designs, agent architectures, prompt engineering, LLMOps observability |
-| **llm-mem**                       | Knowledge compilation: ingest sources into wiki, query accumulated knowledge, lint health |
+| **llm-mem**                       | Knowledge compilation: ingest sources into mem, query accumulated knowledge, lint health |
 | **ops**                            | GitHub Actions templates, Docker patterns, deployment automation, IaC               |
 | **prompt-library**                 | Curated prompt templates, role-based patterns, analysis frameworks                  |
 | **subagent-execution**             | Subagent orchestration, context isolation, two-stage review, status protocol        |
@@ -354,7 +354,7 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
 ```text
   Type /code-review     → Guardian reviews your code
   Type /design          → Architect produces a full spec for architectural changes
-  Type /feature-plan    → concise-planning produces an atomic checklist
+  Type /feature-plan    → Architect (using concise-planning skill) produces an atomic checklist
   Type /sql-query       → Data Analyst writes optimized T-SQL
   Type /debug-detective → Debug Detective hunts the root cause
   Type /brownfield-disc → Brownfield Discovery maps your codebase
@@ -363,9 +363,10 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
   Type /quick-fix       → Fast lane for small, obvious fixes (no pipeline)
   Type /retrospective   → Architect runs pipeline retrospective and improvement cycle
   Type /sprint-contract → Pre-work negotiation between builder and Guardian
-  Type /mem-ingest     → Ingest a source into the project knowledge wiki
-  Type /mem-query      → Query accumulated project wiki knowledge
-  Type /mem-lint       → Health check the project wiki
+  Type /mem-ingest     → Ingest a source into the project knowledge mem
+  Type /mem-query      → Query accumulated project mem knowledge
+  Type /mem-lint       → Health check the project mem
+  Type /pre-mortem     → Guardian analyzes code for fragility against future edits
 ```
 
 ### When to Use a Prompt File vs. Invoking an Agent Directly
@@ -433,8 +434,8 @@ Every AI model has a **context window**, a limited amount of text it can hold in
 
 - **Ready to start using agents?** Follow the setup and first-week walkthrough in [USER-GUIDE.md](USER-GUIDE.md)
 - **Want copy-paste examples for every agent?** Open [PROMPT-CHEATSHEET.md](PROMPT-CHEATSHEET.md)
-- **Not sure when to delegate vs. do it yourself?** Read [guide/DELEGATION-GUIDE.md](guide/DELEGATION-GUIDE.md)
-- **Want to give your project a living memory?** See [llm-mem-GUIDE.md](llm-mem-GUIDE.md)
+- **Not sure when to delegate vs. do it yourself?** See agent handoff chains in [MEGA-MINIONS.md](MEGA-MINIONS.md) and the task-routing skill
+- **Want to give your project a living memory?** See [LLM-MEM-GUIDE.md](LLM-MEM-GUIDE.md)
 
 ### The Prompt Engineering Behind It
 
@@ -507,18 +508,26 @@ Context engineering is the discipline of **putting the right information in fron
   ║    data-deprecation-analysis, data-engineering,           ║
   ║    excalidraw-diagram, genai-security, guardian,          ║
   ║    holdout-validation, implementer, llm-app-patterns,     ║
-  ║    llm-mem, ops, prompt-library, security-boundaries*,   ║
+  ║    llm-mem, ops, prompt-library, security-boundaries*,    ║
   ║    subagent-execution, systematic-debugging,              ║
   ║    task-routing*, thinker*, verification*                 ║
   ║                                                           ║
   ║    * = background skill (auto-loaded, invisible to you)   ║
+  ║                                                           ║
+  ║  HOOKS (8 total, copy hooks/ to ~/.copilot/hooks/)        ║
+  ║    quality-gate, scan-secrets ........... (Stop)          ║
+  ║    block-destructive, lint-on-write .. (PreToolUse)       ║
+  ║    auto-format ..................... (PostToolUse)        ║
+  ║    session-context ............... (SessionStart)         ║
+  ║    subagent-context ........... (SubagentStart)           ║
+  ║    pre-compact-save ............... (PreCompact)          ║
   ║                                                           ║
   ║  PROMPT FILES (14 slash commands)                         ║
   ║    /code-review     /feature-plan    /sql-query           ║
   ║    /debug-detective /brownfield-disc /greenfield-int      ║
   ║    /doc-garden      /quick-fix       /design              ║
   ║    /retrospective   /sprint-contract                      ║
-  ║    /mem-ingest     /mem-query      /mem-lint           ║
+  ║    /mem-ingest     /mem-query      /mem-lint              ║
   ║                                                           ║
   ╠═══════════════════════════════════════════════════════════╣
   ║  GOLDEN RULE: Context in, quality out.                    ║
@@ -538,9 +547,11 @@ The Mega Minions are not magic. They are **well-structured prompts that guide AI
 
 3. **Hallucination risk** - solved by evidence gates (verification-before-completion), read-only review (Guardian), and the researcher agent for fact-checking.
 
+4. **Quality contract reliability** - solved by the hook harness (8 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, and destructive command blocking at the platform level. Instructions ask; hooks enforce.
+
 The beauty is in the composition. No single Mega Minion is extraordinary on its own. But when they work together (discovery feeds design, design feeds implementation, implementation feeds review, review feeds release) the whole becomes significantly greater than the sum of the parts.
 
-This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer.
+This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 8 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, and secrets scanning that run structurally at the platform level below the model. Instructions ask; hooks enforce.
 
 ### Why 12 Agents and Not Fewer?
 
@@ -557,6 +568,4 @@ Research shows that more agents can make systems worse when coordination overhea
 
 ---
 
-_The Mega Minions, 12 agents, 22 skills, 14 prompts, one team._
-
-
+_The Mega Minions, 12 agents, 22 skills, 14 prompts, 8 hooks, one team._

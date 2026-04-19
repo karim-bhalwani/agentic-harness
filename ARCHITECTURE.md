@@ -21,15 +21,15 @@
 
 ## Why This Document Exists
 
-CORE_PRINCIPLES.md explains the *philosophy*. MEGA-MINIONS.md introduces the *team*. This document explains the *engineering*: how the three layers of the system (Prompts, Skills, Agents) are designed, why they compose the way they do, and what deliberate trade-offs were made along the way.
+CORE_PRINCIPLES.md explains the *philosophy*. MEGA-MINIONS.md introduces the *team*. This document explains the *engineering*: how the four layers of the system (Hooks, Prompts, Skills, Agents) are designed, why they compose the way they do, and what deliberate trade-offs were made along the way.
 
 ---
 
 ## 1. System Overview
 
-### The Three-Layer Model
+### The Four-Layer Model
 
-The Mega Minions are built on a three-layer architecture where each layer has a distinct purpose, a distinct lifecycle, and a distinct audience.
+The Mega Minions are built on a four-layer architecture where each layer has a distinct purpose, a distinct lifecycle, and a distinct audience.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
@@ -39,7 +39,7 @@ The Mega Minions are built on a three-layer architecture where each layer has a 
 │  Files: prompts/*.agent.md                                       │
 │                                                                  │
 │  Agents CONSUME skills and prompts. They are the orchestration   │
-│  layer they decide what to do, when to delegate, and when        │
+│  layer: they decide what to do, when to delegate, and when        │
 │  to stop.                                                        │
 ├──────────────────────────────────────────────────────────────────┤
 │                         LAYER 2: SKILLS                          │
@@ -59,16 +59,27 @@ The Mega Minions are built on a three-layer architecture where each layer has a 
 │  Prompts PARAMETERIZE common workflows. They are the user        │
 │  interface: predictable, opinionated, and pre-wired to the       │
 │  right agent.                                                    │
+├──────────────────────────────────────────────────────────────────┤
+│                         LAYER 0: HOOKS                           │
+│  Platform-level lifecycle scripts that fire automatically at     │
+│  agent events. Operate outside the language model entirely.      │
+│  Files: hooks/*.ps1, hooks/hooks.json                            │
+│                                                                  │
+│  Hooks ENFORCE quality contracts deterministically. They cannot  │
+│  be argued with, forgotten under context pressure, or overridden │
+│  by an eager agent. They are the only layer the model cannot     │
+│  influence.                                                      │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-**Why three layers?** Because the three concerns (user interaction, domain knowledge, and workflow orchestration) have fundamentally different change rates and audiences.
+**Why four layers?** Because the four concerns (user interaction, domain knowledge, workflow orchestration, and quality enforcement) have fundamentally different change rates and fundamentally different enforcement mechanisms.
 
 - **Prompts** change when user workflows change. A new slash command for a new task type is a prompt-layer concern.
 - **Skills** change when domain knowledge changes. A new PySpark optimization pattern or a new OWASP vulnerability category is a skill-layer concern.
 - **Agents** change when workflow topology changes. A new pipeline phase or a new delegation path is an agent-layer concern.
+- **Hooks** change when enforcement contracts change. A new quality gate, a new blocked command pattern, or a new credential scan rule is a hook-layer concern.
 
-Collapsing these into a single layer (monolithic agent prompts with embedded knowledge) creates files that change for multiple reasons, are hard to test in isolation, and bloat the context window with knowledge irrelevant to the current task.
+Collapsing these into fewer layers creates files that change for multiple reasons, are hard to test in isolation, and mix probabilistic instruction-following with deterministic enforcement.
 
 ### Why Not Alternatives?
 
@@ -328,6 +339,28 @@ Subagents are the mechanism for keeping context windows clean during complex ope
 | **Re-Read Before Re-Edit** | File edit fails (match not found, merge conflict) | Re-read the file for fresh content before attempting another edit. Never retry on stale content. |
 | **BLOCKED Status** | Subagent cannot proceed due to architectural conflict | Escalate to Architect. Never re-dispatch with only a prompt change. |
 
+### Hook Enforcement Layer
+
+The guardrails above are instruction-level: they shape agent behavior through textual guidance. A complementary layer operates at the platform level, outside the model entirely.
+
+The `hooks/` directory contains 8 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
+
+| Hook | Event | Contract Enforced |
+|---|---|---|
+| `quality-gate.ps1` | Stop | Session cannot close while `ruff` or `ty` errors exist |
+| `scan-secrets.ps1` | Stop | Scans all modified files for leaked credentials before session ends |
+| `block-destructive.ps1` | PreToolUse | Denies `run_in_terminal` calls matching destructive command patterns (`rm -rf`, `DROP TABLE`, `git push --force`) |
+| `lint-on-write.ps1` | PreToolUse | Denies `.py` file writes until `ruff check` passes on the proposed content |
+| `auto-format.ps1` | PostToolUse | Runs `ruff format` on every Python file the agent writes |
+| `session-context.ps1` | SessionStart | Injects branch, venv status, Project Bible presence, pipeline artifact detection, and inferred pipeline phase into every new session |
+| `subagent-context.ps1` | SubagentStart | Injects branch, venv, and Project Bible status into every subagent session |
+| `pre-compact-save.ps1` | PreCompact | Writes `.copilot/state/SESSION_STATE.md` before context compaction |
+
+The distinction that matters: an instruction telling the agent "always run ruff before closing" can be forgotten under context pressure or overridden by a competing priority. A Stop hook running `ruff check .` cannot. The agent is structurally prevented from closing the session until ruff passes. This is the boundary between probabilistic guidance and deterministic enforcement.
+
+Instructions and hooks are complementary, not redundant. Instructions handle nuance and judgment ("prefer CTEs over subqueries for multi-join queries"). Hooks handle invariants that must hold regardless of context ("no session closes with lint errors").
+
+
 ### Security Boundary Enforcement
 
 The `security-boundaries` skill defines how the harness prevents prompt injection cascading through the agent pipeline:
@@ -487,6 +520,16 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 **Rationale**: Conversation context is ephemeral. It exists only within a single session and a single agent's context window. When sessions end or agents change, in-context artifacts are lost. Persisting to `.copilot/specs/SPEC.md`, `.copilot/artifacts/review-report.md`, and `.copilot/holdout/` means downstream agents can load upstream outputs in any session, even days later. The Context Engineer's file layout (defined in `skills/context-engineer/SKILL.md`) standardizes the paths so agents know where to look.
 
 **Trade-off**: File persistence means agents must check for artifacts at known paths, adding a lookup step to each phase. The "MANDATORY" pre-implementation checklist in the Senior Developer agent (check for spec at `.copilot/specs/SPEC.md`) and the Guardian's fallback spec lookup encode this discipline into each agent's workflow.
+
+---
+
+### Decision 8: Hooks as Layer 0 Structural Enforcement
+
+**Choice**: Add a platform-level hook harness (`hooks/*.ps1` + `hooks.json`) that enforces quality contracts outside the language model, complementing the instruction-based behavioral guidance in agent prompts.
+
+**Alternatives Considered**: Rely entirely on agent instructions ("always run ruff before finishing"), Guardian review as the sole quality gate, Git pre-commit hooks (post-session, not within the active session), CI/CD quality gates (post-push).
+
+**Rationale**: Agent instructions are probabilistic. A model may follow them 95% of the time but fails under context pressure, in long sessions, or when a competing priority seems more urgent. VS Code's hook API provides a lighter-weight enforcement point that fires within the agent session, not after it. A Stop hook blocking the session close is cheaper in total session cost than a Guardian re-review cycle triggered by a lint failure caught only at review time.
 
 ---
 

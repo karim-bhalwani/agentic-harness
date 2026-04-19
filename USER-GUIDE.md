@@ -5,7 +5,7 @@
 **Best For:** Data Engineers, AI/ML Engineers, Analytics Teams, Backend Teams  
 **Your team's standard AI development crew, from zero to productive.**
 
-> **Who this is for:** Anyone on the team who has received this repository from solution architect and wants to start using the Mega Minions system. No prior VS Code or GitHub Copilot experience required.
+> **Who this is for:** Anyone on the team who has received/clone this repository and wants to start using the Mega Minions system. No prior VS Code or GitHub Copilot experience required.
 
 ---
 
@@ -16,7 +16,8 @@ Your architect has handed you a standardised AI development system built into Gi
 - **12 custom AI agents**, specialist assistants for each phase of development
 - **22 skills**, knowledge packs agents load automatically when needed
 - **14 prompt shortcuts**, slash commands that wire structured workflows to the right agent
-- **Reference documents**: philosophy, architecture, pattern guides, and a [delegation guide](guide/DELEGATION-GUIDE.md) for the whole team
+- **8 hooks** (optional), automation scripts for quality gates, secret scanning, and destructive command blocking
+- **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
 This is your team's **standard**. Everyone uses the same agents, the same patterns, and the same quality bar. That is the point.
 
@@ -96,9 +97,19 @@ If you see custom agents in the dropdown, setup is complete. If not, double-chec
 
 ---
 
+### Step 6: (Optional) Install Hooks for Automatic Quality Gates
+
+Hooks are automation scripts that enforce quality standards automatically. They block destructive commands, run formatters, scan for leaked secrets, and inject context at session start.
+
+**Benefits:** Automatic linting, prevented accidents (rm -rf blocks), secret detection before commit.
+
+**How to install:** See [hooks/INSTALL.md](hooks/INSTALL.md) for detailed setup (5 minutes). If you skip this step, agents still work perfectly - hooks are a convenience for quality automation.
+
+---
+
 #### Keeping skills and prompts up to date
 
-When the solution architect updates the shared files with new or improved agents, re-run the steps above to copy the new files. Your Project Bible and specs are stored inside your projects, not in these folders, so updating never touches your work.
+When the architect updates the shared files with new or improved agents, re-run the steps above to copy the new files. Your Project Bible and specs are stored inside your projects, not in these folders, so updating never touches your work.
 
 ---
 
@@ -589,7 +600,7 @@ copilot-skills-agents/
 
 ```text
 ╔═══════════════════════════════════════════════════════════════╗
-║                MEGA MINIONS: HOW TO USE THEM                 ║
+║                MEGA MINIONS: HOW TO USE THEM                  ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║                                                               ║
 ║  THE PIPELINE                                                 ║
@@ -604,7 +615,7 @@ copilot-skills-agents/
 ║                                                               ║
 ║  ALWAYS INCLUDE:                                              ║
 ║  • Path to Project Bible  (.copilot/context/PROJECT_CONTEXT)  ║
-║  • Path to spec           (.copilot/specs/SPEC.md)           ║
+║  • Path to spec           (.copilot/specs/SPEC.md)            ║
 ║  • Error + stack trace    (when debugging)                    ║
 ║                                                               ║
 ║  THE TEAM  (select from agents dropdown)                      ║
@@ -620,8 +631,8 @@ copilot-skills-agents/
 ║  greenfield-interview  Document what you plan to build        ║
 ║                                                               ║
 ║  BUILT-IN AGENTS (always available in dropdown)               ║
-║  Agent   Full access: edits, terminal, file reads            ║
-║  Ask     Read-only Q&A: safe for questions                   ║
+║  Agent   Full access: edits, terminal, file reads             ║
+║  Ask     Read-only Q&A: safe for questions                    ║
 ║  Plan    Research and plan before acting                      ║
 ║                                                               ║
 ║  SLASH COMMAND SHORTCUTS                                      ║
@@ -631,16 +642,16 @@ copilot-skills-agents/
 ║  /sql-query       English to T-SQL                            ║
 ║  /debug-detective Root cause analysis                         ║
 ║  /sprint-contract Acceptance criteria negotiation             ║
-║  /mem-ingest     Ingest source into project mem             ║
-║  /mem-query      Query project mem knowledge                ║
-║  /mem-lint       Health check project mem                   ║
+║  /mem-ingest     Ingest source into project mem               ║
+║  /mem-query      Query project mem knowledge                  ║
+║  /mem-lint       Health check project mem                     ║
 ║                                                               ║
 ║  RULES                                                        ║
 ║  1. Spec before code. Always.                                 ║
 ║  2. Review before merge. Always.                              ║
 ║  3. Keep the Project Bible current. Always.                   ║
 ║  4. Review agent output. They make mistakes.                  ║
-║  5. Unsure which agent? Switch to architect, they route you. ║
+║  5. Unsure which agent? Switch to architect, they route you.  ║
 ║  6. Trouble? Right-click Chat → Diagnostics.                  ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -654,14 +665,11 @@ Once you are comfortable with basic workflows:
 
 - **Full agent catalog with capabilities and handoff chains** → [MEGA-MINIONS.md](MEGA-MINIONS.md)
 - **Copy-paste examples for every agent and slash command** → [PROMPT-CHEATSHEET.md](PROMPT-CHEATSHEET.md)
-- **When to delegate vs. handle yourself** → [guide/DELEGATION-GUIDE.md](guide/DELEGATION-GUIDE.md)
-- **Give your project a living memory** → [llm-mem-GUIDE.md](llm-mem-GUIDE.md)
+- **When to delegate vs. handle yourself** → See agent handoff chains in [MEGA-MINIONS.md](MEGA-MINIONS.md)
+- **Give your project a living memory** → [LLM-MEM-GUIDE.md](LLM-MEM-GUIDE.md)
 - **Understand the philosophy behind the system** → [CORE_PRINCIPLES.md](CORE_PRINCIPLES.md)
 - **Architecture and engineering deep dive** → [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
-Version 7.0 | April 12, 2026 | Part of the Mega Minions system | Verified against VS Code 1.106 docs
-
-
-
+Version 7.0 | April 12, 2026 | Part of the Mega Minions system | Verified against VS Code > 1.106 docs

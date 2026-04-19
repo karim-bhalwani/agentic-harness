@@ -45,6 +45,7 @@ Discover  →  Design  →  Build  →  Review  →  Ship
 | Audit docs for staleness                | `/doc-garden`           | Review   |
 | Health-check the project mem           | `/mem-lint`            | Review   |
 | Set up CI/CD and deploy                 | `@release-manager`      | Ship     |
+| Analyze code for fragility              | `/pre-mortem`           | Review   |
 | Run a retrospective                     | `/retrospective`        | Ship     |
 | Ingest a source into project mem       | `/mem-ingest`          | Ship     |
 
@@ -679,7 +680,7 @@ Use after decisions are made, post-mortems are written, or research is completed
 | `senior-developer`     | Build    | Features, bug fixes, refactoring           | Yes            |
 | `data-engineer`        | Build    | PySpark, Delta Lake, dbt, Airflow          | Yes            |
 | `ai-engineer`          | Build    | RAG, LLM agents, embeddings, Azure OpenAI  | Yes            |
-| `data-analyst`         | Discover | Natural language to T-SQL                  | No (read-only) |
+| `data-analyst`         | Any      | Natural language to T-SQL (utility)        | No (read-only) |
 | `guardian`             | Review   | Code review, security, performance         | No (read-only) |
 | `debug-detective`      | Build    | Root cause analysis                        | No (proposes)  |
 | `release-manager`      | Ship     | CI/CD, deployment, changelogs              | Yes            |

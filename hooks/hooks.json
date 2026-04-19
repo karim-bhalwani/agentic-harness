@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/quality-gate.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\quality-gate.ps1\"",
+        "timeout": 60
+      },
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/scan-secrets.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\scan-secrets.ps1\"",
+        "timeout": 30,
+        "env": {
+          "SCAN_MODE": "warn"
+        }
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/block-destructive.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\block-destructive.ps1\"",
+        "timeout": 15
+      },
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/lint-on-write.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\lint-on-write.ps1\"",
+        "timeout": 20
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/auto-format.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\auto-format.ps1\"",
+        "timeout": 30
+      }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/session-context.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\session-context.ps1\"",
+        "timeout": 10
+      }
+    ],
+    "SubagentStart": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/subagent-context.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\subagent-context.ps1\"",
+        "timeout": 10
+      }
+    ],
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/pre-compact-save.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\pre-compact-save.ps1\"",
+        "timeout": 15
+      }
+    ]
+  }
+}
