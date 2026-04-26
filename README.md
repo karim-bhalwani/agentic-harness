@@ -48,6 +48,8 @@ A curated collection of VS Code Copilot **custom agents** (`.agent.md`), **custo
   - [Skill Registry](#skill-registry)
 - [Prompt Files](#prompt-files)
   - [Prompt File Registry](#prompt-file-registry)
+- [Hooks](#hooks)
+  - [Hook Registry](#hook-registry)
 - [Global Instructions](#global-instructions)
 - [Design Principles](#design-principles)
 - [Conventions & Standards](#conventions--standards)
@@ -64,6 +66,7 @@ This repository provides a **multi-agent orchestration system** for GitHub Copil
 2. **Skills** (`SKILL.md`) provide domain-specific knowledge and workflow patterns that agents load on demand.
 3. **Prompt Files** (`.prompt.md`) provide parameterized slash-command templates that invoke specific agents with structured context.
 4. **Instructions** (`.instructions.md`) define global rules applied to every Copilot interaction.
+5. **Hooks** (`.ps1` + `hooks.json`) enforce quality invariants at the platform level, running automatically at agent lifecycle events (SessionStart, Stop, etc.).
 
 The system follows a **Spec-Before-Code** philosophy: the Architect designs, the Senior Developer implements, the Guardian reviews, and the Release Manager ships.
 
@@ -216,20 +219,20 @@ copilot-skills-agents/
 
 ### Agent Registry
 
-| Agent                    | Role                                                   | Hands Off To                                               |
-| ------------------------ | ------------------------------------------------------ | ---------------------------------------------------------- |
-| **architect**            | System design, API contracts, module boundaries, specs | data-engineer, ai-engineer, senior-developer, data-analyst |
-| **senior-developer**     | Implementation, features, bug fixes, refactoring       | guardian                                                   |
-| **ai-engineer**          | RAG pipelines, LLM agents, embeddings, LLMOps          | guardian                                                   |
-| **data-engineer**        | PySpark pipelines, Delta Lake, dbt, Airflow            | guardian                                                   |
-| **data-analyst**         | NL-to-SQL, Azure SQL, Data Vault querying, T-SQL       | guardian, data-engineer, architect                         |
+| Agent                    | Role                                                   | Hands Off To                                                                      |
+| ------------------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| **architect**            | System design, API contracts, module boundaries, specs | data-engineer, ai-engineer, senior-developer, data-analyst                        |
+| **senior-developer**     | Implementation, features, bug fixes, refactoring       | guardian                                                                          |
+| **ai-engineer**          | RAG pipelines, LLM agents, embeddings, LLMOps          | guardian                                                                          |
+| **data-engineer**        | PySpark pipelines, Delta Lake, dbt, Airflow            | guardian                                                                          |
+| **data-analyst**         | NL-to-SQL, Azure SQL, Data Vault querying, T-SQL       | guardian, data-engineer, architect                                                |
 | **guardian**             | Code review, security audit, performance profiling     | release-manager (PASS); senior-developer, data-engineer, ai-engineer (NEEDS WORK) |
-| **debug-detective**      | Root cause analysis, hypothesis-driven investigation   | architect, senior-developer, data-engineer, ai-engineer    |
-| **brownfield-discovery** | Map undocumented brownfield codebases                  | architect                                                  |
-| **greenfield-interview** | Interview users for greenfield Project Bible           | architect                                                  |
-| **release-manager**      | CI/CD pipelines, deployment, changelogs, quality gates | senior-developer (for gate failures)                       |
-| **prompt-builder**       | Refine rough prompts into polished versions            | (standalone, no handoffs)                                  |
-| **researcher**           | Fact-checking, docs retrieval, syntax validation       | (hidden, never user-invoked)                               |
+| **debug-detective**      | Root cause analysis, hypothesis-driven investigation   | architect, senior-developer, data-engineer, ai-engineer                           |
+| **brownfield-discovery** | Map undocumented brownfield codebases                  | architect                                                                         |
+| **greenfield-interview** | Interview users for greenfield Project Bible           | architect                                                                         |
+| **release-manager**      | CI/CD pipelines, deployment, changelogs, quality gates | senior-developer (for gate failures)                                              |
+| **prompt-builder**       | Refine rough prompts into polished versions            | (standalone, no handoffs)                                                         |
+| **researcher**           | Fact-checking, docs retrieval, syntax validation       | (hidden, never user-invoked)                                                      |
 
 > **Note:** Most agents omit `tools` in frontmatter for full default access. Exceptions: `researcher` uses `tools: [web, search]` (restricted to read-only web and search), and `guardian` has an explicit tools list enforcing its read-only audit role. Other behavioral constraints (e.g., no code editing for Guardian) are enforced via agent instructions.
 
@@ -282,30 +285,30 @@ copilot-skills-agents/
 
 ### Skill Registry
 
-| Skill                              | Domain                                                                   | Used By                                                | Background? |
-| ---------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ | ----------- |
-| **architect**                      | Black-box design, Scope Challenge, Error & Rescue Maps, module boundaries | architect agent                                        |             |
-| **brainstorming**                  | Ideas-to-design dialogue, approach exploration                           | architect, greenfield-interview                        |             |
-| **concise-planning**               | Atomic task checklists, implementation plans                             | senior-developer, any agent                            |             |
-| **context-engineer**               | Project Bible generation, tiered context loading                         | brownfield-discovery, greenfield-interview             | Yes         |
-| **data-analyst**                   | NL-to-SQL, Azure SQL/SSMS, Data Vault querying, T-SQL optimization       | data-analyst agent, guardian                           |             |
-| **data-deprecation-analysis**      | Dead data detection, legacy pattern recognition, deprecation planning    | data-engineer, data-analyst, guardian                  |             |
-| **data-engineering**               | Medallion architecture, PySpark, dbt, SQL, data quality                  | data-engineer agent                                    |             |
-| **excalidraw-diagram**             | Visual diagram generation (.excalidraw JSON), architecture illustrations | architect, data-engineer, ai-engineer, senior-developer |             |
-| **genai-security**                 | GenAI/LLM security auditing, OWASP Top 10 for LLMs & Agents, red teaming | guardian agent, ai-engineer                            |             |
-| **guardian**                       | Three-phase review (SCOPE AUDIT/CRITICAL/INFORMATIONAL), OWASP Top 10, testing pyramid | guardian agent                                         |             |
-| **holdout-validation**             | Holdout scenario authorship and evaluation, test separation discipline   | architect (authorship), guardian (eval)                | Yes         |
-| **implementer**                    | TDD, clean code, type safety, Python standards                           | senior-developer agent                                 |             |
-| **llm-app-patterns**               | RAG pipelines, agent architectures, prompt engineering, LLMOps           | ai-engineer agent                                      |             |
-| **llm-mem**                       | Knowledge compilation: ingest sources, query mem, lint health, persist durable knowledge | all agents (post-task), senior-developer, guardian      |             |
-| **ops**                            | GitHub Actions, Docker, deployment patterns, IaC                         | release-manager agent                                  |             |
-| **prompt-library**                 | Prompt templates, role-based patterns, analysis frameworks               | prompt-builder agent                                   |             |
+| Skill                              | Domain                                                                                             | Used By                                                 | Background? |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------- |
+| **architect**                      | Black-box design, Scope Challenge, Error & Rescue Maps, module boundaries                          | architect agent                                         |             |
+| **brainstorming**                  | Ideas-to-design dialogue, approach exploration                                                     | architect, greenfield-interview                         |             |
+| **concise-planning**               | Atomic task checklists, implementation plans                                                       | senior-developer, any agent                             |             |
+| **context-engineer**               | Project Bible generation, tiered context loading                                                   | brownfield-discovery, greenfield-interview              | Yes         |
+| **data-analyst**                   | NL-to-SQL, Azure SQL/SSMS, Data Vault querying, T-SQL optimization                                 | data-analyst agent, guardian                            |             |
+| **data-deprecation-analysis**      | Dead data detection, legacy pattern recognition, deprecation planning                              | data-engineer, data-analyst, guardian                   |             |
+| **data-engineering**               | Medallion architecture, PySpark, dbt, SQL, data quality                                            | data-engineer agent                                     |             |
+| **excalidraw-diagram**             | Visual diagram generation (.excalidraw JSON), architecture illustrations                           | architect, data-engineer, ai-engineer, senior-developer |             |
+| **genai-security**                 | GenAI/LLM security auditing, OWASP Top 10 for LLMs & Agents, red teaming                           | guardian agent, ai-engineer                             |             |
+| **guardian**                       | Three-phase review (SCOPE AUDIT/CRITICAL/INFORMATIONAL), OWASP Top 10, testing pyramid             | guardian agent                                          |             |
+| **holdout-validation**             | Holdout scenario authorship and evaluation, test separation discipline                             | architect (authorship), guardian (eval)                 | Yes         |
+| **implementer**                    | TDD, clean code, type safety, Python standards                                                     | senior-developer agent                                  |             |
+| **llm-app-patterns**               | RAG pipelines, agent architectures, prompt engineering, LLMOps                                     | ai-engineer agent                                       |             |
+| **llm-mem**                        | Knowledge compilation: ingest sources, query mem, lint health, persist durable knowledge           | all agents (post-task), senior-developer, guardian      |             |
+| **ops**                            | GitHub Actions, Docker, deployment patterns, IaC                                                   | release-manager agent                                   |             |
+| **prompt-library**                 | Prompt templates, role-based patterns, analysis frameworks                                         | prompt-builder agent                                    |             |
 | **subagent-execution**             | Orchestrating multi-task plans via subagents, context isolation, two-stage review, status protocol | senior-developer, data-engineer, ai-engineer, architect |             |
-| **systematic-debugging**           | Evidence-first root cause analysis, 4-phase debugging methodology, rationalization resistance | debug-detective, senior-developer                      |             |
-| **thinker**                        | Structured reasoning (UNDERSTAND, EXTRACT, HIGHLIGHT, APPLY, VALIDATE)   | all agents (complex tasks)                             | Yes         |
-| **task-routing**                   | Multi-agent delegation protocol, 6-check routing, anti-patterns          | all agents (before delegating)                         | Yes         |
-| **security-boundaries**            | Prompt injection defense, trust boundaries, agent-specific security      | all agents (untrusted content), guardian                | Yes         |
-| **verification-before-completion** | Evidence-before-claims gate, fresh verification required                 | all agents (before completion)                         | Yes         |
+| **systematic-debugging**           | Evidence-first root cause analysis, 4-phase debugging methodology, rationalization resistance      | debug-detective, senior-developer                       |             |
+| **thinker**                        | Structured reasoning (UNDERSTAND, EXTRACT, HIGHLIGHT, APPLY, VALIDATE)                             | all agents (complex tasks)                              | Yes         |
+| **task-routing**                   | Multi-agent delegation protocol, 6-check routing, anti-patterns                                    | all agents (before delegating)                          | Yes         |
+| **security-boundaries**            | Prompt injection defense, trust boundaries, agent-specific security                                | all agents (untrusted content), guardian                | Yes         |
+| **verification-before-completion** | Evidence-before-claims gate, fresh verification required                                           | all agents (before completion)                          | Yes         |
 
 > **Background skills** have `user-invocable: false`. They are loaded automatically by agents when relevant and cannot be invoked manually via slash commands.
 
@@ -317,23 +320,47 @@ copilot-skills-agents/
 
 Prompt files are **parameterized slash-command templates** that invoke a specific agent with structured context. Invoke them with `/prompt-name` in the Chat view.
 
-| Prompt File                        | Slash Command              | Agent Invoked          | Purpose                                        |
-| ---------------------------------- | -------------------------- | ---------------------- | ---------------------------------------------- |
-| `code-review.prompt.md`            | `/code-review`             | `guardian`             | Structured PASS/FAIL/NEEDS WORK code review    |
-| `feature-plan.prompt.md`           | `/feature-plan`            | `architect`            | Atomic implementation checklist (no code)      |
-| `sql-query.prompt.md`              | `/sql-query`               | `data-analyst`         | Natural language → optimized T-SQL             |
-| `debug-detective.prompt.md`        | `/debug-detective`         | `debug-detective`      | Hypothesis-driven root cause analysis          |
-| `brownfield-discovery.prompt.md`   | `/brownfield-discovery`    | `brownfield-discovery` | Codebase mapping → Project Bible               |
-| `greenfield-interview.prompt.md`   | `/greenfield-interview`    | `greenfield-interview` | Founding interview → Project Bible             |
-| `doc-garden.prompt.md`             | `/doc-garden`              | `guardian`             | Documentation freshness & consistency audit    |
-| `design.prompt.md`                 | `/design`                  | `architect`            | Full design spec for a feature or system       |
-| `quick-fix.prompt.md`              | `/quick-fix`               | `senior-developer`     | Fast lane for small, low-risk changes          |
-| `retrospective.prompt.md`          | `/retrospective`           | `architect`            | Pipeline retrospective and improvement cycle   |
-| `sprint-contract.prompt.md`        | `/sprint-contract`         | `architect`            | Pre-work negotiation between builder & Guardian |
-| `mem-ingest.prompt.md`            | `/mem-ingest`             | `ai-engineer`          | Ingest source into project knowledge mem      |
-| `mem-query.prompt.md`             | `/mem-query`              | `ai-engineer`          | Query accumulated project mem knowledge       |
-| `mem-lint.prompt.md`              | `/mem-lint`               | `guardian`             | Health check the project mem                  |
-| `pre-mortem.prompt.md`            | `/pre-mortem`             | `guardian`             | Fragility analysis: fictional post-mortems for bugs that haven't happened yet |
+| Prompt File                      | Slash Command           | Agent Invoked          | Purpose                                                                       |
+| -------------------------------- | ----------------------- | ---------------------- | ----------------------------------------------------------------------------- |
+| `code-review.prompt.md`          | `/code-review`          | `guardian`             | Structured PASS/FAIL/NEEDS WORK code review                                   |
+| `feature-plan.prompt.md`         | `/feature-plan`         | `architect`            | Atomic implementation checklist (no code)                                     |
+| `sql-query.prompt.md`            | `/sql-query`            | `data-analyst`         | Natural language → optimized T-SQL                                            |
+| `debug-detective.prompt.md`      | `/debug-detective`      | `debug-detective`      | Hypothesis-driven root cause analysis                                         |
+| `brownfield-discovery.prompt.md` | `/brownfield-discovery` | `brownfield-discovery` | Codebase mapping → Project Bible                                              |
+| `greenfield-interview.prompt.md` | `/greenfield-interview` | `greenfield-interview` | Founding interview → Project Bible                                            |
+| `doc-garden.prompt.md`           | `/doc-garden`           | `guardian`             | Documentation freshness & consistency audit                                   |
+| `design.prompt.md`               | `/design`               | `architect`            | Full design spec for a feature or system                                      |
+| `quick-fix.prompt.md`            | `/quick-fix`            | `senior-developer`     | Fast lane for small, low-risk changes                                         |
+| `retrospective.prompt.md`        | `/retrospective`        | `architect`            | Pipeline retrospective and improvement cycle                                  |
+| `sprint-contract.prompt.md`      | `/sprint-contract`      | `architect`            | Pre-work negotiation between builder & Guardian                               |
+| `mem-ingest.prompt.md`           | `/mem-ingest`           | `ai-engineer`          | Ingest source into project knowledge mem                                      |
+| `mem-query.prompt.md`            | `/mem-query`            | `ai-engineer`          | Query accumulated project mem knowledge                                       |
+| `mem-lint.prompt.md`             | `/mem-lint`             | `guardian`             | Health check the project mem                                                  |
+| `pre-mortem.prompt.md`           | `/pre-mortem`           | `guardian`             | Fragility analysis: fictional post-mortems for bugs that haven't happened yet |
+
+---
+
+## Hooks
+
+The hook harness enforces quality invariants **at the platform level, outside the model**. Unlike instructions (which are probabilistic), hooks are deterministic: a Stop hook that fails will block the agent session from closing regardless of context pressure, model drift, or competing priorities.
+
+Hook files live in `hooks/` and must be copied to `~/.copilot/hooks/` to activate. See [hooks/INSTALL.md](hooks/INSTALL.md) for the full setup guide.
+
+### Hook Registry
+
+| File                    | Event           | Purpose                                                                                             |
+| ----------------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| `hooks.json`            | (config)        | Registers all hooks with VS Code                                                                    |
+| `quality-gate.ps1`      | `Stop`          | Blocks agent from finishing while `ruff` or `mypy` errors exist                                     |
+| `scan-secrets.ps1`      | `Stop`          | Scans modified files for leaked credentials (warn mode)                                             |
+| `block-destructive.ps1` | `PreToolUse`    | Blocks `rm -rf`, `DROP TABLE`, `git push --force`, and similar destructive commands                 |
+| `lint-on-write.ps1`     | `PreToolUse`    | Denies `.py` file writes until `ruff` passes (pre-write lint gate)                                  |
+| `auto-format.ps1`       | `PostToolUse`   | Runs `ruff format` on every Python file the agent writes                                            |
+| `session-context.ps1`   | `SessionStart`  | Injects branch, commit, Python version, and Project Bible status into each session                  |
+| `subagent-context.ps1`  | `SubagentStart` | Injects branch, venv, and Project Bible status into every subagent context                          |
+| `pre-compact-save.ps1`  | `PreCompact`    | Saves session state to `.copilot/state/SESSION_STATE.md` before context compaction discards history |
+
+> **Why hooks matter:** Instructions tell agents what to do; hooks ensure it actually happens. A `Stop` hook running `ruff check .` cannot be skipped by the model under any circumstances. See [Design Principle #13](#13-structural-enforcement-layer-hooks).
 
 ---
 
@@ -353,8 +380,8 @@ The file [prompts/copilot-instruction.instructions.md](prompts/copilot-instructi
 | **Error Handling**      | Happy path first. Validate inputs. Fail fast.                                                                                                 |
 | **Dependencies**        | Stable/LTS. Pin majors. Never hardcode secrets.                                                                                               |
 | **Tooling**             | Check for `.venv`. Never install globally. Load skills from `~/.copilot/skills/`.                                                             |
-| **Agent Registry**      | Delegation table defining when each agent applies. Quick-Fix Fast Lane for small changes.                                           |
-| **Project Context**     | Check `.copilot/context/PROJECT_CONTEXT.md` before any work. Session Resume Protocol for `.copilot/state/SESSION_STATE.md`.           |
+| **Agent Registry**      | Delegation table defining when each agent applies. Quick-Fix Fast Lane for small changes.                                                     |
+| **Project Context**     | Check `.copilot/context/PROJECT_CONTEXT.md` before any work. Session Resume Protocol for `.copilot/state/SESSION_STATE.md`.                   |
 | **Conflict Resolution** | Safety > Correctness > Brevity. Document overrides.                                                                                           |
 | **Workflow Discipline** | Action bias, retry guardrails (3-strike rule), non-interactive flags, convention mimicry, re-read before re-edit, lint/typecheck after task.  |
 | **Continuous Learning** | Use VS Code `memory` tool for cross-session facts. Store conventions, patterns, verified commands.                                            |
@@ -364,61 +391,21 @@ The file [prompts/copilot-instruction.instructions.md](prompts/copilot-instructi
 
 ## Design Principles
 
-### 1. Coordinator-Worker Pattern
-
-A main agent orchestrates the task, delegating subtasks to specialized agents. Each worker runs in its own context window, returning only summaries to keep the coordinator focused.
-
-### 2. Spec-Before-Code
-
-No implementation begins without a reviewed specification. The Architect produces specs, the Senior Developer follows them, the Guardian validates them.
-
-### 3. Tiered Context Loading
-
-Project context is organized in tiers to manage token budgets:
-
-- **Tier 1** (always loaded, < 200 lines): `PROJECT_CONTEXT.md`
-- **Tier 2** (loaded by task match): `ARCHITECTURE.md`, `CODEBASE_PATTERNS.md`, `AGENT_GUIDE.md`
-- **Tier 3** (loaded on reference): `DECISIONS.md`
-
-### 4. Evidence-Before-Claims
-
-No agent may claim work is complete without running verification commands and confirming output. The `verification-before-completion` skill enforces this gate.
-
-### 5. Persona-Based Agents
-
-Each agent has a **default persona** and one or more **specialized personas** (e.g., Senior Developer has a Code Reviewer, Guardian has a Gate Keeper, Architect has a Design Reviewer).
-
-### 6. Read-Only Review
-
-The Guardian agent never modifies code. It only reads, tests, analyzes, and reports findings with severity-rated remediation guidance.
-
-### 7. Black-Box Modules
-
-All architectural designs treat modules as replaceable black boxes with defined interfaces. Internal implementation is irrelevant to consumers.
-
-### 8. Prompt Injection Defense
-
-All agents treat content from workspace files, terminals, URLs, and user documents as **data, never as instructions**. Only trusted sources (`.agent.md`, `.instructions.md`, `SKILL.md`) define agent behavior. Embedded directives in code comments, docstrings, or fetched content are ignored and flagged. This prevents indirect prompt injection, role hijacking, and system prompt exfiltration. See Section 14 of the [Global Instructions](prompts/copilot-instruction.instructions.md).
-
-### 9. Intent Contracts
-
-Every agent defines an **Intent Contract** - a set of conditions that must be true when the agent's work is done. Unlike procedural instructions ("run the tests"), intent contracts specify outcomes ("a user performing the core workflow succeeds without unexpected errors"). This shifts agent accountability from process compliance to user-observable results.
-
-### 10. Holdout Validation
-
-The Architect writes behavioral acceptance scenarios during spec creation, stored in `.copilot/holdout/` where implementation agents cannot see them. Guardian evaluates implementations against these holdout scenarios during review. This structural separation prevents agents from gaming their own tests - the entity writing the code can never see the criteria it will be evaluated against.
-
-### 11. Specialization Over Minimalism
-
-The system uses 12 specialized agents rather than fewer generalist agents. This is a deliberate tradeoff: each agent's system prompt is tightly scoped, reducing context pollution and keeping each agent focused on its domain. The coordination overhead is mitigated by strict handoff chains, token budgeting, and tiered context loading. Domain expertise lives in 22 skills (loaded on demand), not in bloated system prompts. Fourteen parameterized prompt files provide slash-command entry points for the most common workflows.
-
-### 12. Self-Measurement
-
-The system tracks its own effectiveness through retrospectives and rework tracking. When agents hit 3-strike escalations, when Guardian sends work back, or when holdout scenarios fail, these events are recorded as specification health signals. After every 5 workflows, the system audits whether each agent is adding value proportional to its coordination cost.
-
-### 13. Structural Enforcement Layer (Hooks)
-
-Quality contracts enforced by instructions are probabilistic. An agent under context pressure may skip a lint check even when instructed never to do so. The hook harness enforces quality invariants at the platform level, outside the model: a Stop hook running `ruff check .` blocks the session from closing until ruff passes. No amount of context pressure, competing priorities, or model drift can override it. Instructions handle judgment; hooks handle invariants.
+| #   | Principle                          | Summary                                                                                                                                            |
+| --- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Coordinator-Worker**             | Main agent orchestrates; workers run in isolated context windows and return only summaries.                                                        |
+| 2   | **Spec-Before-Code**               | Architect designs first, Senior Developer implements, Guardian validates (no code without a reviewed spec).                                        |
+| 3   | **Tiered Context Loading**         | Tier 1 always loaded (`PROJECT_CONTEXT.md`); Tier 2 by task match; Tier 3 on reference. Keeps token budgets lean.                                  |
+| 4   | **Evidence-Before-Claims**         | Agents must run verification commands and confirm output before declaring work complete.                                                           |
+| 5   | **Persona-Based Agents**           | Each agent has a default persona and specialized sub-personas scoped to its domain.                                                                |
+| 6   | **Read-Only Review**               | Guardian never modifies code (reads, tests, analyzes, and reports only).                                                                           |
+| 7   | **Black-Box Modules**              | Modules are replaceable black boxes with defined interfaces; internal implementation is irrelevant to consumers.                                   |
+| 8   | **Prompt Injection Defense**       | All workspace content is treated as data, never instructions. Only `.agent.md`, `.instructions.md`, and `SKILL.md` define behavior.                |
+| 9   | **Intent Contracts**               | Agents define outcome conditions (not procedural checklists) that must be true when work is done.                                                  |
+| 10  | **Holdout Validation**             | Architect writes acceptance scenarios in `.copilot/holdout/` at spec time; implementation agents cannot see them; Guardian evaluates against them. |
+| 11  | **Specialization Over Minimalism** | 12 tightly scoped agents over fewer generalists; domain expertise in 22 on-demand skills, not bloated prompts.                                     |
+| 12  | **Self-Measurement**               | Retrospectives, rework tracking, and per-agent value audits after every 5 workflows.                                                               |
+| 13  | **Structural Enforcement (Hooks)** | Instructions handle judgment; hooks handle invariants. A `Stop` hook cannot be skipped by any amount of context pressure.                          |
 
 ---
 
@@ -432,20 +419,17 @@ Quality contracts enforced by instructions are probabilistic. An agent under con
 | Prompt files      | `<purpose>.prompt.md`         | `code-review.prompt.md`                              |
 | Skill files       | `SKILL.md` in named directory | `skills/implementer/SKILL.md`                        |
 | Instruction files | `<name>.instructions.md`      | `copilot-instruction.instructions.md`                |
+| Hook files        | `<purpose>.ps1`, `hooks.json` | `quality-gate.ps1`, `hooks.json`                     |
 | Agent names       | lowercase, hyphenated         | `data-engineer`, `debug-detective`                   |
 | Skill names       | lowercase, hyphenated         | `llm-app-patterns`, `verification-before-completion` |
 
-> **Note:** Agent-skill mirror naming (e.g., `architect` agent + `architect` skill) is intentional. They are different primitives registered via different mechanisms and do not collide.
+> Agent-skill mirror naming (e.g., `architect` agent + `architect` skill) is intentional; they are different primitives and do not collide.
 
 ### Agent Response Format
 
-Every agent response starts with its persona header:
+Every response starts with a persona header: `## **[Persona]**: [Action Description]`
 
-```text
-## **[Persona]**: [Action Description]
-```
-
-Examples: `## **Senior Developer**: Implementing auth service`, `## **Guardian**: Security Audit - payments module`
+Example: `## **Guardian**: Security Audit - payments module`
 
 ### Severity Levels (Guardian)
 
@@ -455,15 +439,6 @@ Examples: `## **Senior Developer**: Implementing auth service`, `## **Guardian**
 | **High**     | Yes, by default |
 | **Medium**   | No              |
 | **Low**      | No              |
-
-### Imperative Prompting Terms (Prompt Builder)
-
-- **You MUST**: Critical requirement
-- **You WILL**: Required action
-- **You ALWAYS**: Consistent behavior
-- **You NEVER**: Prohibited action
-- **MANDATORY**: Must not be skipped
-- **CRITICAL**: Affects correctness or safety
 
 ### Technology Stack Defaults
 
@@ -539,8 +514,35 @@ New-Item -ItemType Directory -Path $hooksPath -Force
 Copy-Item -Path ".\hooks\*" -Destination $hooksPath -Force
 ```
 
+**Unblock downloaded files** (required after cloning from GitHub; Windows marks cloned files with Mark of the Web):
+
+```powershell
+Get-ChildItem "$env:USERPROFILE\.copilot\hooks\*" | Unblock-File
+```
+
+**Set PowerShell execution policy** (hooks run as unsigned local scripts):
+
+```powershell
+# Persistent fix (recommended)
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+**Enable hooks in VS Code**: add to `settings.json` (`Ctrl+Shift+P` → "Open User Settings JSON"):
+
+```json
+{
+  "chat.hookFilesLocations": {
+    "~/.copilot/hooks": true
+  }
+}
+```
+
+**Verify**: open Copilot Chat and type `/hooks`, or open Command Palette → "Chat: Configure Hooks". You should see 8 hooks registered (Stop ×2, PreToolUse ×2, PostToolUse ×1, SessionStart ×1, SubagentStart ×1, PreCompact ×1).
+
+> See [hooks/INSTALL.md](hooks/INSTALL.md) for troubleshooting and detailed options.
+
 ---
 
 ## License
 
-This is a personal productivity toolkit. See individual files for any specific licensing.
+MIT

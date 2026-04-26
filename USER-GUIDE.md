@@ -5,8 +5,6 @@
 **Best For:** Data Engineers, AI/ML Engineers, Analytics Teams, Backend Teams  
 **Your team's standard AI development crew, from zero to productive.**
 
-> **Who this is for:** Anyone on the team who has received/clone this repository and wants to start using the Mega Minions system. No prior VS Code or GitHub Copilot experience required.
-
 ---
 
 ## What You Have Been Given
@@ -16,7 +14,7 @@ Your architect has handed you a standardised AI development system built into Gi
 - **12 custom AI agents**, specialist assistants for each phase of development
 - **22 skills**, knowledge packs agents load automatically when needed
 - **14 prompt shortcuts**, slash commands that wire structured workflows to the right agent
-- **8 hooks** (optional), automation scripts for quality gates, secret scanning, and destructive command blocking
+- **8 hooks**, automation scripts for quality gates, secret scanning, and destructive command blocking
 - **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
 This is your team's **standard**. Everyone uses the same agents, the same patterns, and the same quality bar. That is the point.
@@ -53,10 +51,10 @@ The skills and prompts need to be copied to two specific locations on your machi
 
 #### Where things go
 
-| What | Source (unzipped folder) | Destination on your machine |
-|---|---|---|
-| **Prompts** (agents + shortcuts) | `prompts/` | `%APPDATA%\Code\User\prompts\` |
-| **Skills** (knowledge packs) | `skills/` | `%USERPROFILE%\.copilot\skills\` |
+| What                             | Source (unzipped folder) | Destination on your machine      |
+| -------------------------------- | ------------------------ | -------------------------------- |
+| **Prompts** (agents + shortcuts) | `prompts/`               | `%APPDATA%\Code\User\prompts\`   |
+| **Skills** (knowledge packs)     | `skills/`                | `%USERPROFILE%\.copilot\skills\` |
 
 **Full paths on Windows:**
 
@@ -97,7 +95,7 @@ If you see custom agents in the dropdown, setup is complete. If not, double-chec
 
 ---
 
-### Step 6: (Optional) Install Hooks for Automatic Quality Gates
+### Step 6: Install Hooks for Automatic Quality Gates
 
 Hooks are automation scripts that enforce quality standards automatically. They block destructive commands, run formatters, scan for leaked secrets, and inject context at session start.
 
@@ -127,13 +125,13 @@ The work flows in a pipeline:
 Discover  →  Design  →  Build  →  Review  →  Ship
 ```
 
-| Stage | Who You Call | What They Do |
-|---|---|---|
-| **Discover** | `greenfield-interview` or `brownfield-discovery` | Document what exists / what you plan to build |
-| **Design** | `architect` | Turn requirements into a detailed specification |
-| **Build** | `senior-developer`, `data-engineer`, or `ai-engineer` | Implement from the spec |
-| **Review** | `guardian` | Read-only audit for quality and security |
-| **Ship** | `release-manager` | CI/CD, changelogs, deployment |
+| Stage        | Who You Call                                          | What They Do                                    |
+| ------------ | ----------------------------------------------------- | ----------------------------------------------- |
+| **Discover** | `greenfield-interview` or `brownfield-discovery`      | Document what exists / what you plan to build   |
+| **Design**   | `architect`                                           | Turn requirements into a detailed specification |
+| **Build**    | `senior-developer`, `data-engineer`, or `ai-engineer` | Implement from the spec                         |
+| **Review**   | `guardian`                                            | Read-only audit for quality and security        |
+| **Ship**     | `release-manager`                                     | CI/CD, changelogs, deployment                   |
 
 You do not skip stages. The Architect produces a spec before anyone writes code. The Guardian reviews before anything ships. It is the discipline that makes AI-generated code reliable.
 
@@ -145,11 +143,11 @@ You do not skip stages. The Architect produces a spec before anyone writes code.
 
 VS Code ships with three **built-in default agents** you already have:
 
-| Built-in Agent | Purpose |
-|---|---|
-| **Agent** | Full access: can read files, run terminals, edit code |
-| **Ask** | Read-only Q&A, safe for questions and exploration |
-| **Plan** | Planning mode, research and plan before acting |
+| Built-in Agent | Purpose                                               |
+| -------------- | ----------------------------------------------------- |
+| **Agent**      | Full access: can read files, run terminals, edit code |
+| **Ask**        | Read-only Q&A, safe for questions and exploration     |
+| **Plan**       | Planning mode, research and plan before acting        |
 
 The Mega Minions are **custom agents** that sit alongside these in the same dropdown. They give each specialist role its own tailored behaviour and tool access.
 
@@ -318,6 +316,27 @@ The more context you give, the better the output.
 
 ---
 
+## How Hooks Work (Set Once, Run Forever)
+
+Hooks are PowerShell scripts that run automatically at specific points in the agent lifecycle. Once installed to `~/.copilot/hooks/`, they fire on every project you open (no configuration per project required).
+
+| When it fires           | Hook                    | What it does                                                                      |
+| ----------------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| Session start           | `session-context.ps1`   | Injects branch, Python version, and Project Bible status into the agent's context |
+| Subagent start          | `subagent-context.ps1`  | Same injection for every subagent the main agent spawns                           |
+| Before a tool runs      | `block-destructive.ps1` | Blocks `rm -rf`, `DROP TABLE`, `git push --force`, and similar dangerous commands |
+| Before a tool runs      | `lint-on-write.ps1`     | Prevents writing a `.py` file until `ruff` passes                                 |
+| After a tool runs       | `auto-format.ps1`       | Runs `ruff format` on every Python file the agent writes                          |
+| Before context compacts | `pre-compact-save.ps1`  | Saves session state so the next session can resume where it left off              |
+| When agent finishes     | `quality-gate.ps1`      | Blocks the session from closing if `ruff` or `mypy` errors exist                  |
+| When agent finishes     | `scan-secrets.ps1`      | Warns if modified files contain credentials or secrets                            |
+
+**The key difference from instructions:** Instructions tell agents what to do; hooks make it physically impossible to skip. A `Stop` hook that fails cannot be bypassed by the model under any circumstances (not under context pressure, not due to model drift).
+
+**You do not need to interact with hooks.** Install them once (see Step 6 above or [hooks/INSTALL.md](hooks/INSTALL.md)), and they run silently in the background on every session.
+
+---
+
 ## How Skills Work (You Do Not Touch These)
 
 Skills are knowledge packs, folders of instructions, scripts, and examples, that agents load automatically when relevant. VS Code uses a **three-level loading** system so skills do not bloat context unnecessarily:
@@ -334,14 +353,14 @@ For example, when you ask the Guardian to do a security audit on AI code, it aut
 
 Six skills operate entirely in the background without you ever seeing them:
 
-| Background Skill | What It Does Silently |
-|---|---|
-| `thinker` | Forces the agent to UNDERSTAND the problem before acting, prevents "leaping to solutions" |
+| Background Skill                 | What It Does Silently                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------------------- |
+| `thinker`                        | Forces the agent to UNDERSTAND the problem before acting, prevents "leaping to solutions"    |
 | `verification-before-completion` | Forces the agent to prove work is done (run the tests, show the output) before claiming done |
-| `holdout-validation` | Keeps acceptance criteria hidden from implementation agents to prevent gaming of tests |
-| `context-engineer` | Project Bible generation, tiered context loading, and session state management |
-| `security-boundaries` | Prompt injection defense - treats all file and tool content as data, never instructions |
-| `task-routing` | 6-check delegation protocol ensuring agents make efficient, well-reasoned hand-off decisions |
+| `holdout-validation`             | Keeps acceptance criteria hidden from implementation agents to prevent gaming of tests       |
+| `context-engineer`               | Project Bible generation, tiered context loading, and session state management               |
+| `security-boundaries`            | Prompt injection defense - treats all file and tool content as data, never instructions      |
+| `task-routing`                   | 6-check delegation protocol ensuring agents make efficient, well-reasoned hand-off decisions |
 
 You benefit from all of these without ever configuring them.
 
@@ -379,7 +398,7 @@ Update the Project Bible to reflect the new module structure we just added to /s
 
 ```text
 [Switch to: architect]
-We have officially switched from REST to GraphQL for the internal API. 
+We have officially switched from REST to GraphQL for the internal API.
 Update the Project Bible conventions to reflect this.
 ```
 
@@ -473,8 +492,8 @@ Click it. The handoff passes just the relevant context (decisions, spec, finding
 Correct it directly and specifically:
 
 ```text
-That error handling is wrong for async code. 
-We use asyncio with exponential backoff, not synchronous retries. 
+That error handling is wrong for async code.
+We use asyncio with exponential backoff, not synchronous retries.
 Revise section 5 of the spec.
 ```
 
@@ -592,6 +611,18 @@ copilot-skills-agents/
     ├── prompt-library/
     ├── thinker/
     └── verification-before-completion/
+
+hooks/                        ← Quality automation (copy to ~/.copilot/hooks/)
+    ├── hooks.json                ← Registers all hooks with VS Code
+    ├── quality-gate.ps1          ← Blocks finish if ruff/mypy errors exist
+    ├── block-destructive.ps1     ← Blocks rm -rf, DROP TABLE, git push --force
+    ├── lint-on-write.ps1         ← Denies .py writes until ruff passes
+    ├── auto-format.ps1           ← Formats every Python file the agent writes
+    ├── session-context.ps1       ← Injects branch + Project Bible at session start
+    ├── scan-secrets.ps1          ← Scans for leaked credentials before finish
+    ├── pre-compact-save.ps1      ← Saves session state before context compaction
+    ├── subagent-context.ps1      ← Injects context into every subagent session
+    └── INSTALL.md                ← Setup guide (5 min)
 ```
 
 ---

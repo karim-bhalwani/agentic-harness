@@ -7,8 +7,8 @@ disable-model-invocation: true
 agents:
   - researcher
 model:
-  - "Claude Sonnet 4.5 (copilot)"
-  - "Claude Haiku 4.5 (copilot)"
+  - "GPT-5.4 (copilot)"
+  - "Auto (copilot)"
 handoffs:
   - label: Hand off to Senior Developer
     agent: senior-developer

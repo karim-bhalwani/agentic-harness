@@ -6,8 +6,8 @@ target: vscode
 agents:
   - researcher
 model:
-  - "Claude Opus 4.6 (copilot)"
-  - "GPT-5.4 (copilot)"
+  - "Claude Sonnet 4.6 (copilot)"
+  - "Auto (copilot)"
 handoffs:
   - label: Hand off to Guardian (Initial Review)
     agent: guardian

@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**12 Agents • 22 Skills • Multi-Phase Pipeline**
+**12 Agents • 22 Skills • 14 Prompts • 8 Hooks • Multi-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -18,7 +18,7 @@
 
 ## Welcome to the Team
 
-The **Mega Minions** are a collection of 12 custom AI agents, 22 specialized skills, and 14 parameterized prompt files built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
+The **Mega Minions** are a collection of 12 custom AI agents, 22 specialized skills, 14 parameterized prompt files, and 8 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
 
 Think of them as a squad of specialists, not a single jack-of-all-trades. The Architect draws the blueprints. The Senior Developer writes the code. The Guardian reviews it. The Release Manager ships it. Each one stays in their lane and passes the baton when it is time.
 

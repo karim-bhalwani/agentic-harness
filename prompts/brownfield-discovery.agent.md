@@ -7,8 +7,8 @@ disable-model-invocation: true
 agents:
   - researcher
 model:
-  - "Claude Opus 4.6 (copilot)"
-  - "Claude Sonnet 4.5 (copilot)"
+  - "Gemini 3.1 Pro (Preview) (copilot)"
+  - "Auto (copilot)"
 handoffs:
   - label: Hand off to Architect
     agent: architect

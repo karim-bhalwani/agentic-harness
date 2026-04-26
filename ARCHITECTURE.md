@@ -39,7 +39,7 @@ The Mega Minions are built on a four-layer architecture where each layer has a d
 │  Files: prompts/*.agent.md                                       │
 │                                                                  │
 │  Agents CONSUME skills and prompts. They are the orchestration   │
-│  layer: they decide what to do, when to delegate, and when        │
+│  layer: they decide what to do, when to delegate, and when       │
 │  to stop.                                                        │
 ├──────────────────────────────────────────────────────────────────┤
 │                         LAYER 2: SKILLS                          │

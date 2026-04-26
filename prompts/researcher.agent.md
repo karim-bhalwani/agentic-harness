@@ -6,9 +6,10 @@ user-invocable: false
 tools:
   - web
   - search
+  - read
 model:
   - "Claude Haiku 4.5 (copilot)"
-  - "Claude Sonnet 4.5 (copilot)"
+  - "Auto (copilot)"
 ---
 
 # Researcher Agent

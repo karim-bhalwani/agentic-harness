@@ -6,14 +6,16 @@ target: vscode
 tools:
   - read
   - search
+  - execute
   - agent
   - web
-  - execute
+  - todo
+  - vscode
 agents:
   - researcher
 model:
-  - "Claude Opus 4.6 (copilot)"
-  - "GPT-5.4 (copilot)"
+  - "Claude Sonnet 4.6 (copilot)"
+  - "Auto (copilot)"
 handoffs:
   - label: Hand off to Release Manager (PASS)
     agent: release-manager

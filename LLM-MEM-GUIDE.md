@@ -35,7 +35,7 @@ Three rules to remember:
 2. **Raw sources are sacred. Mem articles are AI-owned.** Never edit mem articles directly. If something is wrong, add a correcting source and let the agent recompile.
 3. **Living memory, not a dumping ground.** The mem is for knowledge that matters to the project and that you want agents to remember across sessions. If it is already captured elsewhere in the Mega Minions ecosystem (Project Bible, repo memory, code comments, skill references), it does not belong here. Every article the mem holds costs context tokens when agents read it. Fill it with noise and your agents get slower and dumber. Fill it with signal and they compound.
 
-> **The litmus test before ingesting anything:** *"Is this something relevant to the project that is not already documented, and will an agent (or a teammate) genuinely need this knowledge in three months?"* If the answer is no, skip it. The mem is a curated library, not a filing cabinet.
+> **The litmus test before ingesting anything:** _"Is this something relevant to the project that is not already documented, and will an agent (or a teammate) genuinely need this knowledge in three months?"_ If the answer is no, skip it. The mem is a curated library, not a filing cabinet.
 
 ---
 
@@ -51,11 +51,11 @@ Ask the mem a question           /mem-query <your question>
 Check the mem is healthy         /mem-lint all
 ```
 
-| Command | What Happens | Who Does the Work |
-|---------|-------------|-------------------|
-| `/mem-ingest` | Fetches the source, saves it as raw material, compiles it into mem articles, updates the index | AI Engineer agent |
-| `/mem-query` | Searches the mem, reads relevant articles, synthesizes an answer with citations | AI Engineer agent |
-| `/mem-lint` | Checks for broken links, index drift, contradictions, orphan pages. Auto-fixes what it can. | Guardian agent |
+| Command       | What Happens                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `/mem-ingest` | Fetches the source, saves it as raw material, compiles it into mem articles, updates the index |
+| `/mem-query`  | Searches the mem, reads relevant articles, synthesizes an answer with citations                |
+| `/mem-lint`   | Checks for broken links, index drift, contradictions, orphan pages. Auto-fixes what it can.    |
 
 ---
 
@@ -107,13 +107,13 @@ the mem compounds. Each source you add makes every future query richer.
 
 Good things to ingest:
 
-| Source Type | Example | Why It Matters |
-|------------|---------|----------------|
-| **Design decisions** | "We chose event sourcing because..." | Prevents future re-debates |
-| **Post-mortems** | "The OOM was caused by a broadcast join on an 8G table" | Prevents repeat failures |
-| **Research findings** | "We evaluated 3 caching libraries, here are results" | Saves future evaluation time |
-| **Meeting notes** | "Architecture review decided to split the monolith" | Captures decisions that live in people's heads |
-| **External articles** | Industry best practices relevant to your stack | Brings outside knowledge into project context |
+| Source Type           | Example                                                 | Why It Matters                                 |
+| --------------------- | ------------------------------------------------------- | ---------------------------------------------- |
+| **Design decisions**  | "We chose event sourcing because..."                    | Prevents future re-debates                     |
+| **Post-mortems**      | "The OOM was caused by a broadcast join on an 8G table" | Prevents repeat failures                       |
+| **Research findings** | "We evaluated 3 caching libraries, here are results"    | Saves future evaluation time                   |
+| **Meeting notes**     | "Architecture review decided to split the monolith"     | Captures decisions that live in people's heads |
+| **External articles** | Industry best practices relevant to your stack          | Brings outside knowledge into project context  |
 
 **Do NOT ingest:**
 
@@ -197,110 +197,12 @@ your-project/
 
 ### The Two Sides
 
-| Side | Who Owns It | What Happens There | Your Role |
-|------|------------|-------------------|-----------|
-| `llmmem/raw/` | **You** | Source material goes in, never changes | Curate what gets ingested |
-| `llmmem/mem/` | **AI** | Articles get compiled, cross-referenced, updated | Read and query |
+| Side          | Who Owns It | What Happens There                               | Your Role                 |
+| ------------- | ----------- | ------------------------------------------------ | ------------------------- |
+| `llmmem/raw/` | **You**     | Source material goes in, never changes           | Curate what gets ingested |
+| `llmmem/mem/` | **AI**      | Articles get compiled, cross-referenced, updated | Read and query            |
 
 > **Think of it like a compiler.** `raw/` is your source code. `mem/` is the compiled output. You do not edit the compiled output. If the output is wrong, you fix the source and recompile.
-
----
-
-## Git: the mem Is Just Files
-
-This is the best part. There is no database. No mem server. No SaaS subscription. the mem is plain markdown in your repo. That means:
-
-### Everything You Already Know About Git Works
-
-- **Commits** track every change to every article
-- **Branches** let feature branches add mem content alongside code
-- **Diffs** show exactly what the agent wrote or changed
-- **PRs** let your team review mem articles the same way they review code
-- **Blame** shows who (or which agent) wrote what and when
-
-### The Recommended Workflow
-
-```text
-  ┌──────────────────────────────────────────────────────────┐
-  │                  DAILY GIT WORKFLOW                      │
-  │                                                          │
-  │   1. Start a feature branch                              │
-  │   2. Agent reads mem for prior decisions   ◄── READ      │
-  │   3. Do the work                                         │
-  │   4. Agent compiles findings to mem        ◄── WRITE     │
-  │   5. Commit code + mem changes TOGETHER                  │
-  │   6. Push, open PR                                       │
-  │   7. Reviewer checks both code and mem     ◄── REVIEW    │
-  │                                                          │
-  └──────────────────────────────────────────────────────────┘
-```
-
-**Why commit together?** Because the knowledge and the code that produced it belong together. The PR reviewer sees both the implementation and the reasoning behind it.
-
-### Batch Ingestion (Onboarding, Research Catch-Up)
-
-When you need to ingest many sources at once:
-
-```text
-git checkout -b mem/batch-ingest-april
-
-/mem-ingest https://source1.com
-/mem-ingest https://source2.com
-/mem-ingest path/to/meeting-notes.md
-
-/mem-lint all
-
-git add llmmem/ && git commit -m "Batch ingest: architecture sources"
-git push && open PR
-```
-
-### Merge Conflicts
-
-Rare, because different branches typically produce different articles. When they happen, resolve like any markdown conflict and run `/mem-lint all` after merging to fix any broken cross-references.
-
-### .gitignore
-
-Do **not** gitignore the mem. The whole point is that it is shared, versioned, and reviewable. Exception: if you store large binary files in `llmmem/raw/` (PDFs, images), consider ignoring those specifically.
-
----
-
-## the mem vs. Other Things You Already Have
-
-You might be wondering: do I still need the Project Bible? Repo memory? Code comments? Yes. They serve different purposes.
-
-```text
-  ┌──────────────────────────────────────────────────────────┐
-  │              THE KNOWLEDGE HIERARCHY                     │
-  │                                                          │
-  │  ┌─────────────────────────────────────────────────────┐ │
-  │  │  PROJECT BIBLE (.copilot/context/)                  │ │
-  │  │  What the project IS: identity, stack, rules        │ │
-  │  │  < 200 lines. Changes rarely.                       │ │
-  │  └─────────────────────────────────────────────────────┘ │
-  │                        │                                 │
-  │  ┌─────────────────────▼───────────────────────────────┐ │
-  │  │  LLM MEM (llmmem/)                                  │ │
-  │  │  What the project has LEARNED: decisions, findings, │ │
-  │  │  trade-offs, post-mortems, patterns                 │ │
-  │  │  Grows over time. Changes frequently.               │ │
-  │  └─────────────────────────────────────────────────────┘ │
-  │                        │                                 │
-  │  ┌─────────────────────▼───────────────────────────────┐ │
-  │  │  REPO MEMORY (single-line facts)                    │ │
-  │  │  Quick conventions: "use F.col() in PySpark"        │ │
-  │  │  One-liners. No cross-references. No structure.     │ │
-  │  └─────────────────────────────────────────────────────┘ │
-  │                        │                                 │
-  │  ┌─────────────────────▼───────────────────────────────┐ │
-  │  │  CODE COMMENTS (inline)                             │ │
-  │  │  Why this specific line is the way it is            │ │
-  │  │  Scoped to a single file.                           │ │
-  │  └─────────────────────────────────────────────────────┘ │
-  │                                                          │
-  └──────────────────────────────────────────────────────────┘
-```
-
-The Project Bible tells agents *what the project is*. the mem tells agents *what the project has learned*. Repo memory stores quick facts. Code comments explain individual lines. Each has its lane.
 
 ---
 
@@ -308,12 +210,12 @@ The Project Bible tells agents *what the project is*. the mem tells agents *what
 
 ### Role Responsibilities
 
-| Role | What They Do with the mem |
-|------|---------------------------|
-| **Developer** | Ingests sources from their work. Queries before starting new tasks. |
-| **Tech Lead** | Reviews mem articles in PRs. Runs periodic lint. Curates topic structure. |
+| Role           | What They Do with the mem                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Developer**  | Ingests sources from their work. Queries before starting new tasks.                                                       |
+| **Tech Lead**  | Reviews mem articles in PRs. Runs periodic lint. Curates topic structure.                                                 |
 | **New Joiner** | Queries the mem on their first day instead of asking 50 questions. Ingests their onboarding notes at the end of week one. |
-| **AI Agent** | Reads the mem before work. Compiles articles after work. Auto-fixes links during lint. |
+| **AI Agent**   | Reads the mem before work. Compiles articles after work. Auto-fixes links during lint.                                    |
 
 ### Onboarding a New Team Member
 
@@ -398,14 +300,14 @@ Yes. Git gives you full version history, author attribution (including which age
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| "No mem found" message | Run `/mem-ingest` with any source. The first ingest creates the directory structure. |
-| Agents are not compiling after tasks | Normal for routine work. Compilation only triggers for durable, reusable knowledge. |
-| Broken links after a merge | Run `/mem-lint links`. The agent searches for moved files and fixes paths automatically. |
-| Index out of sync | Run `/mem-lint index`. Missing entries are added, orphan entries are flagged. |
-| Articles contradict each other | Run `/mem-lint all`. Contradictions are reported as heuristic findings. Resolve by adding a clarifying source or annotating both articles. |
-| Mem too noisy in PRs | Use a dedicated mem branch (for teams of 10+) or configure your PR template to collapse `llmmem/` diffs. |
+| Problem                              | Fix                                                                                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| "No mem found" message               | Run `/mem-ingest` with any source. The first ingest creates the directory structure.                                                       |
+| Agents are not compiling after tasks | Normal for routine work. Compilation only triggers for durable, reusable knowledge.                                                        |
+| Broken links after a merge           | Run `/mem-lint links`. The agent searches for moved files and fixes paths automatically.                                                   |
+| Index out of sync                    | Run `/mem-lint index`. Missing entries are added, orphan entries are flagged.                                                              |
+| Articles contradict each other       | Run `/mem-lint all`. Contradictions are reported as heuristic findings. Resolve by adding a clarifying source or annotating both articles. |
+| Mem too noisy in PRs                 | Use a dedicated mem branch (for teams of 10+) or configure your PR template to collapse `llmmem/` diffs.                                   |
 
 ---
 

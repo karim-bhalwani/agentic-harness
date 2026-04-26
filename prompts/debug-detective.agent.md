@@ -6,8 +6,8 @@ target: vscode
 agents:
   - researcher
 model:
-  - "GPT-5.4 (copilot)"
-  - "Claude Opus 4.6 (copilot)"
+  - "Gemini 3.1 Pro (Preview) (copilot)"
+  - "Auto (copilot)"
 handoffs:
   - label: Hand off to Architect
     agent: architect

@@ -83,6 +83,10 @@ For full checklist, load [agentic-top-10-checklist.md](./references/agentic-top-
 - [ ] Agent loop limits enforced (hard cap on iterations)
 - [ ] Human-in-the-loop required for destructive or irreversible actions
 - [ ] All tool invocations logged with full audit trail
+- [ ] Memory files treated as **untrusted input** — stored memory is read back into context and is a prompt injection vector (memory poisoning); never trust stored content as instructions
+- [ ] Memory content sanitized before storage: filter injected directives, strip executable patterns, enforce max file size
+- [ ] Memory scoped per-user and per-project to prevent cross-contamination between tenants or tasks
+- [ ] Memory operations audited: all reads/writes logged with timestamps and source tracing
 
 ### Operational Security
 

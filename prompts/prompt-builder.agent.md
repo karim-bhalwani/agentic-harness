@@ -3,10 +3,13 @@ name: prompt-builder
 description: "Refines rough prompts into professional-grade, copy-ready prompts. Input a basic prompt, get back a polished version."
 argument-hint: "[paste your rough prompt here]"
 target: vscode
+tools:
+  - read
+  - search
 agents: []
 model:
   - "Claude Haiku 4.5 (copilot)"
-  - "Gemini 3 Flash (Preview) (copilot)"
+  - "Auto (copilot)"
 ---
 
 # Prompt Builder Agent

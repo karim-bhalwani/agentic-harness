@@ -41,6 +41,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 - Check out the current project state first (files, docs, recent commits)
 - Ask questions one at a time to refine the idea
+- **Lead with your recommended answer or assumption** - the user confirms or corrects, rather than thinking from scratch
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
@@ -86,7 +87,7 @@ Only after passing all four checks: present the design to the user and wait for 
 
 ## Key Principles
 
-- **One question at a time** - Don't overwhelm with multiple questions
+- **One question at a time, with your recommendation** - State your assumption or preferred answer first; the user confirms or redirects
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling
