@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Architect:** Karim Bhalwani  
-**Version:** 7.0 | **Updated:** 2026-04-12  
+**Version:** 8.0 | **Updated:** 2026-05-03  
 **Scope:** Multi-agent orchestration for data & AI systems
 
 ---
@@ -220,21 +220,21 @@ Auditability is not overhead. It is the mechanism by which trust is earned.
 
 ---
 
-## The Deliberate Tension: Why Twelve Agents?
+## The Deliberate Tension: Why Fifteen Agents?
 
-DeepMind's research shows that more agents can make systems worse when coordination overhead exceeds the value of parallelism. So why does this system have twelve agents instead of five or six?
+DeepMind's research shows that more agents can make systems worse when coordination overhead exceeds the value of parallelism. So why does this system have fifteen agents instead of five or six?
 
 The answer is specialization-through-scoping, not specialization-through-duplication.
 
 **The coordination math matters.** A twelve-person human team creates sixty-six communication pathways: $n(n-1)/2$. Every pathway is a potential conversation, clarification, meeting, or message thread. Add one person and twelve new pathways appear instantly. Coordination grows faster than the team itself.
 
-Twelve agents in this system do not create sixty-six pathways. The pipeline is linear. Each handoff has exactly one sender and one receiver. Twelve agents produce eleven handoff points, each with a defined contract (the spec, the review report, the deployment manifest). There is no peer-to-peer communication between agents. The Senior Developer never messages the Data Engineer. The AI Engineer never debates the Guardian. The coordination surface is structurally bounded by the pipeline, not by the agent count.
+Fifteen agents in this system do not create sixty-six pathways. The pipeline is linear. Each handoff has exactly one sender and one receiver. Fifteen agents produce fourteen handoff points, each with a defined contract (the spec, the review report, the deployment manifest). There is no peer-to-peer communication between agents. The Senior Developer never messages the Data Engineer. The AI Engineer never debates the Guardian. The coordination surface is structurally bounded by the pipeline, not by the agent count.
 
-This is the architectural answer to the coordination problem. Human teams pay a quadratic communication tax. Agent pipelines pay a linear handoff tax. The twelve agents are viable precisely because they do not communicate like a twelve-person team.
+This is the architectural answer to the coordination problem. Human teams pay a quadratic communication tax. Agent pipelines pay a linear handoff tax. The fifteen agents are viable precisely because they do not communicate like a twelve-person team.
 
 Each agent's system prompt is tightly focused on one domain. The Data Engineer prompt contains PySpark patterns, Delta Lake writes, and dbt models. It does not contain RAG pipelines or SQL optimization or deployment patterns. This tight scoping reduces context pollution; the model is not distracted by domain knowledge it does not need for the current task.
 
-Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer. The agents are routing and workflow scaffolding. The twenty-one skills handle everything from black-box design patterns to GenAI security auditing to structured reasoning frameworks. Each one is loaded only when the task domain matches, saving token budget for actual reasoning.
+Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer. The agents are routing and workflow scaffolding. The 24 skills handle everything from black-box design patterns to GenAI security auditing to structured reasoning frameworks. Each one is loaded only when the task domain matches, saving token budget for actual reasoning.
 
 The agents follow identical workflow patterns (state machine, retry, escalation) but with different domain _content_. Adding a new domain (say, mobile engineering) means creating a new agent prompt with domain-specific content and a matching skill, not redesigning the workflow. The template is proven; only the content changes.
 
@@ -256,7 +256,7 @@ Honesty about limitations is more useful than confidence about strengths.
 
 **It does not automatically run retrospectives.** The self-measurement system provides templates and triggers, but someone has to actually use them. The Context Engineer skill prompts for a retrospective after every five workflows, but if the prompt is ignored, no measurement happens. Discipline is required.
 
-**It does not prove that twelve agents is optimal.** The current agent count is a design choice, not a research finding. The justification: tighter scoping, reduced context pollution, is reasonable but unproven at this scale. The retrospective system exists partly to generate the evidence needed to validate or revise this choice.
+**It does not prove that fifteen agents is optimal.** The current agent count is a design choice, not a research finding. The justification: tighter scoping, reduced context pollution, is reasonable but unproven at this scale. The retrospective system exists partly to generate the evidence needed to validate or revise this choice.
 
 **It does not replace human judgment for ambiguous decisions.** The system handles tasks with clear specifications extremely well. It handles tasks with ambiguous specifications less well. When the specification itself requires judgment: "should we prioritize latency or consistency?", a human must make the call. The Greenfield Interview and Brownfield Discovery agents are designed to surface these decisions, but they cannot make them.
 

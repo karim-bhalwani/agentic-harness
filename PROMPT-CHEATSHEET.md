@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Scope:** Copy-paste prompts and slash commands for every agent, every phase  
-**Version:** 7.0 | **Updated:** 2026-04-12
+**Version:** 8.0 | **Updated:** 2026-05-03
 
 Copy-paste prompts for every agent and every phase. Find your situation, grab the example, go.
 
@@ -14,10 +14,14 @@ Copy-paste prompts for every agent and every phase. Find your situation, grab th
 
 **Prompts** (`/name`): Type `/` in Copilot Chat to see the list, or copy examples below directly into the chat.
 
-**The rule**: follow the pipeline order. Discover → Design → Build → Review → Ship. Don't skip phases for non-trivial work.
+**The rule**: follow the pipeline order. Discover → Design → (Plan) → Build → Review → Ship. Don't skip phases for non-trivial work. The Plan phase is optional: after Design, you choose at Gate 0 whether to decompose into user stories first or build directly from the spec.
 
 ```text
-Discover  →  Design  →  Build  →  Review  →  Ship
+Discover  →  Design  →  (Plan)  →  Build  →  Review  →  Ship
+                           ↑
+                     Optional path.
+                     Human decides
+                     at Gate 0.
 ```
 
 > **Best practice**: Start a **new chat session** for each phase or stage. Agents perform best with a clean context window. A long conversation accumulates noise that degrades output quality. For example, use one session for `/design`, close it, then open a fresh session for `@senior-developer` to build from the spec.
@@ -28,18 +32,21 @@ Discover  →  Design  →  Build  →  Review  →  Ship
 
 | I want to...                            | Use this                | Phase    |
 | --------------------------------------- | ----------------------- | -------- |
-| Start a brand new project               | `/greenfield-interview` | Discover |
-| Map an existing codebase                | `/brownfield-discovery` | Discover |
+| Start a brand new project               | `@greenfield-interview` | Discover |
+| Map an existing codebase                | `@brownfield-discovery` | Discover |
 | Explore data in a database              | `/sql-query`            | Discover |
 | Query my project mem                   | `/mem-query`           | Discover |
 | Design a feature or system              | `/design`               | Design   |
 | Plan implementation steps               | `/feature-plan`         | Design   |
 | Lock down acceptance criteria           | `/sprint-contract`      | Design   |
+| Break a spec into a story backlog       | `@story-master`         | Plan     |
+| Turn a story into an implementation plan| `@story-planner`        | Plan     |
+| Verify and stamp a story as done        | `@close-story`          | Plan     |
 | Build a feature from a spec             | `@senior-developer`     | Build    |
 | Build a data pipeline                   | `@data-engineer`        | Build    |
 | Build a RAG/AI system                   | `@ai-engineer`          | Build    |
 | Fix a small bug or typo                 | `/quick-fix`            | Build    |
-| Debug a failure or error                | `/debug-detective`      | Build    |
+| Debug a failure or error                | `@debug-detective`      | Build    |
 | Refine a rough prompt                   | `@prompt-builder`       | Build    |
 | Review code before shipping             | `/code-review`          | Review   |
 | Audit docs for staleness                | `/doc-garden`           | Review   |
@@ -55,24 +62,28 @@ Discover  →  Design  →  Build  →  Review  →  Ship
 
 This running example follows one app from idea to deployment across all 5 phases. Each step shows the exact prompt to copy and how context transfers between phases. **Start a new chat session for each phase.**
 
-The handoff mechanism is simple: agents write artifacts to disk (specs, contracts, code). The next agent reads those files. You don't need to copy-paste output between sessions.
+The handoff mechanism is simple: agents write artifacts to disk (specs, contracts, stories, plans, code). The next agent reads those files. You don't need to copy-paste output between sessions.
 
 ```text
- Phase 1          Phase 2            Phase 2b             Phase 3                Phase 4           Phase 5
- Discover    -->  Design        -->  Contract        -->  Build             -->  Review       -->  Ship
+ Phase 1          Phase 2            Phase 2b (optional)          Phase 3                Phase 4           Phase 5
+ Discover    -->  Design        -->  Plan                    -->  Build             -->  Review       -->  Ship
 
- /greenfield      /design            /sprint-contract     @senior-developer      /code-review      @release-manager
- -interview                                                                                        /retrospective
+ /greenfield      /design            @story-master                @senior-developer      /code-review      @release-manager
+ -interview       /sprint-contract   @story-planner                                                        /retrospective
+                                     @close-story
 
- Produces:        Produces:          Produces:            Produces:              Produces:         Produces:
- PROJECT_         SPEC.md            CONTRACT-            Working code           Gate Report       CI/CD pipeline
- CONTEXT.md                          task-tracker.md      + tests                PASS/FAIL         Changelog
+ Produces:        Produces:          Produces:                    Produces:              Produces:         Produces:
+ PROJECT_         SPEC.md            STORIES.md                   Working code           Gate Report       CI/CD pipeline
+ CONTEXT.md       CONTRACT-*.md      US-{id}-PLAN.md              + tests                PASS/FAIL         Changelog
+                                     US-{id}-VALIDATION.md
 ```
+
+> **Gate 0 (human decision)**: After Design, you decide: run the Plan phase (recommended for specs with 3+ stories or parallel teams) or build directly from the spec. The Plan phase is skipped by default for small, self-contained specs.
 
 ### Step 1: Discover (new chat session)
 
 ```text
-/greenfield-interview I want to build a task tracker web app. Teams can create projects, assign tasks to members, set deadlines, and track progress with a kanban board. We'll use Python FastAPI for the backend and React for the frontend.
+@greenfield-interview I want to build a task tracker web app. Teams can create projects, assign tasks to members, set deadlines, and track progress with a kanban board. We'll use Python FastAPI for the backend and React for the frontend.
 ```
 
 **What you get**: The agent interviews you across 6 phases. At the end, it writes `.copilot/context/PROJECT_CONTEXT.md` (the Project Bible).
@@ -87,7 +98,7 @@ The handoff mechanism is simple: agents write artifacts to disk (specs, contract
 /design Design the backend API for the task tracker. Core entities: Project, Task, User, Team. A task belongs to a project and is assigned to a user. Support CRUD for all entities, plus moving tasks between kanban columns (To Do, In Progress, Done). Include auth with JWT.
 ```
 
-**What you get**: The Architect produces `.copilot/specs/TASK-TRACKER-API-SPEC.md` with module boundaries, API contracts, data models, error handling, and acceptance scenarios.
+**What you get**: The Architect produces `.copilot/specs/TASK-TRACKER-API-SPEC.md` with module boundaries, API contracts, data models, error handling, and acceptance scenarios. The agent also writes `.copilot/holdout/HOLDOUT.md` with behavioral acceptance scenarios and runs verification gates (`verify_spec.py`, `verify_session_state.py`) before declaring done. If you see those scripts running, that's the agent confirming both artifacts are real (not stub) before handoff.
 
 **How to hand off**: Close this chat. The spec file is on disk for the next agent.
 
@@ -116,7 +127,7 @@ The handoff mechanism is simple: agents write artifacts to disk (specs, contract
 **If you hit a bug during build** (same or new session):
 
 ```text
-/debug-detective POST /api/tasks returns 422 when I include the assignee_id field. Here's the request body and error response: [paste]
+@debug-detective POST /api/tasks returns 422 when I include the assignee_id field. Here's the request body and error response: [paste]
 ```
 
 **How to hand off**: Close this chat. Code is written and committed locally.
@@ -163,18 +174,33 @@ Then re-review in another new session.
 
 ---
 
-### Summary: The 6 Prompts That Built an App
+### Summary: The Prompts That Built an App
+
+#### Build Direct path (no Plan phase)
 
 | # | Phase    | Prompt                                                                 | New Session? |
 |---|----------|------------------------------------------------------------------------|--------------|
-| 1 | Discover | `/greenfield-interview I want to build a task tracker web app...`      | Yes          |
+| 1 | Discover | `@greenfield-interview I want to build a task tracker web app...`      | Yes          |
 | 2 | Design   | `/design Design the backend API for the task tracker...`               | Yes          |
 | 3 | Contract | `/sprint-contract task-tracker-api`                                    | Yes          |
 | 4 | Build    | `@senior-developer Implement from .copilot/specs/TASK-TRACKER-API...`  | Yes          |
 | 5 | Review   | `/code-review Review src/api/ and src/services/...`                    | Yes          |
 | 6 | Ship     | `@release-manager Set up GitHub Actions CI/CD...`                      | Yes          |
 
-> **Key takeaway**: You never copy-paste output between sessions. Agents write files (Project Bible, specs, contracts, code). The next agent reads those files. The file system is the handoff mechanism.
+#### Plan Phase path (recommended for larger specs)
+
+| # | Phase    | Prompt                                                                         | New Session? |
+|---|----------|--------------------------------------------------------------------------------|--------------|
+| 1 | Discover | `@greenfield-interview I want to build a task tracker web app...`              | Yes          |
+| 2 | Design   | `/design Design the backend API for the task tracker...`                       | Yes          |
+| 3 | Contract | `/sprint-contract task-tracker-api`                                            | Yes          |
+| 4 | Plan     | `@story-master Decompose .copilot/specs/TASK-TRACKER-API-SPEC.md into stories` | Yes          |
+| 5 | Plan     | `@story-planner Plan US-001 from .copilot/stories/STORIES.md`                  | Yes (per story) |
+| 6 | Build    | `@senior-developer Build US-001 from .copilot/stories/US-001-PLAN.md`          | Yes (per story) |
+| 7 | Review   | `/code-review Review src/api/ and src/services/...`                            | Yes          |
+| 8 | Ship     | `@close-story US-001` then `@release-manager Set up GitHub Actions CI/CD...`   | Yes          |
+
+> **Key takeaway**: You never copy-paste output between sessions. Agents write files (Project Bible, specs, contracts, stories, plans, code). The next agent reads those files. The file system is the handoff mechanism.
 
 ---
 
@@ -182,22 +208,22 @@ Then re-review in another new session.
 
 > **Goal**: Understand what exists (or what you want to build) before touching code.
 >
-> **Running example**: This is where we ran `/greenfield-interview` for the task tracker app. Output: `.copilot/context/PROJECT_CONTEXT.md`.
+> **Running example**: This is where we ran `@greenfield-interview` for the task tracker app. Output: `.copilot/context/PROJECT_CONTEXT.md`.
 
-### `/greenfield-interview`  -  Start a New Project
+### `@greenfield-interview`  -  Start a New Project
 
 The agent interviews you one question at a time to produce a full Project Bible.
 
 ```text
-/greenfield-interview I want to build a customer feedback analytics platform
+@greenfield-interview I want to build a customer feedback analytics platform
 ```
 
 ```text
-/greenfield-interview We need an internal tool for employees to submit and track IT support requests
+@greenfield-interview We need an internal tool for employees to submit and track IT support requests
 ```
 
 ```text
-/greenfield-interview I'm building a multi-tenant SaaS API for invoice processing with Stripe integration
+@greenfield-interview I'm building a multi-tenant SaaS API for invoice processing with Stripe integration
 ```
 
 **What happens**: 6-phase interview (purpose, users, workflows, constraints, tech stack, open questions). Produces `.copilot/context/PROJECT_CONTEXT.md`.
@@ -206,20 +232,20 @@ The agent interviews you one question at a time to produce a full Project Bible.
 
 ---
 
-### `/brownfield-discovery`  -  Map an Existing Codebase
+### `@brownfield-discovery`  -  Map an Existing Codebase
 
 Use when you inherited a project, joined a team, or have zero documentation.
 
 ```text
-/brownfield-discovery Map the codebase at src/ - I inherited this and have no docs
+@brownfield-discovery Map the codebase at src/ - I inherited this and have no docs
 ```
 
 ```text
-/brownfield-discovery I just joined this team. Walk me through the project structure, entry points, and key dependencies
+@brownfield-discovery I just joined this team. Walk me through the project structure, entry points, and key dependencies
 ```
 
 ```text
-/brownfield-discovery We have a legacy Flask app in backend/. Map the API routes, database models, and config patterns
+@brownfield-discovery We have a legacy Flask app in backend/. Map the API routes, database models, and config patterns
 ```
 
 **What happens**: Explores 10 layers (entry points, dependencies, config, domain model, data flows, conventions). Produces a Project Bible tagged `[CONFIRMED]`, `[INFERRED]`, or `[UNKNOWN]`.
@@ -304,7 +330,7 @@ The Architect challenges scope, asks clarifying questions, then produces a full 
 
 **What happens**: Phase 0 Scope Challenge (REDUCTION / HOLD / EXPANSION), 5 pre-design questions, then a `SPEC.md` with module boundaries, API contracts, error handling, and acceptance scenarios.
 
-**Next step**: `/sprint-contract` to lock acceptance criteria, then hand the spec to a build agent.
+**Next step**: `/sprint-contract` to lock acceptance criteria. Then choose your path at Gate 0: `@story-master` for the Plan Phase, or hand the spec directly to a build agent.
 
 ---
 
@@ -354,11 +380,89 @@ Use after `/design` and before implementation. Creates a testable contract betwe
 
 ---
 
-## Phase 3: Build
+## Phase 2b: Plan (Optional)
+
+> **Goal**: Decompose the spec into a story backlog, plan each story atomically, and track progress with a structured artifact trail. Skip this phase for small, self-contained specs (single developer, < 3 stories, no parallel teams).
+>
+> **When to use it**: The spec has multiple independent stories, parallel teams will build different modules, or you want fine-grained progress tracking and per-story verification before shipping.
+>
+> **Gate 0**: After Design, you decide. `@story-master` to enter the Plan Phase. Or hand the spec directly to a build agent.
+
+### `@story-master`  -  Decompose a Spec into a Story Backlog
+
+Reads the spec, groups work into user stories, assigns them to delivery waves, and writes `STORIES.md`.
+
+```text
+@story-master Decompose .copilot/specs/TASK-TRACKER-API-SPEC.md into user stories
+```
+
+```text
+@story-master Break the auth and notification modules from the spec into stories - we have two developers working in parallel
+```
+
+```text
+@story-master Create a story backlog from .copilot/specs/DATA-PIPELINE-SPEC.md, group into two waves: Bronze-Silver first, Silver-Gold second
+```
+
+**What happens**: Reads the spec and Project Bible, creates user stories with acceptance criteria, groups them into delivery waves, writes `.copilot/stories/STORIES.md`. Runs `verify_stories.py` before declaring done.
+
+**Gate 1 (human)**: Review `STORIES.md`. Approve wave structure and story scope before continuing.
+
+**Next step**: `@story-planner` for each story in Wave 1.
+
+---
+
+### `@story-planner`  -  Plan a Single Story
+
+Takes one approved story and produces an atomic implementation plan plus a validation checklist.
+
+```text
+@story-planner Plan US-001 from .copilot/stories/STORIES.md
+```
+
+```text
+@story-planner Create an implementation plan for US-003 - the JWT auth story. Spec is at .copilot/specs/AUTH-SPEC.md
+```
+
+```text
+@story-planner Plan US-007 (CSV upload pipeline). Include data quality checks and rollback steps.
+```
+
+**What happens**: Explores the codebase for affected modules, produces `US-{id}-PLAN.md` (atomic implementation steps) and `US-{id}-VALIDATION.md` (acceptance checklist). Runs `verify_plan.py` and `verify_validation.py` before declaring done.
+
+**Gate 2 (human)**: Review the plan. Approve before handing to build.
+
+**Next step**: `@senior-developer` (or specialist) with the plan file as input.
+
+---
+
+### `@close-story`  -  Verify and Stamp a Story Done
+
+After a story is built and reviewed, close-story validates all acceptance criteria and stamps the `STORIES.md` row as complete.
+
+```text
+@close-story US-001
+```
+
+```text
+@close-story US-003 - confirm the JWT auth story is complete. Code is in src/auth/.
+```
+
+```text
+@close-story US-007 and update STORIES.md with the completion date
+```
+
+**What happens**: Reads `US-{id}-VALIDATION.md`, checks each acceptance criterion against the code and tests, stamps the STORIES.md row (`✅ Done`), and flags any unmet criteria. Will not stamp done if criteria are unmet.
+
+**Next step**: Once all stories in a wave are stamped, `@release-manager` for ship.
+
+---
 
 > **Goal**: Write the code. Each agent is a specialist. Pick the one that matches your task.
 >
 > **Running example**: New chat session. We pointed `@senior-developer` at the spec and contract files. The agent read both and implemented the task tracker API with tests.
+>
+> **Plan Phase path**: If you ran `@story-planner`, point the build agent at `US-{id}-PLAN.md` instead of the spec directly. The plan file is the sole context anchor for that story's build session.
 
 ### `@senior-developer`  -  General Features, Bug Fixes, Refactoring
 
@@ -470,12 +574,12 @@ Skips the full pipeline. Use for single-file changes under 20 lines with no arch
 
 ---
 
-### `/debug-detective`  -  Debug Failures and Errors
+### `@debug-detective`  -  Debug Failures and Errors
 
 Use when something is broken and you don't know why. Always paste the actual error output.
 
 ```text
-/debug-detective The API returns 500 on POST /api/orders - here's the stack trace:
+@debug-detective The API returns 500 on POST /api/orders - here's the stack trace:
 Traceback (most recent call last):
   File "src/api/routes/orders.py", line 45, in create_order
     order = OrderService.create(payload)
@@ -485,15 +589,15 @@ sqlalchemy.exc.IntegrityError: UNIQUE constraint failed: orders.reference_id
 ```
 
 ```text
-/debug-detective The Spark job fails after 20 minutes with OOM on the executor nodes. Job config: 4 executors, 8GB each. Input: 50GB parquet from S3
+@debug-detective The Spark job fails after 20 minutes with OOM on the executor nodes. Job config: 4 executors, 8GB each. Input: 50GB parquet from S3
 ```
 
 ```text
-/debug-detective CI pipeline passes locally but fails in GitHub Actions with "Module not found: src.utils.helpers". Here's the Actions log: [paste log]
+@debug-detective CI pipeline passes locally but fails in GitHub Actions with "Module not found: src.utils.helpers". Here's the Actions log: [paste log]
 ```
 
 ```text
-/debug-detective Users report the dashboard loads in 15+ seconds. It was under 2 seconds last week. Nothing was deployed since then
+@debug-detective Users report the dashboard loads in 15+ seconds. It was under 2 seconds last week. Nothing was deployed since then
 ```
 
 **What happens**: Systematic investigation: observe symptom, form 2-3 ranked hypotheses, test against evidence, confirm root cause, propose minimal fix. Never guesses without evidence.
@@ -677,6 +781,9 @@ Use after decisions are made, post-mortems are written, or research is completed
 | `greenfield-interview` | Discover | Interview for new projects                 | No             |
 | `brownfield-discovery` | Discover | Map existing codebases                     | No             |
 | `architect`            | Design   | System design and specifications           | No             |
+| `story-master`         | Plan     | Decompose spec into story backlog          | No             |
+| `story-planner`        | Plan     | Per-story implementation plan + validation | No             |
+| `close-story`          | Plan/Ship| Verify acceptance criteria, stamp done     | No             |
 | `senior-developer`     | Build    | Features, bug fixes, refactoring           | Yes            |
 | `data-engineer`        | Build    | PySpark, Delta Lake, dbt, Airflow          | Yes            |
 | `ai-engineer`          | Build    | RAG, LLM agents, embeddings, Azure OpenAI  | Yes            |
@@ -711,20 +818,22 @@ Use after decisions are made, post-mortems are written, or research is completed
 
 - `@senior-developer` Add retry logic to `src/services/api_client.py` for HTTP 429 responses, max 3 retries with exponential backoff
 - `/design` Webhook system for order status updates, must support at least 1000 events/sec, retry failed deliveries for 24h
-- `/debug-detective` Memory leak in the worker process, RSS grows 50MB/hour, here's the memory profile: [paste]
+- `@debug-detective` Memory leak in the worker process, RSS grows 50MB/hour, here's the memory profile: [paste]
 
 ---
 
 ## Tips for New Users
 
-1. **Start with context.** No Project Bible? Run `/greenfield-interview` or `/brownfield-discovery` first. Everything works better with context.
+1. **Start with context.** No Project Bible? Run `@greenfield-interview` or `@brownfield-discovery` first. Everything works better with context.
 2. **Spec before code.** Use `/design` before calling build agents for non-trivial work. This saves more time than it costs.
-3. **Review before ship.** Use `/code-review` before merging. The Guardian catches things you miss when you're deep in implementation.
-4. **Small fixes skip the pipeline.** Use `/quick-fix` for typos, config tweaks, and one-line fixes. No need for the full ceremony.
-5. **Paste errors, not descriptions.** "It doesn't work" is not helpful. Paste the actual stack trace, error log, or screenshot.
-6. **One agent, one job.** Don't ask the Architect to write code. Don't ask the Developer to review code. Each agent is a specialist.
-7. **Give context, get quality.** The more you tell the agent (file paths, error messages, constraints, business rules), the better the output.
-8. **Chain agents, don't overload one.** A feature flow looks like: `/design` → `/sprint-contract` → `@senior-developer` → `/code-review` → `@release-manager`. Each step feeds the next.
-9. **New chat per phase.** Start a fresh chat session for each pipeline stage. Agents work best with a clean context. Long conversations accumulate noise and degrade quality.
+3. **Consider the Plan Phase for larger specs.** If your spec has 3+ stories or parallel developers, run `@story-master` → `@story-planner` before building. Each story gets its own focused build session with a clean plan file as context.
+4. **Review before ship.** Use `/code-review` before merging. The Guardian catches things you miss when you're deep in implementation.
+5. **Close stories before shipping.** If you used the Plan Phase, run `@close-story` for each story before `@release-manager`. It validates acceptance criteria and stamps the backlog.
+6. **Small fixes skip the pipeline.** Use `/quick-fix` for typos, config tweaks, and one-line fixes. No need for the full ceremony.
+7. **Paste errors, not descriptions.** "It doesn't work" is not helpful. Paste the actual stack trace, error log, or screenshot.
+8. **One agent, one job.** Don't ask the Architect to write code. Don't ask the Developer to review code. Each agent is a specialist.
+9. **Give context, get quality.** The more you tell the agent (file paths, error messages, constraints, business rules), the better the output.
+10. **Chain agents, don't overload one.** A feature flow looks like: `/design` → `/sprint-contract` → (optional: `@story-master` → `@story-planner`) → `@senior-developer` → `/code-review` → `@release-manager`. Each step feeds the next.
+11. **New chat per phase.** Start a fresh chat session for each pipeline stage. Agents work best with a clean context. Long conversations accumulate noise and degrade quality.
 
 

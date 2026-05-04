@@ -3,16 +3,16 @@ name: ops
 description: "CI/CD pipelines, GitHub Actions workflows, Docker configurations, deployment automation, and release management patterns. Use when building CI/CD, writing GitHub Actions, creating Docker configs, automating deployments, managing releases, or setting up infrastructure-as-code. DO NOT USE FOR: application code implementation (use implementer), system architecture (use architect), security auditing (use guardian), or data pipeline orchestration like Airflow DAGs (use data-engineering)."
 argument-hint: "[CI/CD or deployment task]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Ops Skill - CI/CD, Deployment & Automation
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Tiered: core (~140 lines) + on-demand references
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~140 lines) + on-demand references
 
 Unified reference for operational automation. For copy-ready templates (GitHub Actions, Docker, Terraform, release checklists), load the deep-dive reference.
 

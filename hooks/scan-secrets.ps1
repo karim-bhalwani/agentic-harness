@@ -1,4 +1,4 @@
-# Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 #
 # scan-secrets.ps1
 # Stop hook: scan all files modified in this session for leaked credentials.
@@ -9,8 +9,8 @@
 #
 # Env vars:
 #   SKIP_SECRETS_SCAN=true  - bypass entirely (emergency circuit breaker)
-#   SCAN_MODE=warn           - log findings without blocking (default)
-#   SCAN_MODE=block          - block agent from finishing when secrets detected
+#   SCAN_MODE=warn           - log findings without blocking
+#   SCAN_MODE=block          - block agent from finishing when secrets detected (default) (default)
 #
 # Lifecycle: fires on Stop event. Checks stop_hook_active to avoid infinite loops.
 # Requires git — skips gracefully if not in a git repository.
@@ -36,7 +36,7 @@ if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
     }
 }
 
-$mode = if ($env:SCAN_MODE) { $env:SCAN_MODE } else { 'warn' }
+$mode = if ($env:SCAN_MODE) { $env:SCAN_MODE } else { 'block' }
 
 # --- Require git ---
 $null = & git rev-parse --is-inside-work-tree 2>&1
@@ -53,7 +53,8 @@ $patterns = @(
     @{ Name = 'AZURE_CLIENT_SECRET'; Severity = 'critical'; Regex = 'azure[_\-]?client[_\-]?secret\s*[:=]\s*[''"]?[A-Za-z0-9_~.\-]{34,}' }
     @{ Name = 'GITHUB_PAT'; Severity = 'critical'; Regex = 'ghp_[0-9A-Za-z]{36}' }
     @{ Name = 'GITHUB_FINE_GRAINED'; Severity = 'critical'; Regex = 'github_pat_[0-9A-Za-z_]{82}' }
-    @{ Name = 'PRIVATE_KEY'; Severity = 'critical'; Regex = '\-\-\-\-\-BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY\-\-\-\-\-' }
+    @{ Name = 'OPENAI_API_KEY'; Severity = 'critical'; Regex = 'sk-[A-Za-z0-9]{20,}' }
+    @{ Name = 'PRIVATE_KEY'; Severity = 'critical'; Regex = '\-\-\-\-\-BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY\-\-\-\-\-' }
     @{ Name = 'STRIPE_SECRET'; Severity = 'critical'; Regex = 'sk_live_[0-9A-Za-z]{24,}' }
     @{ Name = 'SLACK_TOKEN'; Severity = 'high'; Regex = 'xox[baprs]-[0-9]{10,}-[0-9A-Za-z\-]+' }
     @{ Name = 'NPM_TOKEN'; Severity = 'high'; Regex = 'npm_[0-9A-Za-z]{36}' }

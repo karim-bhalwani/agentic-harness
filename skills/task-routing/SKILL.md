@@ -4,17 +4,17 @@ description: "Multi-agent delegation protocol with sequentiality, decomposabilit
 user-invocable: false
 disable-model-invocation: true
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
-  source: "Extracted from copilot-instruction.instructions.md §9 to reduce auto-loaded context"
+  version: "8.0"
+  updated: "2026-05-03"
+  source: "Extracted from copilot-instruction.instructions.md Section 9 to reduce auto-loaded context"
   dependencies: []
 ---
 
 # Task Routing Protocol
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Source: [arXiv:2512.08296v2](https://arxiv.org/abs/2512.08296)
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 ## When to Load This Skill
 
@@ -102,12 +102,57 @@ These patterns are proven to degrade agent system performance. Avoid them.
 | **Auto-retry without state transition**                   | Compounds errors in a loop                     | FSM with explicit recovery state and 3-strike limit    |
 | **Unbounded context forwarding**                          | Dumps irrelevant history into downstream agent | Compiled context: only pass decisions, schemas, errors |
 
-## Context Isolation Principle
+## Context Isolation
 
-When delegating to any subagent, construct what they need - do not forward session history:
-
-- **Pass**: the task spec, relevant file paths, acceptance criteria, and any decisions already made
-- **Never pass**: the full conversation history, your reasoning steps, or context unrelated to the task
-- **Why**: context pollution causes the subagent to reason about your session instead of their task; it also wastes your own context budget on forwarding instead of coordination
+See `skills/subagent-execution/SKILL.md` Section Context Isolation Principle for the canonical rules. Summary: pass the task spec, file paths, acceptance criteria, and prior decisions only, never the full session history or unrelated reasoning.
 
 For structured multi-task execution with two-stage review, load `skills/subagent-execution/SKILL.md`.
+
+## PLAN-phase Agent Routing (v8.0)
+
+The Plan Phase introduces three new agents and one new prompt that overlap superficially with existing pipeline entries. Use this section to disambiguate.
+
+### story-planner vs feature-plan.prompt.md
+
+- `story-planner.agent.md` - A `SPEC.md` and `STORIES.md` exist; a story ID is supplied (or read from `.active-story` / `STORY_ID`). Output: `US-{id}-PLAN.md` + `US-{id}-VALIDATION.md` with plan-checker history. **DO NOT USE FOR:** ad-hoc one-off tasks with no SPEC.
+- `feature-plan.prompt.md` - No SPEC, no STORIES.md, no story ID. Ad-hoc fast-lane planning for one-off tasks outside the pipeline. **DO NOT USE FOR:** stories that are part of an approved backlog (use story-planner).
+
+### story-master vs architect
+
+- `architect.agent.md` - Produces `SPEC.md`. Designs module boundaries, API contracts, data models. Decides `Scope: HOLD/EXPANSION/REDUCTION`. **DO NOT USE FOR:** breaking an approved SPEC into stories.
+- `story-master.agent.md` - Consumes an approved `SPEC.md` and produces `STORIES.md` with dependency graph, waves, and risk tags. Does not invent requirements; every story traces to a SPEC section. **DO NOT USE FOR:** redesigning the SPEC (that is back-pressure to architect via the `Hand off to Architect (Story Scope Problem)` handoff in story-planner).
+
+### close-story vs release-manager
+
+- `release-manager.agent.md` - Owns the path from approved code to production: CI/CD, deployment, changelogs, rollback runbooks. **DO NOT USE FOR:** stamping a single story's backlog row to done.
+- `close-story.agent.md` - Verify-and-stamp closer for one shipped story. Checks plan tasks ticked, VALIDATION.md present, report present with PASS, then updates STORIES.md row under file lock and advances `.active-story`. Does NOT author the report and does NOT generate release notes. **DO NOT USE FOR:** writing the implementation report (BUILD agent owns that) or releasing software (release-manager owns that).
+
+### Gate 0 routing decision
+
+The Architect now presents four handoff buttons after writing `SPEC.md`. Three are `Build Direct` (Senior Dev / Data Eng / AI Eng) which read SPEC.md directly with no story decomposition; one is `Approve: Plan Phase` which routes to story-master. The Architect's recommendation guidance table (small `Scope: HOLD` -> Build Direct, multi-deliverable or `Scope: EXPANSION/REDUCTION` -> Plan Phase) is advisory; the human's click is the final decision. The Architect records the decision in `SESSION_STATE.md`.
+
+### Data Analyst routing in v8.0
+
+The Architect handoff to `data-analyst` was removed (RD-1). Data Analyst remains a utility agent reachable via four retained paths: `@data-analyst` mention, `/sql-query` slash command, Guardian rework handoff for SQL-heavy code, and peer delegation from Senior Developer / Data Engineer per the 6-check protocol above. **DO NOT** invent an Architect-to-Data-Analyst handoff in v8.0 designs.
+
+### Analyst story close path (Owner: data-analyst in STORIES.md)
+
+When story-master tags a story `Type: Technical, Owner: data-analyst`, the story bypasses the full BUILD-phase machinery (no story-planner, no PLAN.md, no VALIDATION.md). It is NOT an unverified path -- it has a defined four-step close sequence:
+
+1. Human invokes `@data-analyst` with the story context.
+2. `@data-analyst` writes the SQL deliverable.
+3. `@guardian` reviews the SQL (injection risks, performance, output correctness) and writes approval to `.copilot/artifacts/review-report.md`. Use the Guardian SQL rework handoff for this step.
+4. Human invokes `close-story`. It detects `Owner: data-analyst`, skips PLAN.md and VALIDATION.md checks, verifies the Guardian review report is present and PASS-only, then stamps `STORIES.md` under file lock.
+
+Summary: Guardian review is mandatory for analyst stories. The Guardian review report (`review-report.md`) is the quality gate that replaces the implementation report + VALIDATION.md on this path. `close-story` enforces this gate before stamping.
+
+### Analyst story close path (Owner: data-analyst in STORIES.md)
+
+When story-master tags a story `Type: Technical, Owner: data-analyst`, the story bypasses the full BUILD-phase machinery (no story-planner, no PLAN.md, no VALIDATION.md). It is NOT an unverified path -- it has a defined four-step close sequence:
+
+1. Human invokes `@data-analyst` with the story context.
+2. `@data-analyst` writes the SQL deliverable.
+3. `@guardian` reviews the SQL (injection risks, performance, output correctness) and writes approval to `.copilot/artifacts/review-report.md`. Use the Guardian SQL rework handoff for this step.
+4. Human invokes `close-story`. It detects `Owner: data-analyst`, skips PLAN.md and VALIDATION.md checks, verifies the Guardian review report is present and PASS-only, then stamps `STORIES.md` under file lock.
+
+Summary: Guardian review is mandatory for analyst stories. The Guardian review report (`review-report.md`) is the quality gate that replaces the implementation report + VALIDATION.md on this path. `close-story` enforces this gate before stamping.

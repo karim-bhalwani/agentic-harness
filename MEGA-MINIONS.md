@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**12 Agents • 22 Skills • 14 Prompts • 8 Hooks • Multi-Phase Pipeline**
+**15 Agents • 24 Skills • 13 Prompts • 11 Hooks • 6-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -11,14 +11,14 @@
 ```
 
 **Architect:** Karim Bhalwani  
-**Version:** 7.0 | 12th April 2026  
+**Version:** 8.0 | 3rd May 2026  
 **Scope:** Data Engineering, GenAI/LLM, ML Engineering
 
 ---
 
 ## Welcome to the Team
 
-The **Mega Minions** are a collection of 12 custom AI agents, 22 specialized skills, 14 parameterized prompt files, and 8 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
+The **Mega Minions** are a collection of 15 custom AI agents, 24 specialized skills, 13 parameterized prompt files, and 11 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
 
 Think of them as a squad of specialists, not a single jack-of-all-trades. The Architect draws the blueprints. The Senior Developer writes the code. The Guardian reviews it. The Release Manager ships it. Each one stays in their lane and passes the baton when it is time.
 
@@ -40,10 +40,10 @@ Think of them as a squad of specialists, not a single jack-of-all-trades. The Ar
 
 ## The Architecture at a Glance
 
-Every Mega Minion knows its place. Work flows from discovery through design, implementation, review, and release, a natural pipeline where each agent hands off to the next.
+Every Mega Minion knows its place. Work flows from discovery through design, an optional plan phase, implementation, review, and release, a natural 6-phase pipeline where each agent hands off to the next.
 
 ```text
-                         THE MEGA MINIONS PIPELINE
+                         THE MEGA MINIONS PIPELINE (v8.0)
   ════════════════════════════════════════════════════════════
 
   ┌─────────────────────── DISCOVERY ───────────────────────┐
@@ -63,23 +63,33 @@ Every Mega Minion knows its place. Work flows from discovery through design, imp
   │                 ┌───────────┐                          │
   │                 │ Architect │                          │
   │                 └─────┬─────┘                          │
-  │                       │ specs                          │
-  │         ┌─────────────┼─────────────┐                  │
-  └─────────┼─────────────┼─────────────┼──────────────────┘
-            ▼             ▼             ▼
-  ┌─────────────────── BUILD ──────────────────────────────┐
+  │                       │ SPEC.md                        │
+  └───────────────────────┼────────────────────────────────┘
+                          ▼
+  ╔══════════════ GATE 0 - HUMAN ══════════════════════════╗
+  ║  Review SPEC.md. Choose your path:                     ║
+  ║  [ Build Direct: Senior Dev / Data Eng / AI Eng ]      ║
+  ║  [ Plan Phase:   story-master ]                        ║
+  ╚══════════╤════════════════════════╤════════════════════╝
+             │ Plan Phase             │ Build Direct
+             ▼                        ▼
+  ┌───────── PLAN ──────────┐  ┌───── BUILD (direct) ───────┐
+  │  story-master           │  │  Input:  SPEC.md           │
+  │    - STORIES.md         │  │  Agents: chosen specialist │
+  │    Gate 1: human review │  └─────────────┬──────────────┘
+  │  story-planner          │                │
+  │    - US-{id}-PLAN.md    │                │
+  │    Gate 2: human review │                │
+  └──────────┬──────────────┘                │
+             ▼  (parallel within wave)       │
+  ┌─────────────────── BUILD ────────────────▼─────────────┐
   │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
   │  │ Senior   │  │  Data    │  │   AI     │              │
   │  │Developer │  │ Engineer │  │ Engineer │              │
   │  └────┬─────┘  └────┬─────┘  └────┬─────┘              │
-  │       │             │             │                    │
-  │       │    ┌────────┴──────────┐  │                    │
-  │       │    │    Data Analyst   │  │                    │
-  │       │    │   (NL-to-SQL)     │  │                    │
-  │       │    └───────────────────┘  │                    │
-  │       └──────────────┬────────────┘                    │
-  └──────────────────────┼─────────────────────────────────┘
-                         ▼
+  │       └─────────────┴─────────────┘                    │
+  └─────────────────────┼──────────────────────────────────┘
+                        ▼
   ┌─────────────────── REVIEW ─────────────────────────────┐
   │                 ┌───────────┐                          │
   │                 │ Guardian  │  ◄── read-only auditor   │
@@ -89,6 +99,8 @@ Every Mega Minion knows its place. Work flows from discovery through design, imp
   ┌─────────────────── SHIP ───────────────────────────────┐
   │              ┌────────────────┐                        │
   │              │Release Manager │                        │
+  │              │ Plan path:     │                        │
+  │              │  → close-story │                        │
   │              └────────────────┘                        │
   └────────────────────────────────────────────────────────┘
 
@@ -136,7 +148,52 @@ These two are always your **first call** on any project. They establish the Proj
 
 **When to call:** System design, API contracts, module boundaries, data modeling.  
 **What it does:** Takes the Project Bible and your requirements, then produces detailed specifications: module boundaries, API contracts, data flow diagrams, and interface definitions. Every module is designed as a replaceable black box. Starts with a **Phase 0 Scope Challenge** (REDUCTION / HOLD / EXPANSION) to right-size the design effort, and includes CEO/Product Review exercises for strategic features. Specs include an **Error & Rescue Map** that traces every failure mode to its user-visible consequence. No implementation begins until the spec is reviewed.  
-**Hands off to:** Senior Developer, Data Engineer, AI Engineer, or Data Analyst (depending on the domain)
+**Hands off to:** Senior Developer (Build Direct), Data Engineer (Build Direct), AI Engineer (Build Direct), or story-master (Plan Phase) - the human chooses the path at Gate 0 after reviewing SPEC.md
+
+---
+
+### The PLAN Crew
+
+These three agents form the optional PLAN phase, activated when the human chooses **Plan Phase** at Gate 0. They sit between DESIGN and BUILD and activate only on complex specs that benefit from a structured backlog before any code is written. The Build Direct path from v7.0 is unchanged: if the human chooses Build Direct at Gate 0, these agents are never invoked.
+
+---
+
+#### Story Master
+
+> _"Give me the spec. I will map every deliverable into a story, surface the dependencies, and tell your team which work is safe to start in parallel."_
+
+**When to call:** Human selects `[ Plan Phase ]` at Gate 0 after reviewing SPEC.md. Not invoked automatically by the Architect.  
+**What it does:** Reads the approved `SPEC.md`, decomposes it into a structured user story backlog (`STORIES.md`) with dependency graph, parallel-execution waves, security flags, holdout flags, and risk tagging. Runs mandatory pre-write checks (DAG validity, SDLC coverage, independent-merge verification). Stops at Gate 1 for human review - does not auto-proceed to story-planner.  
+**Inputs:** `SPEC.md`, `PROJECT_CONTEXT.md`  
+**Outputs:** `.copilot/stories/STORIES.md`, `.copilot/stories/.active-story`  
+**Hands off to:** Human (Gate 1 - no auto-handoff). Human then invokes story-planner with a chosen story ID.  
+**DO NOT USE FOR:** Writing per-story implementation plans (use story-planner), ad-hoc one-off tasks without a spec (use feature-plan), system design (use architect), code review (use guardian), or implementation (use senior-developer, data-engineer, or ai-engineer).
+
+---
+
+#### Story Planner
+
+> _"Give me a story and I will break it into atomic tasks, write GIVEN/WHEN/THEN acceptance criteria, list the patterns in this codebase to follow, and validate the plan before BUILD."_
+
+**When to call:** Human invokes story-planner at Gate 1. Defaults to the story ID in `.active-story`; explicit story ID argument or `STORY_ID` env var overrides the file.  
+**What it does:** Reads the story from `STORIES.md`, scans the live codebase for analogous patterns (via Explore subagent), extracts SPEC directives, writes GIVEN/WHEN/THEN acceptance criteria, decomposes into atomic tasks each with a single `Validate:` command, audits test infrastructure, and runs a plan-checker loop (separate judge, up to 3 iterations) before Gate 2. Does not proceed if blocking story dependencies are unfinished.  
+**Inputs:** `STORIES.md` (story row), referenced `SPEC.md` section, `PROJECT_CONTEXT.md`  
+**Outputs:** `.copilot/stories/US-{id}-PLAN.md`, `.copilot/stories/US-{id}-VALIDATION.md`  
+**Hands off to:** Senior Developer, Data Engineer, or AI Engineer (human clicks Gate 2 handoff button). Also hands off to Architect if a Risk: Spike story or spec conflict is discovered.  
+**DO NOT USE FOR:** Ad-hoc tasks with no spec (use feature-plan), backlog decomposition (use story-master), implementation (use senior-developer, data-engineer, or ai-engineer), or code review (use guardian).
+
+---
+
+#### Close Story
+
+> _"The story is done when every task is checked, the report is filed, and STORIES.md is stamped. I am the gate that confirms it."_
+
+**When to call:** Triggered by Release Manager's "Close Story" handoff button at the end of the SHIP phase on the Plan Phase path.  
+**What it does:** Reads `US-{id}-PLAN.md` and the BUILD agent's `US-{id}-report.md`. Verifies every task checkbox is checked and all validation results passed. If anything is incomplete, stops and presents a Resume Build handoff back to the appropriate BUILD agent. If everything is complete, stamps the `STORIES.md` row to `done`, updates `US-{id}-VALIDATION.md`, advances `.active-story` to the next story in the wave.  
+**Inputs:** `US-{id}-PLAN.md`, `US-{id}-report.md`, `US-{id}-VALIDATION.md`, `STORIES.md`  
+**Outputs:** Updated `STORIES.md` (status: done), updated `US-{id}-VALIDATION.md`  
+**Hands off to:** Senior Developer, Data Engineer, or AI Engineer (if incomplete tasks found); otherwise signals wave advancement.  
+**DO NOT USE FOR:** Writing implementation reports (BUILD agent owns that), code review (use guardian), release-note generation (use release-manager), or plan writing (use story-planner).
 
 ---
 
@@ -251,89 +308,59 @@ These agents work outside the main pipeline. Call them when you need them.
 Skills are the **silent workers behind the scenes**. They are not agents you talk to. They are knowledge packs that any Mega Minion can pick up and use when the task calls for it. Think of them as reference manuals, checklists, and best-practice guides that agents read before starting work.
 
 ```text
-  ┌──────────────────────────────────────────────────────────┐
-  │                    SKILLS TOOLKIT                        │
-  │                                                          │
-  │  Any Mega Minion can grab what they need:                │
-  │                                                          │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │ architect  │ │brainstorm- │ │  concise-planning     │ │
-  │  │            │ │  ing       │ │                       │ │
-  │  │ Blueprints │ │ Ideas to   │ │ Task checklists       │ │
-  │  │ & specs    │ │ designs    │ │ & atomic plans        │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  │                                                          │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │  context-  │ │   data-    │ │  data-engineering     │ │
-  │  │  engineer  │ │  analyst   │ │                       │ │
-  │  │ Project    │ │ NL-to-SQL  │ │ PySpark, dbt,         │ │
-  │  │ Bible ops  │ │ & T-SQL    │ │ Medallion, Delta      │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  │                                                          │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │  genai-    │ │  guardian  │ │  implementer          │ │
-  │  │  security  │ │            │ │                       │ │
-  │  │ OWASP LLM  │ │ QA & sec   │ │ TDD & clean           │ │
-  │  │ & Agentic  │ │ checklists │ │ code patterns         │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  │                                                          │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │  data-     │ │  excali-   │ │  llm-app-patterns     │ │
-  │  │deprecation-│ │  draw-     │ │                       │ │
-  │  │  analysis  │ │  diagram   │ │ RAG, agents           │ │
-  │  │ Dead data  │ │ Visual     │ │ & LLMOps              │ │
-  │  │ detection  │ │ diagrams   │ │                       │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  │                                                          │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │    ops     │ │  prompt-   │ │                       │ │
-  │  │            │ │  library   │ │                       │ │
-  │  │ CI/CD,     │ │ Prompt     │ │                       │ │
-  │  │ Docker, IaC│ │ templates  │ │                       │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  │                                                          │
-  │  BACKGROUND SKILLS (auto-loaded, you never see them):    │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │  thinker   │ │ verificat- │ │  context-engineer     │ │
-  │  │            │ │ ion-before │ │                       │ │
-  │  │ Structured │ │-completion │ │ Project Bible         │ │
-  │  │ reasoning  │ │ Proof gate │ │ generation            │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  │  ┌────────────┐ ┌────────────┐ ┌───────────────────────┐ │
-  │  │  holdout-  │ │ security-  │ │  task-routing         │ │
-  │  │ validation │ │ boundaries │ │                       │ │
-  │  │ Test separ-│ │ Injection  │ │ Delegation            │ │
-  │  │ ation gate │ │ defense    │ │ protocol              │ │
-  │  └────────────┘ └────────────┘ └───────────────────────┘ │
-  └──────────────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                    SKILLS TOOLKIT (24 SKILLS)                        │
+  │                                                                      │
+  │  Any Mega Minion can grab what they need:                            │
+  │                                                                      │
+  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │
+  │  │ architect  │ │brainstorm- │ │ concise-   │ │ context-engineer   │ │
+  │  │            │ │  ing       │ │ planning   │ │                    │ │
+  │  │ Blueprints │ │ Ideas to   │ │ Task       │ │ Project Bible      │ │
+  │  │ & specs    │ │ designs    │ │ checklists │ │ operations & state │ │
+  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
+  │                                                                      │
+  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │
+  │  │  data-     │ │   data-    │ │  data-     │ │  excalidraw-       │ │
+  │  │  analyst   │ │deprecation-│ │ engineering│ │  diagram           │ │
+  │  │ NL-to-SQL  │ │ analysis   │ │            │ │                    │ │
+  │  │ & T-SQL    │ │ Dead data  │ │ PySpark,   │ │ Visual diagrams    │ │
+  │  │            │ │ detection  │ │ dbt, Delta │ │ & architecture     │ │
+  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
+  │                                                                      │
+  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │
+  │  │  genai-    │ │  guardian  │ │implementer │ │  llm-app-patterns  │ │
+  │  │  security  │ │            │ │            │ │                    │ │
+  │  │ OWASP LLM  │ │ QA & sec   │ │ TDD &      │ │ RAG, agents        │ │
+  │  │ & Agentic  │ │ checklists │ │ clean code │ │ & LLMOps           │ │
+  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
+  │                                                                      │
+  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │
+  │  │  llm-mem   │ │   ops      │ │ prompt-    │ │ security-          │ │
+  │  │            │ │            │ │  library   │ │ boundaries         │ │
+  │  │ Knowledge  │ │ CI/CD,     │ │ Prompt     │ │ Injection defense  │ │
+  │  │ compilation│ │ Docker,IaC │ │ templates  │ │ & trust boundaries │ │
+  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
+  │                                                                      │
+  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │
+  │  │subagent-   │ │systematic- │ │ task-      │ │ thinker            │ │
+  │  │execution   │ │ debugging  │ │ routing    │ │                    │ │
+  │  │            │ │            │ │            │ │ Structured         │ │
+  │  │ Multi-task │ │ Root cause │ │ Delegation │ │ reasoning & proof  │ │
+  │  │ orchestrat.│ │ analysis   │ │ protocol   │ │ scaffolds          │ │
+  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
+  │                                                                      │
+  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │
+  │  │verification│ │holdout-    │ │ story-     │ │ story-planner      │ │
+  │  │-before-    │ │ validation │ │ master     │ │                    │ │
+  │  │completion  │ │            │ │            │ │ Per-story atomic   │ │
+  │  │ Evidence   │ │ Test separ-│ │ PLAN phase │ │ planning & gate 2  │ │
+  │  │ proof gate │ │ ation gate │ │ backlog    │ │                    │ │
+  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
+  │                                                                      │
+  │  All 24 skills auto-load on demand. You never invoke them manually.  │
+  └──────────────────────────────────────────────────────────────────────┘
 ```
-
-### Quick Skill Reference
-
-| Skill                              | What It Gives Any Agent                                                             |
-| ---------------------------------- | ----------------------------------------------------------------------------------- |
-| **architect**                      | Black-box design, spec formats, Scope Challenge modes, Error & Rescue Maps          |
-| **brainstorming**                  | Structured idea exploration, approach comparison, requirement validation            |
-| **concise-planning**               | Atomic task checklists with clear done-criteria for any multi-step work             |
-| **context-engineer**               | Project Bible generation, tiered context loading, decision tracking                 |
-| **data-analyst**                   | NL-to-SQL patterns, Data Vault querying cheatsheets, schema exploration             |
-| **data-engineering**               | Medallion architecture, PySpark optimization, dbt patterns, data quality            |
-| **data-deprecation-analysis**      | Dead data detection, legacy pattern recognition, data deprecation planning          |
-| **excalidraw-diagram**             | Visual diagram generation (.excalidraw JSON), architecture and flow illustrations   |
-| **genai-security**                 | OWASP Top 10 for LLMs and Agentic apps, prompt injection defense, red teaming       |
-| **guardian**                       | Three-phase review checklist, security audit patterns, testing pyramid, perf profiling |
-| **implementer**                    | TDD workflows, clean code principles, Python type safety, refactoring patterns      |
-| **llm-app-patterns**               | RAG pipeline designs, agent architectures, prompt engineering, LLMOps observability |
-| **llm-mem**                       | Knowledge compilation: ingest sources into mem, query accumulated knowledge, lint health |
-| **ops**                            | GitHub Actions templates, Docker patterns, deployment automation, IaC               |
-| **prompt-library**                 | Curated prompt templates, role-based patterns, analysis frameworks                  |
-| **subagent-execution**             | Subagent orchestration, context isolation, two-stage review, status protocol        |
-| **systematic-debugging**           | Evidence-first debugging, 4-phase methodology, rationalization resistance           |
-| **thinker**                        | Cognitive scaffolding (UNDERSTAND, EXTRACT, HIGHLIGHT, APPLY, VALIDATE)             |
-| **holdout-validation**             | Holdout scenario authorship, test separation discipline, intent-level validation    |
-| **security-boundaries**            | Prompt injection defense, trust boundary rules, agent-specific security             |
-| **task-routing**                   | Multi-agent delegation protocol, 6-check routing, coordination anti-patterns        |
-| **verification-before-completion** | Pre-completion evidence gate: run it, prove it, then claim it                       |
 
 ### How Skills Work (Behind the Scenes)
 
@@ -356,17 +383,20 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
   Type /design          → Architect produces a full spec for architectural changes
   Type /feature-plan    → Architect (using concise-planning skill) produces an atomic checklist
   Type /sql-query       → Data Analyst writes optimized T-SQL
-  Type /debug-detective → Debug Detective hunts the root cause
-  Type /brownfield-disc → Brownfield Discovery maps your codebase
-  Type /greenfield-int  → Greenfield Interview captures your vision
   Type /doc-garden      → Guardian audits documentation freshness
   Type /quick-fix       → Fast lane for small, obvious fixes (no pipeline)
   Type /retrospective   → Architect runs pipeline retrospective and improvement cycle
   Type /sprint-contract → Pre-work negotiation between builder and Guardian
-  Type /mem-ingest     → Ingest a source into the project knowledge mem
-  Type /mem-query      → Query accumulated project mem knowledge
-  Type /mem-lint       → Health check the project mem
-  Type /pre-mortem     → Guardian analyzes code for fragility against future edits
+  Type /mem-ingest      → Ingest a source into the project knowledge mem
+  Type /mem-query       → Query accumulated project mem knowledge
+  Type /mem-lint        → Health check the project mem
+  Type /pre-mortem      → Guardian analyzes code for fragility against future edits
+  Type /start-here      → Quick start walkthrough for new users
+
+  Direct Agent Invocation (no slash command):
+  Type @brownfield-discovery  → Map your existing codebase
+  Type @greenfield-interview  → Capture vision for a new project
+  Type @debug-detective       → Hunt root causes of failures
 ```
 
 ### When to Use a Prompt File vs. Invoking an Agent Directly
@@ -437,103 +467,29 @@ Every AI model has a **context window**, a limited amount of text it can hold in
 - **Not sure when to delegate vs. do it yourself?** See agent handoff chains in [MEGA-MINIONS.md](MEGA-MINIONS.md) and the task-routing skill
 - **Want to give your project a living memory?** See [LLM-MEM-GUIDE.md](LLM-MEM-GUIDE.md)
 
-### The Prompt Engineering Behind It
+## Know Your Hooks
 
-Each Mega Minion's instructions are crafted using deliberate prompt engineering patterns:
+The hook harness (`hooks/`, 11 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
 
-| Pattern                   | How It Is Used                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------------- |
-| **Persona assignment**    | Each agent has a clear identity ("You are an expert...") that anchors its behavior       |
-| **Constraint definition** | Agents know what they do NOT do (Guardian never writes code, Architect never implements) |
-| **Workflow scaffolding**  | Step-by-step procedures prevent agents from skipping phases                              |
-| **Output formatting**     | Every agent starts responses with `## **Persona**: Action` for scannable output          |
-| **Delegation tables**     | Agents know exactly when to hand off and to whom, with token cost estimates              |
-| **Evidence gates**        | No agent can claim "done" without proving it with tool output                            |
-| **Convention mimicry**    | Agents study surrounding code before editing, matching your team's style                 |
-| **Safety-first priority** | Safety > Correctness > Brevity, baked into every agent's decision making                 |
+Copy the `hooks/` directory to `~/.copilot/hooks/` to activate them. They fire automatically on VS Code agent lifecycle events.
 
-### The Context Engineering Behind It
+| Hook | Event | What It Does |
+| ---- | ----- | ------------ |
+| `quality-gate.ps1` | `Stop` | Runs lint + typecheck before the agent declares done. Blocks completion if the project's quality commands fail. |
+| `scan-secrets.ps1` | `Stop` | Scans all staged files for credentials, API keys, and secret patterns. Blocks (or warns) before anything leaves the session. |
+| `block-destructive.ps1` | `PreToolUse` | Intercepts `run_in_terminal` calls and blocks dangerous commands: `rm -rf`, `Remove-Item -Recurse`, `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, and more. Allows temp-path bypasses and an allowlist escape hatch. |
+| `scan-user-prompt.ps1` | `PreToolUse` | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. |
+| `lint-on-write.ps1` | `PreToolUse` | Runs the project linter on any file the agent is about to write. Catches style and syntax errors before they land. |
+| `auto-format.ps1` | `PostToolUse` | Runs the project formatter on files the agent just wrote. Keeps diffs clean without agent involvement. |
+| `session-context.ps1` | `SessionStart` | Injects Project Bible path, active story, branch, last commit, Python version, and pipeline phase into the agent's startup context. |
+| `subagent-context.ps1` | `SubagentStart` | Passes project root, active story, and pipeline phase to each subagent at launch, so delegated agents start with the right context. |
+| `subagent-verify.ps1` | `SubagentStop` | After a subagent finishes, runs the relevant `verify_*.py` script to confirm expected artifacts (spec, story backlog, plan, review report, session state) actually landed and are not stubs. Blocks if verification fails. |
+| `pre-compact-save.ps1` | `PreCompact` | Writes `.copilot/state/SESSION_STATE.md` before VS Code compacts the conversation. Preserves enough context to resume the session. |
+| `block-holdout.ps1` | `PreToolUse` | Prevents implementation agents from reading `.copilot/holdout/` acceptance scenarios - the blind-evaluation layer stays blind until Guardian runs. |
 
-Context engineering is the discipline of **putting the right information in front of the AI at the right time**. The Mega Minions implement this through:
+**Circuit breakers**: every hook respects an escape hatch env var (e.g. `SKIP_DESTRUCTIVE_GUARD=true`, `SKIP_SUBAGENT_VERIFY=true`) for emergencies. Use them deliberately; do not leave them set.
 
-| Technique                   | Implementation                                                                                                         |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Project Bible**           | A single, structured document that captures project truth. Every agent reads it first.                                 |
-| **Tiered loading**          | Three tiers of context, loaded progressively based on task needs.                                                      |
-| **Subagent isolation**      | Delegated work runs in separate context windows. Main agent stays focused.                                             |
-| **Skill loading protocol**  | Domain knowledge loaded on demand, not upfront. Saves tokens for reasoning.                                            |
-| **Handoff context passing** | Each handoff includes a prompt that transfers only the relevant decisions and findings.                                |
-| **Token cost awareness**    | Delegation tables include estimated token costs to help agents make efficient decisions.                               |
-| **Background knowledge**    | Silent skills (`thinker`, `verification-before-completion`) inject quality standards without consuming user attention. |
-| **Holdout validation**      | Architect writes acceptance scenarios; implementation agents can't see them; Guardian evaluates against them.          |
-| **Intent contracts**        | Every agent defines outcome conditions, not just procedural steps. Accountability shifts from process to results.      |
-| **Self-measurement**        | Retrospectives and rework tracking surface specification quality trends and agent value over time.                     |
-
----
-
-## Quick Reference Card
-
-```text
-  ╔═══════════════════════════════════════════════════════════╗
-  ║              MEGA MINIONS QUICK REFERENCE                 ║
-  ╠═══════════════════════════════════════════════════════════╣
-  ║                                                           ║
-  ║  DISCOVERY                                                ║
-  ║    greenfield-interview ... New project? Start here.      ║
-  ║    brownfield-discovery ... Existing code? Map it first.  ║
-  ║                                                           ║
-  ║  DESIGN                                                   ║
-  ║    architect .............. Specs before code. Always.    ║
-  ║                                                           ║
-  ║  BUILD                                                    ║
-  ║    senior-developer ....... Features, bugs, refactoring   ║
-  ║    data-engineer .......... Pipelines, dbt, PySpark       ║
-  ║    ai-engineer ............ RAG, LLM agents, embeddings   ║
-  ║    data-analyst ........... English to SQL, Data Vault    ║
-  ║                                                           ║
-  ║  REVIEW                                                   ║
-  ║    guardian ............... Read-only audit & security    ║
-  ║                                                           ║
-  ║  SHIP                                                     ║
-  ║    release-manager ........ CI/CD, deploy, quality gates  ║
-  ║                                                           ║
-  ║  ON CALL                                                  ║
-  ║    debug-detective ........ Root cause analysis           ║
-  ║    prompt-builder ......... Create & improve prompts      ║
-  ║    researcher ............. Hidden fact-checker           ║
-  ║                                                           ║
-  ║  SKILLS (22 total, loaded on demand by any agent)         ║
-  ║    architect, brainstorming, concise-planning,            ║
-  ║    context-engineer, data-analyst,                        ║
-  ║    data-deprecation-analysis, data-engineering,           ║
-  ║    excalidraw-diagram, genai-security, guardian,          ║
-  ║    holdout-validation, implementer, llm-app-patterns,     ║
-  ║    llm-mem, ops, prompt-library, security-boundaries*,    ║
-  ║    subagent-execution, systematic-debugging,              ║
-  ║    task-routing*, thinker*, verification*                 ║
-  ║                                                           ║
-  ║    * = background skill (auto-loaded, invisible to you)   ║
-  ║                                                           ║
-  ║  HOOKS (8 total, copy hooks/ to ~/.copilot/hooks/)        ║
-  ║    quality-gate, scan-secrets ........... (Stop)          ║
-  ║    block-destructive, lint-on-write .. (PreToolUse)       ║
-  ║    auto-format ..................... (PostToolUse)        ║
-  ║    session-context ............... (SessionStart)         ║
-  ║    subagent-context ........... (SubagentStart)           ║
-  ║    pre-compact-save ............... (PreCompact)          ║
-  ║                                                           ║
-  ║  PROMPT FILES (14 slash commands)                         ║
-  ║    /code-review     /feature-plan    /sql-query           ║
-  ║    /debug-detective /brownfield-disc /greenfield-int      ║
-  ║    /doc-garden      /quick-fix       /design              ║
-  ║    /retrospective   /sprint-contract                      ║
-  ║    /mem-ingest     /mem-query      /mem-lint              ║
-  ║                                                           ║
-  ╠═══════════════════════════════════════════════════════════╣
-  ║  GOLDEN RULE: Context in, quality out.                    ║
-  ║  Set up your Project Bible first. Everything else follows.║
-  ╚═══════════════════════════════════════════════════════════╝
-```
+**Installation**: see `hooks/INSTALL.md` for a one-command setup and `hooks/README.md` for configuration options per hook.
 
 ---
 
@@ -547,25 +503,14 @@ The Mega Minions are not magic. They are **well-structured prompts that guide AI
 
 3. **Hallucination risk** - solved by evidence gates (verification-before-completion), read-only review (Guardian), and the researcher agent for fact-checking.
 
-4. **Quality contract reliability** - solved by the hook harness (8 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, and destructive command blocking at the platform level. Instructions ask; hooks enforce.
+4. **Quality contract reliability** - solved by the hook harness (11 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, and post-subagent artifact verification at the platform level. Instructions ask; hooks enforce.
 
 The beauty is in the composition. No single Mega Minion is extraordinary on its own. But when they work together (discovery feeds design, design feeds implementation, implementation feeds review, review feeds release) the whole becomes significantly greater than the sum of the parts.
 
-This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 8 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, and secrets scanning that run structurally at the platform level below the model. Instructions ask; hooks enforce.
-
-### Why 12 Agents and Not Fewer?
-
-Research shows that more agents can make systems worse when coordination overhead exceeds the value of parallelism (DeepMind, December 2025). So why does this system use 12 agents instead of 5 or 6?
-
-**The answer is specialization-through-scoping, not specialization-through-duplication:**
-
-- Each agent's system prompt is tightly focused on one domain. A `data-engineer` prompt contains PySpark patterns, Delta Lake writes, and dbt models; it doesn't contain RAG pipelines or SQL optimization. This tight scoping reduces context pollution and keeps the agent working within its area of expertise.
-- Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer; the agents are routing and workflow scaffolding.
-- The agents follow identical workflow _patterns_ (state machine, retry, escalation) but with different domain _content_. This is template consistency, not unnecessary duplication.
-- Coordination overhead is mitigated by strict handoff chains (linear pipeline, not peer-to-peer mesh), token budgeting (delegation tables with cost estimates), and tiered context loading (each agent loads only what it needs).
+This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 11 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
 
 **Give them context. Let them specialize. Verify their output. Ship with confidence.**
 
 ---
 
-_The Mega Minions, 12 agents, 22 skills, 14 prompts, 8 hooks, one team._
+_The Mega Minions, 15 agents, 24 skills, 13 prompts, 11 hooks, one team._

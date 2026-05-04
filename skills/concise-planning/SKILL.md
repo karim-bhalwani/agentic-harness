@@ -1,18 +1,20 @@
 ---
 name: concise-planning
-description: "Generate clear, actionable, and atomic checklists for coding tasks with minimal interaction and reasonable assumptions. Use when creating implementation plans, breaking down tasks into steps, generating task checklists, or planning project workflows. DO NOT USE FOR: exploring requirements or brainstorming (use brainstorming), system architecture design (use architect), actual code implementation (use implementer), or delegating tasks to subagents (use subagent-execution)."
+description: "PIPELINE POSITION: sequence (step 3 of 4: brainstorming → architect → concise-planning → implementer). Produce an atomic, ordered checklist that turns an approved design into executable steps. Use AFTER intent is aligned (brainstorming) and AFTER the spec exists (architect, when applicable), or directly when the change is small and the approach is obvious. Output is a verb-first checklist with verification steps. DO NOT USE FOR: exploring whether or what to build (use brainstorming), designing module boundaries or API contracts (use architect), writing the code (use implementer), or delegating tasks across multiple subagents (use subagent-execution)."
 argument-hint: "[task to plan]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["thinker"]
 ---
 
 # Concise Planning
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: thinker
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: thinker
+
+> **Pipeline position**: **sequence** (3 of 4) - `brainstorming` -> `architect` -> **`concise-planning`** -> `implementer`. This skill produces a verb-first checklist. It runs AFTER design is approved and BEFORE code is written.
 
 ## Dependencies
 

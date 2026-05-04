@@ -4,16 +4,16 @@ description: "Evidence-based completion gate that enforces running verification 
 user-invocable: false
 disable-model-invocation: true
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Verification Before Completion
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 ## When to Load This Skill
 

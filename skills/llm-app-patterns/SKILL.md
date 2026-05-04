@@ -3,16 +3,16 @@ name: llm-app-patterns
 description: "Production LLM application patterns, architectures, and best practices. Covers RAG pipelines, agent architectures, prompt engineering, LLMOps, and production deployment patterns. DO NOT USE FOR: LLM security auditing (use genai-security), general data pipelines without LLM components (use data-engineering), prompt template libraries (use prompt-library), or wiki knowledge management (use llm-mem)."
 argument-hint: "[LLM pattern to apply]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["architect", "data-engineering", "ops"]
 ---
 
 # LLM Application Patterns
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: architect, data-engineering, ops
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: architect, data-engineering, ops
 
 ## Dependencies
 

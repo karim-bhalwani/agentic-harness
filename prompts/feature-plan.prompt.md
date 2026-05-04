@@ -5,11 +5,11 @@ argument-hint: "[feature, task, or user story to plan]"
 tools:
   - read
   - search
-version: "7.0"
-updated: "2026-04-12"
 ---
 
-Use the `concise-planning` skill to produce an implementation plan for: **${input:task}**
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+
+Produce an implementation plan for: **${input:task}**
 
 **Context to scan before planning**:
 
@@ -17,16 +17,6 @@ Use the `concise-planning` skill to produce an implementation plan for: **${inpu
 - Tech stack and available libraries (do NOT assume a library is available)
 - Any constraints or acceptance criteria the user mentioned
 
-**Output format** (strict):
-
-1. **Goal** - One sentence stating what done looks like from the user's perspective
-2. **Assumptions** - Numbered list of inferred decisions (flag if any are risky)
-3. **Plan** - Atomic, sequenced checklist. Each item:
-   - Starts with a verb (Create, Update, Add, Remove, Refactor, Test)
-   - Is small enough to verify independently
-   - References specific files or modules where known
-4. **Risks** - Up to 3 items that could derail execution
-5. **Estimated steps** - rough count (e.g., "12 steps, ~2h")
+**Workflow**: Load `skills/concise-planning/SKILL.md` via `read_file` and follow its Workflow + Plan Template. The skill is the single source of truth for the output format (Approach / Scope / Action Items / Validation), atomic-step granularity, and assumption-handling rules.
 
 Do NOT write any code. Wait for explicit approval before proceeding to implementation.
-

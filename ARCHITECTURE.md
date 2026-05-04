@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Architect:** Karim Bhalwani  
-**Version:** 7.0 | **Updated:** 2026-04-12  
+**Version:** 8.0 | **Updated:** 2026-05-03  
 **Scope:** Multi-layer system design for data & LLM systems
 
 **Is this document for you?**
@@ -21,18 +21,28 @@
 
 ## Why This Document Exists
 
-CORE_PRINCIPLES.md explains the *philosophy*. MEGA-MINIONS.md introduces the *team*. This document explains the *engineering*: how the four layers of the system (Hooks, Prompts, Skills, Agents) are designed, why they compose the way they do, and what deliberate trade-offs were made along the way.
+CORE_PRINCIPLES.md explains the *philosophy*. MEGA-MINIONS.md introduces the *team*. This document explains the *engineering*: how the five layers of the system (Hooks, Prompts, Skills, Agents, Instructions) are designed, why they compose the way they do, and what deliberate trade-offs were made along the way.
 
 ---
 
 ## 1. System Overview
 
-### The Four-Layer Model
+### The Five-Layer Model
 
-The Mega Minions are built on a four-layer architecture where each layer has a distinct purpose, a distinct lifecycle, and a distinct audience.
+The Mega Minions are built on a five-layer architecture where each layer has a distinct purpose, a distinct lifecycle, and a distinct audience.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
+│                      LAYER 4: INSTRUCTIONS                       │
+│  Workspace-scoped global rules applied to every agent session    │
+│  automatically. Platform behavior, security posture, tool use,   │
+│  and code style conventions that apply unconditionally.          │
+│  Files: instructions/*.instructions.md                           │
+│                                                                  │
+│  Instructions SET the baseline contract. They load automatically │
+│  via applyTo patterns and require no agent action to activate.   │
+│  They cannot be overridden by skills, prompts, or agents.        │
+├──────────────────────────────────────────────────────────────────┤
 │                         LAYER 3: AGENTS                          │
 │  Autonomous agents, each with a persona, intent contract,        │
 │  workflow state machine, and delegation table.                   │
@@ -72,8 +82,9 @@ The Mega Minions are built on a four-layer architecture where each layer has a d
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-**Why four layers?** Because the four concerns (user interaction, domain knowledge, workflow orchestration, and quality enforcement) have fundamentally different change rates and fundamentally different enforcement mechanisms.
+**Why five layers?** Because the five concerns (baseline contract, user interaction, domain knowledge, workflow orchestration, and quality enforcement) have fundamentally different change rates and fundamentally different enforcement mechanisms.
 
+- **Instructions** change when workspace-wide standards change. A new language convention, a new security posture rule, or a new tool-use policy is an instructions-layer concern.
 - **Prompts** change when user workflows change. A new slash command for a new task type is a prompt-layer concern.
 - **Skills** change when domain knowledge changes. A new PySpark optimization pattern or a new OWASP vulnerability category is a skill-layer concern.
 - **Agents** change when workflow topology changes. A new pipeline phase or a new delegation path is an agent-layer concern.
@@ -94,19 +105,60 @@ Collapsing these into fewer layers creates files that change for multiple reason
 Work flows through a strict linear pipeline. Each phase has exactly one sender and one receiver.
 
 ```text
-Discovery ──► Design ──► Build ──► Review ──► Ship
-    │            │          │         │          │
-    │            │          │         │          │
- Greenfield  Architect   Senior    Guardian   Release
- Interview              Developer             Manager
-    or                  Data Eng.
- Brownfield             AI Eng.
- Discovery              Data Analyst
+                         THE MEGA MINIONS PIPELINE (v8.0)
+  ════════════════════════════════════════════════════════════
+
+  ┌─────────────────────── DISCOVERY ───────────────────────┐
+  │   New project? → Greenfield Interview                   │
+  │   Existing codebase? → Brownfield Discovery             │
+  │   Output: PROJECT_CONTEXT.md (Project Bible)            │
+  └─────────────────────────┬───────────────────────────────┘
+                             ▼
+  ┌──────────────────────── DESIGN ─────────────────────────┐
+  │   Agent: Architect                                      │
+  │   Output: SPEC.md (modules, contracts, holdout flags,   │
+  │           Error & Rescue Map, Scope tag)                │
+  └─────────────────────────┬───────────────────────────────┘
+                             ▼
+  ╔═══════════════════ GATE 0 - HUMAN ══════════════════════╗
+  ║  Review SPEC.md. Choose path:                           ║
+  ║  [ Build Direct → Senior Dev / Data Eng / AI Eng ]      ║
+  ║  [ Plan Phase ]                                         ║
+  ╚═════════════════╤═══════════════════╤═══════════════════╝
+                    │ Plan Phase        │ Build Direct
+                    ▼                   ▼
+  ┌──────────────── PLAN ──────────────┐ ┌────── BUILD (direct) ───────┐
+  │  Step 1: story-master              │ │  Input:  SPEC.md            │
+  │    Output: STORIES.md              │ │  Agent:  chosen specialist  │
+  │    Gate 1: Human approves waves    │ └─────────────┬───────────────┘
+  │                                    │               │
+  │  Step 2: story-planner (per story) │               │
+  │    Output: US-{id}-PLAN.md         │               │
+  │            US-{id}-VALIDATION.md   │               │
+  │    Gate 2: Human approves plan     │               │
+  └────────────────┬───────────────────┘               │
+                   ▼  (parallel within wave)           │
+  ┌──────────────────────── BUILD ─────────────────────▼───┐
+  │   Agents: Senior Developer / Data Engineer / AI Eng    │
+  │   Input:  US-{id}-PLAN.md  OR  SPEC.md (direct path)   │
+  │   Output: code + tests + US-{id}-report.md             │
+  └─────────────────────────┬──────────────────────────────┘
+                             ▼
+  ┌─────────────────────── REVIEW ──────────────────────────┐
+  │   Agent: Guardian                                       │
+  │   (genai-security skill auto-loaded if Security-flagged)│
+  └─────────────────────────┬───────────────────────────────┘
+                             ▼
+  ┌───────────────────────── SHIP ──────────────────────────┐
+  │   Agent: Release Manager                                │
+  │   Plan path: close-story → stamps STORIES.md row        │
+  │   Direct path: standard release flow                    │
+  └─────────────────────────────────────────────────────────┘
 ```
 
-On-call specialists (Debug Detective, Prompt Builder, Researcher) operate outside this pipeline and are invoked when needed. The Researcher is hidden (only other agents can invoke it as a subagent).
+On-call specialists (Debug Detective, Prompt Builder, Researcher) operate outside this pipeline and are invoked when needed. The Researcher is hidden (only other agents can invoke it as a subagent). Gate 0 is a routing decision between Design and Plan, not a phase of its own.
 
-This linear topology means 12 agents produce 11 handoff points, not 66 communication pathways (n(n-1)/2). The coordination surface is bounded by the pipeline structure, not by the agent count.
+This linear topology means 15 agents produce handoff points bounded by the pipeline structure, not by the agent count. The coordination surface is linear rather than quadratic (n(n-1)/2).
 
 ---
 
@@ -163,7 +215,7 @@ This pattern enables reuse: the same agent (e.g., `senior-developer`) can be inv
 
 ### Context-as-Architecture
 
-Context engineering is not about "giving the model more information." It is about constructing the right information, in the right shape, at the right time, and discarding everything else. In a system with 12 agents, 22 skills, and a token budget that is both expensive and finite, context management is an architectural concern, not a convenience feature.
+Context engineering is not about "giving the model more information." It is about constructing the right information, in the right shape, at the right time, and discarding everything else. In a system with 15 agents, 24 skills, and a token budget that is both expensive and finite, context management is an architectural concern, not a convenience feature.
 
 The system implements context management through three mechanisms: **tiered loading**, **session state**, and **subagent isolation**.
 
@@ -178,6 +230,19 @@ All project context is organized into three tiers under `.copilot/context/`:
 | **Tier 3** | Only when referenced | `DECISIONS.md`, skill references, historical templates | Per-reference |
 
 The 200-line limit on Tier 1 is not arbitrary. It is a budget constraint. Every line loaded into Tier 1 is a line loaded into every agent, every session, every task. At scale, the difference between a 200-line and a 500-line Tier 1 is measurable in reasoning quality and token cost.
+
+### PLAN-Phase Artifact Tier Classification
+
+v8.0 introduces four new artifacts under `.copilot/stories/`. Their tier assignments follow the same budget logic: only what the current phase needs is loaded.
+
+| Artifact | Path | Tier | Loaded When |
+|---|---|---|---|
+| `STORIES.md` | `.copilot/stories/STORIES.md` | **Tier 2** | PLAN, SHIP, and retrospective phases only. **Not loaded during BUILD.** |
+| `US-{id}-PLAN.md` | `.copilot/stories/US-{id}-PLAN.md` | **Tier 1 (story-scoped)** | The sole BUILD-time anchor for that story's session. |
+| `US-{id}-VALIDATION.md` | `.copilot/stories/US-{id}-VALIDATION.md` | **Tier 2** | story-planner (write) and close-story (verify). **Not loaded during BUILD.** |
+| `reports/US-{id}-report.md` | `.copilot/stories/reports/US-{id}-report.md` | **Tier 3** | On demand only (close-story, retrospective). |
+
+`STORIES.md` is intentionally Tier 2 (excluded from BUILD context) so the BUILD agent's only story-anchor is `US-{id}-PLAN.md`. This prevents context bleeding from sibling stories in the same wave: each BUILD session sees exactly one story's scope.
 
 ### PROJECT_CONTEXT.md and SESSION_STATE.md as Cognitive Anchors
 
@@ -282,12 +347,15 @@ Harness engineering is the discipline of shaping the environment in which a mode
 | Greenfield Interview | Structured interview for new projects | Discovery | Assume decisions the user hasn't made |
 | Brownfield Discovery | Systematic codebase mapping | Discovery | Guess what undocumented code does |
 | Architect | System design and specification | Design | Implement code |
+| story-master | Decompose SPEC into story backlog (PLAN path) | Plan | Write implementation plans or code |
+| story-planner | Per-story implementation plan (PLAN path) | Plan | Implement code or review it |
 | Senior Developer | Feature implementation and bug fixes | Build | Redesign architecture |
 | Data Engineer | Data pipeline construction | Build | Build RAG pipelines |
 | AI Engineer | LLM/RAG system construction | Build | Design data schemas |
-| Data Analyst | Natural language to SQL | Build | Modify application code |
+| Data Analyst | Natural language to SQL | Build (utility) | Modify application code |
 | Guardian | Code review and security audit | Review | Modify code (strictly read-only) |
 | Release Manager | CI/CD pipelines and deployment | Ship | Write application code |
+| close-story | Verify story completion, stamp STORIES.md | Ship (PLAN path) | Advance active story without full validation |
 | Debug Detective | Root cause analysis | On-call | Apply fixes (hands off to developers) |
 | Prompt Builder | Prompt creation and improvement | On-call | Implement features |
 | Researcher | Fact-checking and documentation retrieval | Hidden | Generate code or modify files |
@@ -307,18 +375,6 @@ The `task-routing` skill defines a 6-check protocol before any delegation:
 
 The default posture is **self-sufficiency**. Delegation is a cost (context loss, token overhead, error amplification risk), not a free upgrade.
 
-### Quick-Fix Fast Lane vs. Full Pipeline
-
-Not every change needs the full Discovery-through-Ship pipeline. The system defines two fast paths:
-
-| Path | Conditions | Process |
-|---|---|---|
-| **Quick-Fix** (`/quick-fix`) | Single file, < 20 lines, no new dependencies, no architectural impact, not security-critical | Read, match conventions, apply minimal change, verify, done. No spec, no Guardian review. |
-| **Feature Plan** (`/feature-plan`) | Within existing architecture, no new modules or API surface changes | Generate atomic checklist via `concise-planning` skill. Implementation follows the plan. |
-| **Full Pipeline** (`/design`) | New modules, new API contracts, cross-cutting concerns | Full Architect spec, implementation, Guardian review, release planning. |
-
-The escalation path is clear: if a quick-fix exceeds scope, it redirects to feature-plan. If a feature-plan reveals architectural implications, it redirects to the Architect.
-
 ### Subagent Strategy
 
 Subagents are the mechanism for keeping context windows clean during complex operations. The principles:
@@ -329,32 +385,27 @@ Subagents are the mechanism for keeping context windows clean during complex ope
 - **Two-Stage Review**: After a subagent returns `DONE`, the orchestrator runs spec compliance review (did it do the right thing?) followed by quality review (did it do the thing right?).
 - **Token cost visibility**: Delegation tables in agent prompts include estimated token costs per handoff (~500-2000 tokens), making the cost of coordination explicit.
 
-### Failure Modes and Guardrails
-
-| Guardrail | Trigger | Response |
-|---|---|---|
-| **3-Strike Retry** | Same operation fails 3 times | Stop and escalate to the user with full context. Do not loop. |
-| **Plan-First Default** | Non-trivial task (3+ steps or architectural decisions) | Enter plan mode. Write spec or checklist before implementation. |
-| **Stop-and-Replan** | Execution goes sideways mid-task | Stop pushing through the failing approach. Re-plan immediately. |
-| **Re-Read Before Re-Edit** | File edit fails (match not found, merge conflict) | Re-read the file for fresh content before attempting another edit. Never retry on stale content. |
-| **BLOCKED Status** | Subagent cannot proceed due to architectural conflict | Escalate to Architect. Never re-dispatch with only a prompt change. |
-
 ### Hook Enforcement Layer
 
-The guardrails above are instruction-level: they shape agent behavior through textual guidance. A complementary layer operates at the platform level, outside the model entirely.
+Instruction-level guardrails shape agent behavior through textual guidance. A complementary layer operates at the platform level, outside the model entirely.
 
-The `hooks/` directory contains 8 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
+The `hooks/` directory contains 11 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
 
 | Hook | Event | Contract Enforced |
 |---|---|---|
-| `quality-gate.ps1` | Stop | Session cannot close while `ruff` or `ty` errors exist |
-| `scan-secrets.ps1` | Stop | Scans all modified files for leaked credentials before session ends |
-| `block-destructive.ps1` | PreToolUse | Denies `run_in_terminal` calls matching destructive command patterns (`rm -rf`, `DROP TABLE`, `git push --force`) |
+| `quality-gate.ps1` | Stop | Session cannot close while `ruff` or `ty` errors exist (auto-skipped when no `.py` files were modified) |
+| `scan-secrets.ps1` | Stop | Scans all modified files for leaked credentials, API keys, and secret patterns before the session ends. Runs in block mode by default. |
+| `block-destructive.ps1` | PreToolUse | Denies `run_in_terminal` calls matching destructive patterns: `rm -rf`, `Remove-Item -Recurse` (any param order), `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, `Clear-Content`, `del /s /q`, `Format-Volume`. Bypasses temp-dir paths; supports `TOOL_GUARD_ALLOWLIST` escape hatch. |
+| `scan-user-prompt.ps1` | PreToolUse | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. Emits a security notice in warn mode; blocks in block mode. |
 | `lint-on-write.ps1` | PreToolUse | Denies `.py` file writes until `ruff check` passes on the proposed content |
 | `auto-format.ps1` | PostToolUse | Runs `ruff format` on every Python file the agent writes |
-| `session-context.ps1` | SessionStart | Injects branch, venv status, Project Bible presence, pipeline artifact detection, and inferred pipeline phase into every new session |
-| `subagent-context.ps1` | SubagentStart | Injects branch, venv, and Project Bible status into every subagent session |
-| `pre-compact-save.ps1` | PreCompact | Writes `.copilot/state/SESSION_STATE.md` before context compaction |
+| `session-context.ps1` | SessionStart | Injects branch, last commit, venv status, Python version, Project Bible presence, active story, pipeline artifact detection, and inferred pipeline phase into every new session |
+| `subagent-context.ps1` | SubagentStart | Injects project root, active story, and pipeline phase into every subagent at launch so delegated agents start with the right context |
+| `subagent-verify.ps1` | SubagentStop | After a subagent finishes, runs the relevant `verify_*.py` to confirm expected artifacts actually landed and are not stubs. Covers: spec (architect), review report (guardian), Project Bible (brownfield/greenfield), session state (builder agents), story backlog (story-master), and story plan + validation (story-planner). Blocks if verification fails; warn mode available via `SUBAGENT_VERIFY_MODE=warn`. |
+| `pre-compact-save.ps1` | PreCompact | Writes `.copilot/state/SESSION_STATE.md` before VS Code compacts the conversation, preserving enough context to resume the session |
+| `block-holdout.ps1` | PreToolUse | Prevents implementation agents from reading files under `.copilot/holdout/`. Keeps the blind-evaluation layer structurally blind until Guardian runs review. |
+
+Every hook respects a circuit-breaker env var (e.g. `SKIP_DESTRUCTIVE_GUARD=true`, `SKIP_SUBAGENT_VERIFY=true`) for emergencies. Use them deliberately.
 
 The distinction that matters: an instruction telling the agent "always run ruff before closing" can be forgotten under context pressure or overridden by a competing priority. A Stop hook running `ruff check .` cannot. The agent is structurally prevented from closing the session until ruff passes. This is the boundary between probabilistic guidance and deterministic enforcement.
 
@@ -387,8 +438,8 @@ disable-model-invocation: [true|false]  # Must be loaded explicitly?
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: [list of other skills]
 ---
 ```
@@ -417,7 +468,7 @@ Skills with `disable-model-invocation: true` (the thinker, verification-before-c
 - **Background skills** (thinker, verification-before-completion, context-engineer) inject quality scaffolding silently. They load automatically when relevant conditions are met but are invisible to the user.
 - **Gating skills** (security-boundaries, task-routing, holdout-validation) load only when specific triggers occur (untrusted content, delegation decision, spec design/review).
 
-The load-before-use pattern prevents context bloat. If all 22 skills were pre-loaded, the agent's context window would be consumed by domain knowledge before any task-specific reasoning could begin.
+The load-before-use pattern prevents context bloat. If all 24 skills were pre-loaded, the agent's context window would be consumed by domain knowledge before any task-specific reasoning could begin.
 
 ### Skill Composition
 
@@ -487,13 +538,13 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 
 ---
 
-### Decision 5: 12 Agents with Tight Scoping Over 5-6 Generalist Agents
+### Decision 5: 15 Agents with Tight Scoping Over 5-6 Generalist Agents
 
-**Choice**: 12 agents, each with a narrowly scoped system prompt focused on one domain or pipeline phase.
+**Choice**: 15 agents, each with a narrowly scoped system prompt focused on one domain or pipeline phase.
 
 **Alternatives Considered**: 5-6 generalist agents that combine roles (e.g., a single "Builder" agent for all implementation), 20+ micro-agents with even narrower scope, dynamically spawned agents per task.
 
-**Rationale**: Each agent's system prompt is tightly focused so the model is not distracted by irrelevant domain knowledge. A `data-engineer` prompt contains PySpark patterns, Delta Lake writes, and dbt models. It does not contain RAG pipelines or SQL optimization. Domain expertise lives in skills (loaded on demand), not in agent count. The agents follow identical workflow patterns (state machine, retry, escalation) but with different domain content. Adding a new domain means creating a new agent prompt and a matching skill, not redesigning the workflow.
+**Rationale**: Each agent's system prompt is tightly focused so the model is not distracted by irrelevant domain knowledge. A `data-engineer` prompt contains PySpark patterns, Delta Lake writes, and dbt models. It does not contain RAG pipelines or SQL optimization. Domain expertise lives in skills (loaded on demand), not in agent count. The agents follow identical workflow patterns (state machine, retry, escalation) but with different domain content. Adding a new domain means creating a new agent prompt and a matching skill, not redesigning the workflow. The three additional (story-master, story-planner, close-story) are PLAN-phase agents with narrow scope: decomposition, per-story planning, and verify-and-stamp respectively. They activate only on the Plan Phase path, gated by a human decision at Gate 0, so they do not apply when SPEC is small or self-contained.
 
 **Trade-off**: More agents means more handoff points and more potential for context loss at transitions. Each handoff costs ~500-2000 tokens in context transfer. The handoff chain structure (where the Guardian saves its review report to `.copilot/artifacts/review-report.md` for downstream agents to read) and the session state protocol mitigate this, but do not eliminate it.
 
@@ -535,7 +586,7 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 
 ## What Was Deliberately Left Out
 
-**Dynamic agent spawning**: The system uses a fixed registry of 12 agents. There is no mechanism to dynamically create new agents at runtime based on task characteristics. This was left out because the current roster covers the target domains (Data, GenAI, ML Engineering) and adding dynamic spawning would require a meta-agent layer with its own coordination overhead.
+**Dynamic agent spawning**: The system uses a fixed registry of 15 agents. There is no mechanism to dynamically create new agents at runtime based on task characteristics. This was left out because the current roster covers the target domains (Data, GenAI, ML Engineering) and adding dynamic spawning would require a meta-agent layer with its own coordination overhead.
 
 **Cross-agent shared memory within a session**: Agents communicate through artifacts and handoffs, not through a shared memory store. A shared memory system would reduce handoff friction but introduce consistency challenges (which agent's write wins?) and blur the clean separation between pipeline phases.
 

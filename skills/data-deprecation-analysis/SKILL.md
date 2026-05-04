@@ -3,16 +3,16 @@ name: data-deprecation-analysis
 description: "Specialist in analyzing access logs to identify unused data structures, technical debt, and legacy patterns. Use when auditing data warehouses for deprecation candidates, detecting stale tables/views, identifying legacy application dependencies, or planning safe data asset retirement. DO NOT USE FOR: writing SQL queries (use data-analyst), building pipelines (use data-engineering), or data architecture (use architect)."
 argument-hint: "[data warehouse or database to audit]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["data-engineering", "data-analyst", "guardian"]
 ---
 
 # Data Deprecation Analysis
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: data-engineering, data-analyst, guardian
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: data-engineering, data-analyst, guardian
 
 ## Dependencies
 

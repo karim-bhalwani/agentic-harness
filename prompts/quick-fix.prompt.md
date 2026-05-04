@@ -7,9 +7,9 @@ tools:
   - search
   - edit
   - execute
-version: "7.0"
-updated: "2026-04-12"
 ---
+
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Apply this quick fix: **${input:fix}**
 
@@ -39,4 +39,3 @@ If ANY condition is false, stop and say: "This exceeds quick-fix scope. Use `/fe
 - Note any test results if tests were run
 
 No spec. No Guardian review. No handoff. Just fix it.
-

@@ -3,16 +3,16 @@ name: systematic-debugging
 description: "Use when a bug, error, or unexpected behavior needs investigation. Enforces evidence-first root cause analysis before any fix attempt. Load before any debugging session - covers all failure modes from data pipelines to API errors to LLM misbehavior. DO NOT USE FOR: code review without a specific error (use guardian), implementing known fixes (use implementer), performance profiling without failures (use guardian), or architecture design (use architect)."
 argument-hint: "[error message, bug description, or failing behavior]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["verification-before-completion"]
 ---
 
 # Systematic Debugging Skill
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: verification-before-completion
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: verification-before-completion
 
 ## Dependencies
 

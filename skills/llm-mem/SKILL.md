@@ -3,16 +3,16 @@ name: llm-mem
 description: "Build and maintain a project knowledge mem using LLMs. Triggers: ingesting sources into a mem, querying mem knowledge, linting mem health, 'add to mem', 'what do I know about', 'compile to mem', or any mention of 'project mem'. Use when persisting durable knowledge (patterns, decisions, post-mortems, research) beyond the current session. DO NOT USE FOR: project setup or context files (use context-engineer), session-scoped memory (use memory tool directly), documentation generation without mem structure, or LLM app design (use llm-app-patterns)."
 argument-hint: "[source to ingest, question to query, or 'lint']"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # LLM MEM Skill - Knowledge Compilation & Persistence
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Build and maintain a persistent, compounding knowledge mem for any project. Raw sources go in, interlinked mem articles come out. The mem grows richer with every source ingested and every question asked.
 
@@ -50,13 +50,21 @@ Everything lives under a single `llmmem/` directory in the **project repo**, ver
 
 ### Initialization
 
-Triggers only on the **first Ingest**. Check whether `llmmem/raw/` and `llmmem/mem/` exist. Create only what is missing; never overwrite existing files:
+Triggers only on the **first Ingest**. Run the scaffold script (idempotent: skips files that exist):
+
+```bash
+uv run skills/llm-mem/scripts/scaffold_mem.py
+```
+
+This creates only what is missing; it never overwrites existing files:
 
 - `llmmem/` parent directory
 - `llmmem/raw/` directory (with `.gitkeep`)
 - `llmmem/mem/` directory (with `.gitkeep`)
 - `llmmem/mem/index.md` - heading `# Knowledge Base Index`, empty body
 - `llmmem/mem/log.md` - heading `# mem Log`, empty body
+
+Verify structure at any time with `uv run skills/llm-mem/scripts/verify_mem.py`. The verifier also surfaces raw files that have no matching mem coverage (use `--strict` to fail on uncovered raw files in CI contexts).
 
 If Query or Lint runs before any mem exists, tell the user: "Run an ingest first to initialize the mem." Do not auto-create.
 
@@ -257,6 +265,11 @@ When starting a task, agents SHOULD check if `llmmem/mem/index.md` exists and re
 - When health-checking mem consistency
 - When an agent produces durable, reusable knowledge after completing a task
 - When setting up a new project's knowledge base
+
+## Scripts
+
+- [scaffold_mem.py](./scripts/scaffold_mem.py) - Idempotent initializer for `llmmem/` structure (creates `raw/`, `mem/`, `index.md`, `log.md`). Run before the first ingest.
+- [verify_mem.py](./scripts/verify_mem.py) - Verifies `llmmem/` structure is intact and surfaces raw files with no matching mem coverage. Use `--strict` to fail on uncovered files in CI.
 
 ## References
 

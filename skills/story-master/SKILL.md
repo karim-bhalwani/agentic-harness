@@ -1,0 +1,27 @@
+---
+name: story-master
+description: "Houses the scaffold_stories.py and verify_stories.py scripts used by the story-master agent (prompts/story-master.agent.md) to generate and validate STORIES.md backlog files. This skill is not directly invocable; it is a script-housing skill that the story-master agent shells out to. DO NOT USE FOR: backlog decomposition itself (that is the story-master agent in prompts/), code review (use guardian), or implementation planning (use story-planner agent)."
+user-invocable: false
+disable-model-invocation: true
+license: MIT
+compatibility: "VS Code"
+metadata:
+  version: "8.0"
+  updated: "2026-05-03"
+  dependencies: []
+---
+
+# story-master
+
+Script-housing skill for the story-master agent. The story-master agent (defined in
+`prompts/story-master.agent.md`) reads an approved `SPEC.md`, decomposes it into a structured
+user-story backlog, and writes `.copilot/stories/STORIES.md`. This skill provides the scaffolding
+and verification scripts that enforce the §3.1 STORIES.md schema and prevent silent schema drift
+from breaking the downstream `close-story` verification step.
+
+## Scripts
+
+| Script                                                         | Purpose                                                                                                                                                                                |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [./scripts/scaffold_stories.py](./scripts/scaffold_stories.py) | Generates a `.copilot/stories/STORIES.md` skeleton with the summary table header, execution wave placeholder sections, and coupled-pairs table. story-master fills in the rows.        |
+| [./scripts/verify_stories.py](./scripts/verify_stories.py)     | Validates a `STORIES.md` file against the §3.1 schema. Checks column set, enum values, dependency references, H3 detail sections, and wave consistency. Exits 0 on pass, 1 on failure. |

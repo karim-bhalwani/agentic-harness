@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Architect:** Karim Bhalwani  
-**Version:** 7.0 | **Updated:** 2026-04-12  
+**Version:** 8.0 | **Updated:** 2026-05-03  
 **Scope:** Persistent project knowledge base for AI-augmented teams
 
 > **Who this is for:** Anyone on the team who wants their project to remember what it has learned. No prior mem experience required. If you can type a slash command, you can use this.

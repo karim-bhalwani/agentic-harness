@@ -1,4 +1,4 @@
-# Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 #
 # lint-on-write.ps1
 # PreToolUse hook: lint Python files BEFORE the write hits disk.

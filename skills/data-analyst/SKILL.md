@@ -3,16 +3,16 @@ name: data-analyst
 description: "Azure SQL Server and T-SQL query specialist covering natural language to SQL conversion, schema exploration, Data Vault 2.0 querying patterns, query optimization, and SSMS workflows. Use when writing SQL queries from natural language requests, exploring database schemas, navigating Data Vault warehouses (Hubs, Links, Satellites, PIT, Bridge, EffSats), optimizing T-SQL performance, or generating copy-ready SQL scripts for Azure SQL or SQL Server databases. DO NOT USE FOR: building ETL/ELT pipelines (use data-engineering), PySpark or dbt transformations (use data-engineering), deprecation audits (use data-deprecation-analysis), or non-SQL database work."
 argument-hint: "[natural language query or database task]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Data Analyst Skill
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Translates natural language requests into optimized, production-safe T-SQL against Azure SQL / SQL Server. For detailed patterns, load the appropriate deep-dive reference.
 

@@ -3,16 +3,16 @@ name: guardian
 description: "Comprehensive quality assurance, security auditing, automated testing, and performance optimization. Covers code review, OWASP Top 10, testing pyramid, E2E automation, visual regression, and vulnerability scanning. Use when reviewing code, hunting bugs, scanning for vulnerabilities, profiling performance, building test suites, or validating implementation quality. DO NOT USE FOR: writing production code (use implementer), system design (use architect), debugging root cause analysis (use systematic-debugging), or LLM-specific security (use genai-security)."
 argument-hint: "[code to review]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Guardian Skill - QA, Security, Testing & Performance
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Unified reference for code quality gates. For extended procedures (doc staleness, entropy, wiki health, quality grading, feedback rules), load the deep-dive reference.
 
@@ -129,6 +129,10 @@ Load calibration examples when judgment is uncertain:
 - Does NOT implement fixes (hand off to implementation agent)
 - Does NOT replace formal security audits or compliance certifications
 
+## Scripts
+
+- [scripts/verify_review.py](./scripts/verify_review.py) - Verification gate for `.copilot/artifacts/review-report.md`. Run from the orchestrating agent (typically Release Manager) before gating on the review verdict. Guardian itself cannot write files (no `editFiles` tool); the orchestrator or user persists the report. Exits 1 if the report is missing, too short, or lacks expected tokens (Findings/Verdict/Severity/Scope).
+
 ## References
 
 Load on demand for specific sub-tasks:
@@ -140,6 +144,7 @@ Load on demand for specific sub-tasks:
 - [quality_grades.md](./references/quality_grades.md) - Quality grading template (opt-in when `.copilot/quality/` exists).
 - [calibration_examples/](./references/calibration_examples/) - True positives, false positives, severity calibration.
 - [fragility-catalogue.md](./references/fragility-catalogue.md) - 10-pattern fragility catalogue for pre-mortem analysis. Identifies code that is correct today but fragile against future edits. Loaded by Phase 3 review and `/pre-mortem` prompt.
+- [doc-audit-checklist.md](./references/doc-audit-checklist.md) - 6-category documentation freshness, accuracy, and consistency audit. Defines scope modes, severity levels, and the Doc Health Report format. Loaded by the `/doc-garden` prompt.
 
 ### Scripts
 

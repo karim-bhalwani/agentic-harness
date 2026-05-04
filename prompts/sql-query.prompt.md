@@ -5,9 +5,9 @@ argument-hint: "[natural language question about your data]"
 tools:
   - read
   - search
-version: "7.0"
-updated: "2026-04-12"
 ---
+
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Answer this data question in T-SQL: **${input:question}**
 
@@ -16,23 +16,13 @@ Answer this data question in T-SQL: **${input:question}**
 - Database/schema: ${input:schema_or_context}
 - Key tables involved (if known): ${input:tables}
 
-**Requirements**:
+**Workflow**: Load `skills/data-analyst/SKILL.md` via `read_file`. The skill is the single source of truth for the production-safety checklist (explicit columns, TOP on exploratory queries, header comment block, SARGable predicates, PII handling) and for Data Vault 2.0 querying patterns (Hubs, Links, Satellites, PIT/Bridge/EffSat) via `data-vault-querying-cheatsheet.md`. Follow the skill's checklist; do not paraphrase it here.
 
-- Produce copy-ready T-SQL that runs on Azure SQL Server without modification
-- If the schema is unknown, start with schema exploration queries first, then the answer query
-- Apply all checklist items from the data-analyst skill:
-  - Explicit column list (no `SELECT *`)
-  - `TOP` clause on exploratory queries
-  - Header comment block with description, database, date, assumptions
-  - SARGable WHERE clauses
-  - PII columns flagged or masked
-- If Data Vault patterns apply (Hubs, Links, Satellites), use the `data-vault-querying-cheatsheet.md` temporal patterns
-- Document any assumptions about schema, nullability, or business logic
-
-**Output format**:
+**Required output**:
 
 1. Assumptions stated upfront (if any)
 2. Schema exploration query (if schema is unknown)
-3. Final answer query with header comment block
+3. Final answer query with header comment block per the skill
 4. Brief explanation of what the query does (2-3 sentences)
 
+The query must run on Azure SQL Server without modification.

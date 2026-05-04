@@ -5,9 +5,9 @@ argument-hint: "[feature or system to design]"
 tools:
   - read
   - search
-version: "7.0"
-updated: "2026-04-12"
 ---
+
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Design: **${input:feature}**
 
@@ -25,4 +25,3 @@ Design: **${input:feature}**
 Run the full Architect workflow per the `architect` skill. Produce the specification at `.copilot/specs/SPEC.md`.
 
 Do NOT begin implementation. The spec must be reviewed and approved before any code is written.
-

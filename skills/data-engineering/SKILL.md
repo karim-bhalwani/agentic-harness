@@ -3,16 +3,16 @@ name: data-engineering
 description: "Comprehensive data engineering reference covering Medallion architecture, Data Vault 2.0, PySpark optimization, dbt transformation patterns, data quality frameworks, and SQL optimization. Use when building ETL/ELT pipelines, designing data schemas, optimizing Spark/SQL performance, implementing data governance, or architecting lakehouse solutions. DO NOT USE FOR: ad-hoc SQL querying (use data-analyst), deprecation analysis (use data-deprecation-analysis), LLM/RAG pipeline design (use llm-app-patterns), or CI/CD configuration (use ops)."
 argument-hint: "[pipeline or data task]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Data Engineering Skill
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Unified reference for data pipeline design, implementation, and optimization. Covers the full stack: schema design, Spark tuning, dbt patterns, SQL optimization, and data quality.
 
@@ -102,6 +102,18 @@ Three core table types: **Hubs** (business keys, append-only), **Links** (relati
 Key rules: target 128-256MB per partition, broadcast tables < 100MB, filter before joins, prefer explicit `StructType` over `inferSchema`, enable AQE (`spark.sql.adaptive.enabled = true`).
 
 > Full tuning guide with code examples, skew handling, and config reference: [references/pyspark-optimization.md](./references/pyspark-optimization.md)
+
+## PySpark Coding Standards
+
+- **DataFrame API over RDD.** Always `import pyspark.sql.functions as F` and use `F.col()` notation.
+- Chain transformations logically; break long chains with `\` or parentheses for readability.
+- Prefer built-in Spark functions over Python UDFs; UDFs bypass Catalyst optimizer and hurt performance.
+- Schema-validate DataFrames at pipeline entry points before any transformations ("fail fast").
+- **Never `.collect()` large DataFrames**: `.collect()` pulls all data to the driver, causing OOM. Use `.limit(n).collect()` for sampling, or write to storage.
+- **Cache strategically**: `.cache()` or `.persist(StorageLevel.DISK_AND_MEMORY)` for DataFrames reused 3+ times. Always `.unpersist()` when done to free memory.
+- **Broadcast small tables in joins**: wrap with `F.broadcast(small_df)` for any join side < ~100 MB to avoid full shuffle.
+- Default write format is `delta`. Use `mergeSchema=True` for additive schema evolution; `overwriteSchema=True` only when intentionally replacing the schema.
+- Prefer `MERGE INTO` (upsert) over full overwrites for incremental loads.
 
 ## dbt Transformation Patterns
 

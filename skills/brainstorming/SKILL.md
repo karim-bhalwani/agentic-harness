@@ -1,18 +1,20 @@
 ---
 name: brainstorming
-description: "Explore user intent, requirements, and design before implementation. Use when turning ideas into designs, validating requirements through dialogue, exploring multiple approaches, or creating design documentation for features, components, and functionality changes. DO NOT USE FOR: actual implementation (use implementer), system specifications (use architect), or planning checklists (use concise-planning)."
+description: "PIPELINE POSITION: explore (step 1 of 4: brainstorming → architect → concise-planning → implementer). Surface questions, alternatives, and unknowns through dialogue BEFORE a specification exists. Use when the problem is fuzzy, multiple approaches are viable, or requirements need validation. Output is aligned understanding (not a spec, not a plan, not code). DO NOT USE FOR: writing the formal specification or module contracts (use architect AFTER brainstorming aligns intent), task checklists for an approved design (use concise-planning), or any code-touching action (use implementer)."
 argument-hint: "[idea or feature to explore]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["thinker", "concise-planning"]
 ---
 
 # Brainstorming Ideas Into Designs
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: thinker, concise-planning
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: thinker, concise-planning
+
+> **Pipeline position**: **explore** (1 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> `implementer`. This skill produces aligned understanding, NOT a spec, NOT a plan, NOT code.
 
 ## Dependencies
 

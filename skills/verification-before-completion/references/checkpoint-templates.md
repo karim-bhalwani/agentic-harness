@@ -1,6 +1,6 @@
 # Validation Checkpoint Templates
 
-> v7.0 | 2026-04-12
+> v8.0 | 2026-05-03
 
 Paste templates for agents to present verification evidence in a standardized format. Each checkpoint requires **actual tool output**, not assertions. Fill the sections that apply to your role; skip what doesn't.
 

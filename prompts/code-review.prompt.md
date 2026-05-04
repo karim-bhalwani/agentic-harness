@@ -6,27 +6,17 @@ tools:
   - read
   - search
   - agent
-version: "7.0"
-updated: "2026-04-12"
 ---
+
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Review the following code: **${input:target}**
 
-Scope:
+**Process** (do not duplicate skill content here, always defer to the skill):
 
-- **Security**: OWASP Top 10, injection, auth, secrets exposure
-- **Correctness**: logic errors, edge cases, null handling, type safety
-- **Performance**: N+1 queries, unnecessary allocations, blocking I/O
-- **Maintainability**: naming, complexity, dead code, missing tests
-- **Architecture**: module boundary violations, coupling, cohesion
-
-Produce a structured review report using `review_report.md` template format:
-
-1. **Verdict**: PASS | NEEDS WORK | FAIL + one-sentence rationale
-2. **Critical findings** (block merge): numbered list, each with file+line reference and remediation
-3. **Warnings** (fix before next sprint): numbered list
-4. **Suggestions** (optional improvements): numbered list
-5. **Test coverage assessment**: what's missing, what's sufficient
+1. Load `skills/guardian/SKILL.md` via `read_file`. The skill is the single source of truth for review scope (Security / Correctness / Performance / Maintainability / Architecture), severity calibration, and report format.
+2. Run the Review Workflow defined in that skill against `${input:target}`.
+3. Produce the review report using the skill's `review_report.md` template.
+4. Persist to `.copilot/artifacts/review-report.md` so `release-manager` can verify it via `verify_review.py`.
 
 A team lead must be able to make a ship/no-ship decision from this report without re-reading the code.
-

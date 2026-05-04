@@ -1,4 +1,4 @@
-# Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 #
 # pre-compact-save.ps1
 # PreCompact hook: checkpoint session state before context compaction discards

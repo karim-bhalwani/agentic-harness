@@ -3,16 +3,16 @@ name: subagent-execution
 description: "Use when executing an approved implementation plan by dispatching work to subagents. Enforces context isolation, two-stage review per task, and a formal status protocol. Load before orchestrating multi-task plans across subagents. DO NOT USE FOR: deciding whether to delegate (use task-routing), creating the plan itself (use concise-planning), single-task execution you can handle directly, or code review (use guardian)."
 argument-hint: "[approved plan or list of tasks to execute]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["task-routing", "guardian", "verification-before-completion"]
 ---
 
 # Subagent Execution Skill
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: task-routing, guardian, verification-before-completion
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: task-routing, guardian, verification-before-completion
 
 ## Dependencies
 
@@ -107,7 +107,7 @@ After all tasks are complete:
 ```markdown
 ## Task: Add rate limiting to POST /api/checkout
 
-**Spec section**: See `.copilot/specs/checkout-spec.md` §3.2 Rate Limiting
+**Spec section**: See `.copilot/specs/checkout-spec.md` Section 3.2 Rate Limiting
 **Files to modify**: `src/api/checkout.py`, `tests/test_checkout.py`
 **Files to read (context only)**: `src/middleware/rate_limiter.py`, `pyproject.toml`
 **Acceptance criteria**:

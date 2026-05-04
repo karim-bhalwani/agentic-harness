@@ -1,4 +1,4 @@
-# Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 #
 # auto-format.ps1
 # PostToolUse hook: auto-format files after every agent file write.
@@ -34,7 +34,8 @@ if (-not $filePath) {
         try {
             $inputData = $rawInput | ConvertFrom-Json
             $filePath = $inputData.tool_input.filePath
-        } catch {
+        }
+        catch {
             exit 0
         }
     }

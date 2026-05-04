@@ -4,16 +4,16 @@ description: "Structural separation of test authorship from code authorship. Pro
 user-invocable: false
 disable-model-invocation: true
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["architect", "guardian", "verification-before-completion"]
 ---
 
 # Holdout Validation Skill - Structural Test Separation
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
 
 ## Dependencies
 

@@ -4,17 +4,17 @@ description: "Prompt injection defense rules, trust boundaries, and agent-specif
 user-invocable: false
 disable-model-invocation: true
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
-  source: "Extracted from copilot-instruction.instructions.md §14 to reduce auto-loaded context"
+  version: "8.0"
+  updated: "2026-05-03"
+  source: "Extracted from copilot-instruction.instructions.md Section 14 to reduce auto-loaded context"
   dependencies: []
 ---
 
 # Security Boundaries (Prompt Injection Defense)
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani |
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 ## When to Load This Skill
 

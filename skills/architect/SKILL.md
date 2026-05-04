@@ -1,18 +1,20 @@
 ---
 name: architect
-description: "Specialized in system architecture, API contracts, and modular black-box design. Use when creating technical specifications, designing system primitives, defining module boundaries and contracts, reviewing architecture for replaceability, or mapping system dependencies. DO NOT USE FOR: writing implementation code (use implementer), code review or security audit (use guardian), debugging errors (use systematic-debugging), or CI/CD pipeline design (use ops)."
+description: "PIPELINE POSITION: specify (step 2 of 4: brainstorming → architect → concise-planning → implementer). Produce the formal SPEC.md after brainstorming has aligned intent. Defines module boundaries, API contracts, data models, and replaceability constraints. Output is a specification artifact at .copilot/specs/SPEC.md. DO NOT USE FOR: open-ended requirement exploration (use brainstorming FIRST), atomic task checklists for an already-approved design (use concise-planning), writing implementation code (use implementer), code review or security audit (use guardian), debugging errors (use systematic-debugging), or CI/CD pipeline design (use ops)."
 argument-hint: "[system component to design]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["brainstorming", "thinker"]
 ---
 
 # Architect Skill - System Design & Specification
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: brainstorming, thinker
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: brainstorming, thinker
+
+> **Pipeline position**: **specify** (2 of 4) - `brainstorming` -> **`architect`** -> `concise-planning` -> `implementer`. This skill produces `.copilot/specs/SPEC.md`. It runs AFTER `brainstorming` has aligned intent and BEFORE `concise-planning` sequences execution.
 
 ## Dependencies
 
@@ -202,7 +204,11 @@ Load these when generating specifications and API contracts:
 
 - [SPEC.md](./references/SPEC.md) - System specification template. Load at the start of every architecture task to ensure all required sections (primitives, contracts, boundaries, data flows) are covered.
 - [api-specification.md](./references/api-specification.md) - API contract template with OpenAPI-style schemas. Load when designing REST, gRPC, or event-driven interfaces.
+- [sprint-contract-template.md](./references/sprint-contract-template.md) - Builder/Guardian sprint-contract negotiation template. Load when running `/sprint-contract` to surface ambiguity between the spec and the implementation plan before coding starts.
+- [sprint-contract-template.md](./references/sprint-contract-template.md) - Builder/Guardian sprint-contract negotiation template. Load when running `/sprint-contract` to surface ambiguity between the spec and the implementation plan before coding starts.
 
 ### Scripts
 
-- [scaffold_spec.py](./scripts/scaffold_spec.py) - Specification document scaffolder. Run to generate a pre-structured `SPEC.md` with all required sections and `TODO` markers for a named module. Use as the starting document for every architecture specification instead of writing from scratch.
+- [scaffold_spec.py](./scripts/scaffold_spec.py) - Specification document scaffolder (programmatic). Run to generate a pre-structured `SPEC.md` with all required sections and `TODO` markers for a named module. Use when you want a richer programmatic template.
+- [scaffold_artifacts.py](./scripts/scaffold_artifacts.py) - On-disk artifact scaffolder. Creates `.copilot/specs/SPEC.md` and `.copilot/holdout/HOLDOUT.md` as stubs. Run at the start of Phase 4 to guarantee both artifact files exist before being filled. Mirrors the brownfield/greenfield Bible scaffold pattern.
+- [verify_spec.py](./scripts/verify_spec.py) - Verification gate. Run before handing off to implementation; exits 1 if `SPEC.md` or `HOLDOUT.md` is still a stub or missing.

@@ -1,39 +1,19 @@
 ---
-agent: senior-developer
-description: Run health checks on the project's knowledge mem. Auto-fixes broken links and index gaps. Reports contradictions, orphan pages, stale content, and missing concept pages. Use periodically or after major changes to keep the mem trustworthy.
+agent: ai-engineer
+description: Run health checks on the project's knowledge mem. Auto-fixes broken links and index gaps, reports contradictions, orphan pages, stale content, and missing concept pages. Use periodically or after major changes to keep the mem trustworthy.
 argument-hint: "[scope: 'all', 'links', 'index', or specific topic directory]"
 tools:
   - read
   - search
   - edit
-version: "7.0"
-updated: "2026-04-12"
 ---
 
-Load `skills/llm-mem/SKILL.md` via `read_file` before proceeding.
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
 
 Lint the project mem. Scope: **${input:scope}**
 
-## Process
+**Workflow**: Load `skills/llm-mem/SKILL.md` via `read_file`. The skill is the single source of truth for the lint workflow (deterministic auto-fix checks, heuristic report-only checks, log-append rules) and for the Mem Health Report format. Follow it; do not paraphrase here.
 
-1. **Verify mem exists** - If `llmmem/mem/index.md` does not exist, report "No mem found. Run `/mem-ingest` first."
-2. **Deterministic checks** (auto-fix):
-   - Index consistency: files vs. index entries
-   - Internal links: broken paths in mem articles
-   - Raw references: broken links to llmmem/raw/ files
-   - See Also: missing or dead cross-references
-3. **Heuristic checks** (report only):
-   - Factual contradictions across articles
-   - Outdated claims superseded by newer sources
-   - Orphan pages with no inbound links
-   - Concepts mentioned frequently but lacking dedicated pages
-   - Archive pages with stale source citations
-4. **Log** - Append summary to `llmmem/mem/log.md`.
+If `llmmem/mem/index.md` does not exist, stop and tell the user: "No mem found. Run `/mem-ingest` first."
 
-## Output
-
-Mem Health Report with:
-
-- Count of issues found and auto-fixed
-- Table of heuristic findings with severity and recommendation
-- Suggested next actions (sources to ingest, pages to create)
+**Output**: A Mem Health Report with the count of issues auto-fixed, a table of heuristic findings with severity, and suggested next actions.

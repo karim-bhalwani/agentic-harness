@@ -1,18 +1,20 @@
 ---
 name: implementer
-description: "Specialized in high-quality implementation, test-driven development, and clean code practices. Use when writing features, fixing bugs, implementing architectural specifications, refactoring code, or ensuring code quality. DO NOT USE FOR: system design or specs (use architect), code review (use guardian), exploring requirements (use brainstorming), debugging unknown errors (use systematic-debugging), or deployment automation (use ops)."
+description: "PIPELINE POSITION: build (step 4 of 4: brainstorming → architect → concise-planning → implementer). Write features, fix bugs, refactor, and produce tests against an approved design or plan. Output is working, tested code. DO NOT USE FOR: deciding what to build (use brainstorming), designing system architecture or API contracts (use architect), generating the task checklist itself (use concise-planning), code review (use guardian), debugging unknown errors (use systematic-debugging), or deployment automation (use ops)."
 argument-hint: "[feature or code to implement]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["architect", "guardian", "verification-before-completion"]
 ---
 
 # Implementer Skill - High-Integrity Development
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
+
+> **Pipeline position**: **build** (4 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> **`implementer`**. This skill produces working, tested code. It runs LAST. Earlier steps may be compressed for small changes (use `/quick-fix`) but never skipped for non-trivial work.
 
 ## Dependencies
 
@@ -37,8 +39,8 @@ The Implementer skill turns architectural specifications into working, tested, a
 
 ## Coding Standards (Python)
 
-- **Imports**: Grouped by Future, StdLib, Third-Party, and Local.
-- **Naming**: `Upper_Case` for constants, `CapWords` for classes, `snake_case` for functions/variables.
+- **Imports**: Grouped by Standard Library, Third-Party, and Local (add a Future group only when a `__future__` import is explicitly required).
+- **Naming**: `UPPER_CASE` for constants, `CapWords` for classes, `snake_case` for functions/variables.
 - **Paths**: Use `pathlib.Path` exclusively.
 - **Strings**: Use f-strings for formatting (except logging).
 - **Docstrings**: Google Style required for all public APIs.
@@ -57,7 +59,15 @@ This replaces "Read Spec" for small tasks. For anything with architectural impli
 
 ## Workflow
 
-1. **Read Spec / Write Mini-Contract**: Full spec for features, mini-contract for fixes and small tasks. If a sprint contract exists at `.copilot/specs/CONTRACT-<feature>.md`, read it and use its acceptance criteria as your implementation targets (the contract supersedes your own interpretation of the spec).
+1. **Read Planning Artifacts (or Write Mini-Contract)**:
+
+- **Use `SPEC.md`** for feature work and any task with architectural impact.
+- **Use the mini-contract** (2-4 bullets above) for small fixes/refactors that do not require a full spec.
+- **Use `.copilot/specs/CONTRACT-<feature>.md`** when present as the sprint planning artifact that translates the spec into implementable acceptance criteria.
+- **Apply precedence rules**:
+- If both `SPEC.md` and `CONTRACT-<feature>.md` exist, use `SPEC.md` for architecture/intent and `CONTRACT-<feature>.md` for sprint scope and acceptance criteria.
+- If no sprint contract exists, implement directly from `SPEC.md` (or from the mini-contract for small tasks).
+
 2. **Setup Tests**: Write unit tests for expected behavior before implementation. Use the sprint contract's acceptance criteria and error scenarios to derive test cases.
 
    #### TDD Discipline (Red-Green-Refactor)
@@ -113,7 +123,7 @@ When `.copilot/state/FEATURE_PROGRESS.json` exists, update it as you work:
 
 **Rules**: Only modify `status`, `started`, `completed`, `notes`, `summary`, and `updated`. Never rewrite `title`, `id`, or `depends_on`.
 
-**Skip signal**: If the file does not exist, skip silently. Do not create it (that is the planner's job).
+**Skip signal**: If the file does not exist, skip silently. Do not create it (that is handled by the `architect` skill during planning/initialization).
 
 ## When to Use
 
@@ -130,21 +140,12 @@ When `.copilot/state/FEATURE_PROGRESS.json` exists, update it as you work:
 
 ## Subagent Status Contract
 
-When this skill is invoked as a subagent (dispatched by an orchestrator), return exactly one of these statuses at the end of your response:
+When invoked as a subagent, return exactly one status (`DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` / `BLOCKED`) per the canonical protocol in `skills/subagent-execution/SKILL.md` Section Subagent Status Protocol.
 
-| Status               | When to Use                                                                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DONE`               | Task complete, all tests pass, ready for review                                                                                             |
-| `DONE_WITH_CONCERNS` | Complete but you flagged issues (technical debt, risky change, ambiguous spec section) - list each concern                                  |
-| `NEEDS_CONTEXT`      | Cannot complete without additional information - specify exactly what is missing                                                            |
-| `BLOCKED`            | Architectural conflict, missing capability, or the spec requires changes to components outside the task scope - do not attempt a workaround |
-
-**Rules:**
+**Implementer-specific rules:**
 
 - Never return `DONE` if any test is failing.
 - Never return `DONE` if a spec requirement was skipped or deferred.
-- `BLOCKED` is not a failure - it is the correct response when proceeding would require unauthorized architectural decisions. Escalate clearly.
-- `NEEDS_CONTEXT` must name the exact missing information (file path, schema, decision). "Needs more information" is not a valid needs-context response.
 
 ## Standards & Best Practices
 
@@ -209,5 +210,7 @@ When this skill is invoked as a subagent (dispatched by an orchestrator), return
 
 Load these when implementing to calibrate style, structure, and conventions:
 
-- [authentication-service.py](./references/authentication-service.py) - Sample service implementation. Load when writing new service classes, repositories, or handlers to match established patterns.
-- [product_model.md](./references/product_model.md) - Reference domain model with field types, validation rules, and relationships. Load when designing or implementing data models.
+> Note: These are optional reference examples. Some projects may not include them; if missing, treat them as templates and create equivalent project-specific references as needed.
+
+- [authentication-service.py](./references/authentication-service.py) - Sample service implementation (if present). Load when writing new service classes, repositories, or handlers to match established patterns.
+- [product_model.md](./references/product_model.md) - Reference domain model (if present) with field types, validation rules, and relationships. Load when designing or implementing data models.

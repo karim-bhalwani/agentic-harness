@@ -3,16 +3,16 @@ name: excalidraw-diagram
 description: "Generate structured, argumentative Excalidraw diagrams from natural language descriptions. Use when creating architecture diagrams, system visualizations, data flow diagrams, pipeline visualizations, workflow charts, or any technical illustration that outputs .excalidraw JSON files. DO NOT USE FOR: Mermaid or markdown diagrams, text-based documentation (use brainstorming or architect), code generation, or non-visual output."
 argument-hint: "[diagram topic or system to visualize]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Excalidraw Diagram Creator
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Deps: none
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: none
 
 ## Overview
 

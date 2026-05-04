@@ -13,11 +13,17 @@
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\scan-secrets.ps1\"",
         "timeout": 30,
         "env": {
-          "SCAN_MODE": "warn"
+          "SCAN_MODE": "block"
         }
       }
     ],
     "PreToolUse": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/block-holdout.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\block-holdout.ps1\"",
+        "timeout": 10
+      },
       {
         "type": "command",
         "command": "pwsh -File ~/.copilot/hooks/block-destructive.ps1",
@@ -61,6 +67,28 @@
         "command": "pwsh -File ~/.copilot/hooks/pre-compact-save.ps1",
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\pre-compact-save.ps1\"",
         "timeout": 15
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/scan-user-prompt.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\scan-user-prompt.ps1\"",
+        "timeout": 10,
+        "env": {
+          "PROMPT_SCAN_MODE": "warn"
+        }
+      }
+    ],
+    "SubagentStop": [
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/subagent-verify.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\subagent-verify.ps1\"",
+        "timeout": 30,
+        "env": {
+          "SUBAGENT_VERIFY_MODE": "warn"
+        }
       }
     ]
   }

@@ -4,16 +4,16 @@ description: "Initialize project infrastructure, generate context files, maintai
 user-invocable: false
 disable-model-invocation: true
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: []
 ---
 
 # Context Engineer Skill - Project Context & Memory
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Unified reference for project initialization, context management, and persistent memory.
 
@@ -123,6 +123,13 @@ Load [session_state_schema.md](./references/session_state_schema.md) for the ful
 - **holdout-validation**: Evaluation reports feed into retrospective tracking
 - **memory tool**: Cross-session facts stored via Copilot Memory
 
+## Scripts
+
+- [scripts/scaffold_bible.py](./scripts/scaffold_bible.py) - Create stub files for all 6 Project Bible documents. Run at the start of the documentation phase. Mode: `--mode greenfield` or `--mode brownfield`.
+- [scripts/verify_bible.py](./scripts/verify_bible.py) - Verification gate for the Project Bible. Exits 1 if any of the 6 files is still a stub or missing.
+- [scripts/scaffold_session_state.py](./scripts/scaffold_session_state.py) - Create `.copilot/state/SESSION_STATE.md` from the schema template. Idempotent; does not overwrite existing files.
+- [scripts/verify_session_state.py](./scripts/verify_session_state.py) - Verify `SESSION_STATE.md` exists and contains all required schema sections and a valid `Status:` value.
+
 ## References
 
 Load on demand for specific sub-tasks:
@@ -132,3 +139,4 @@ Load on demand for specific sub-tasks:
 - [orientation_template.md](./references/orientation_template.md) - 5-Minute Orientation template.
 - [session_state_schema.md](./references/session_state_schema.md) - Session State schema for cross-session resume.
 - [entropy_audit.md](./references/entropy_audit.md) - Entropy Audit checklist for quarterly audits.
+- [pipeline-loop.md](./references/pipeline-loop.md) - Cross-session iteration tracking and 3-strike circuit breaker for the Release Manager / Senior Developer / Guardian review cycle.

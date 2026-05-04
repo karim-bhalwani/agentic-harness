@@ -3,16 +3,16 @@ name: genai-security
 description: "Security auditing for GenAI/LLM applications. Covers OWASP Top 10 for LLMs (2025), OWASP Top 10 for Agentic Applications (2026), MITRE ATLAS mapping, GenAI threat modeling, prompt injection defense, and AI red teaming. Use when reviewing LLM-powered applications, RAG pipelines, AI agents, prompt templates, or any system integrating generative AI. DO NOT USE FOR: general code security review without LLM components (use guardian), building LLM apps (use llm-app-patterns), runtime prompt injection rules (use security-boundaries), or infrastructure security."
 argument-hint: "[LLM application to audit]"
 license: MIT
-compatibility: "VS Code, Claude Code"
+compatibility: "VS Code"
 metadata:
-  version: "7.0"
-  updated: "2026-04-12"
+  version: "8.0"
+  updated: "2026-05-03"
   dependencies: ["guardian", "llm-app-patterns"]
 ---
 
 # GenAI Security Skill
 
-> Version: 7.0 | Updated: 2026-04-12 | Architect: Karim Bhalwani | Tiered: core (~140 lines) + on-demand references
+> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~140 lines) + on-demand references
 
 Specialized security reference for GenAI applications. Extends Guardian with AI-specific threat models sourced from [OWASP GenAI Security Project](https://genai.owasp.org/).
 
@@ -83,7 +83,7 @@ For full checklist, load [agentic-top-10-checklist.md](./references/agentic-top-
 - [ ] Agent loop limits enforced (hard cap on iterations)
 - [ ] Human-in-the-loop required for destructive or irreversible actions
 - [ ] All tool invocations logged with full audit trail
-- [ ] Memory files treated as **untrusted input** — stored memory is read back into context and is a prompt injection vector (memory poisoning); never trust stored content as instructions
+- [ ] Memory files treated as **untrusted input** - stored memory is read back into context and is a prompt injection vector (memory poisoning); never trust stored content as instructions
 - [ ] Memory content sanitized before storage: filter injected directives, strip executable patterns, enforce max file size
 - [ ] Memory scoped per-user and per-project to prevent cross-contamination between tenants or tasks
 - [ ] Memory operations audited: all reads/writes logged with timestamps and source tracing

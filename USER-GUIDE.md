@@ -11,10 +11,10 @@
 
 Your architect has handed you a standardised AI development system built into GitHub Copilot. It contains:
 
-- **12 custom AI agents**, specialist assistants for each phase of development
-- **22 skills**, knowledge packs agents load automatically when needed
-- **14 prompt shortcuts**, slash commands that wire structured workflows to the right agent
-- **8 hooks**, automation scripts for quality gates, secret scanning, and destructive command blocking
+- **15 custom AI agents**, specialist assistants for each phase of development
+- **24 skills**, knowledge packs agents load automatically when needed
+- **13 prompt shortcuts**, slash commands that wire structured workflows to the right agent
+- **11 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, holdout access enforcement, destructive command blocking, prompt-injection detection, and post-subagent artifact verification
 - **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
 This is your team's **standard**. Everyone uses the same agents, the same patterns, and the same quality bar. That is the point.
@@ -51,15 +51,17 @@ The skills and prompts need to be copied to two specific locations on your machi
 
 #### Where things go
 
-| What                             | Source (unzipped folder) | Destination on your machine      |
-| -------------------------------- | ------------------------ | -------------------------------- |
-| **Prompts** (agents + shortcuts) | `prompts/`               | `%APPDATA%\Code\User\prompts\`   |
-| **Skills** (knowledge packs)     | `skills/`                | `%USERPROFILE%\.copilot\skills\` |
+| What                                    | Source (unzipped folder) | Destination on your machine            |
+| --------------------------------------- | ------------------------ | -------------------------------------- |
+| **Prompts** (agents + shortcuts)        | `prompts/`               | `%APPDATA%\Code\User\prompts\`      |
+| **Skills** (knowledge packs)            | `skills/`                | `%USERPROFILE%\.copilot\skills\`    |
+| **Instructions** (coding standards)     | `instructions/`          | `%USERPROFILE%\.copilot\instructions\` |
 
 **Full paths on Windows:**
 
 - Prompts: `C:\Users\<your-username>\AppData\Roaming\Code\User\prompts`
 - Skills: `C:\Users\<your-username>\.copilot\skills`
+- Instructions: `C:\Users\<your-username>\.copilot\instructions`
 
 ---
 
@@ -78,6 +80,15 @@ The skills and prompts need to be copied to two specific locations on your machi
 3. Navigate to `C:\Users\<your-username>\`
 4. Create a `.copilot` folder if one does not exist, then create a `skills` folder inside it
 5. Paste all skill folders into `.copilot\skills\`
+
+**Instructions:**
+
+1. Open File Explorer and navigate to the unzipped `instructions\` folder
+2. Select all files (`Ctrl+A`)
+3. Navigate to `C:\Users\<your-username>\`
+4. If `.copilot` folder does not exist, create it
+5. Create an `instructions` folder inside `.copilot` (if it doesn't exist)
+6. Paste all instruction files into `.copilot\instructions\`
 
 > **Tip:** `AppData` is a hidden folder. In File Explorer, type `%APPDATA%` directly into the address bar and press Enter. It will take you straight there without needing to unhide hidden folders.
 
@@ -122,18 +133,19 @@ You would not ask your database expert to write the deployment pipeline. You wou
 The work flows in a pipeline:
 
 ```text
-Discover  →  Design  →  Build  →  Review  →  Ship
+Discover  →  Design  →  [Plan]  →  Build  →  Review  →  Ship
 ```
 
 | Stage        | Who You Call                                          | What They Do                                    |
 | ------------ | ----------------------------------------------------- | ----------------------------------------------- |
 | **Discover** | `greenfield-interview` or `brownfield-discovery`      | Document what exists / what you plan to build   |
 | **Design**   | `architect`                                           | Turn requirements into a detailed specification |
+| **Plan**     | `story-master`, then `story-planner`                  | Decompose SPEC into stories and per-story plans (Gate 0: Plan Phase path only) |
 | **Build**    | `senior-developer`, `data-engineer`, or `ai-engineer` | Implement from the spec                         |
 | **Review**   | `guardian`                                            | Read-only audit for quality and security        |
 | **Ship**     | `release-manager`                                     | CI/CD, changelogs, deployment                   |
 
-You do not skip stages. The Architect produces a spec before anyone writes code. The Guardian reviews before anything ships. It is the discipline that makes AI-generated code reliable.
+You do not skip stages. The Architect produces a spec before anyone writes code. When Gate 0 routes to Plan Phase (3 or more deliverables, shared dependencies, or a Scope change), the PLAN phase runs before any BUILD agent touches code. The Guardian reviews before anything ships. It is the discipline that makes AI-generated code reliable.
 
 ---
 
@@ -275,9 +287,62 @@ Application throws KeyError: 'customer_id' in the ETL job.
 Here is the stack trace: [paste stack trace]
 ```
 
-Alternatively, type `/debug-detective` in chat and paste the error. The prompt file routes you to the right agent automatically.
+Alternatively, type `@debug-detective` in chat and paste the error. The agent runs the same workflow with no prompt shell neededd.
 
 The detective will run hypothesis-driven analysis and return a root cause with evidence, not guesses.
+
+---
+
+## PLAN Phase Walkthrough
+
+### When Does the PLAN Phase Activate?
+
+After the Architect produces `SPEC.md` and you review it at Gate 0, you choose whether to route work directly to a BUILD agent (Build Direct path) or activate the PLAN phase. The PLAN phase is the right choice when your SPEC has `Scope: EXPANSION` or `Scope: REDUCTION` (any size), or when it has 3 or more deliverables with shared dependencies. Clicking `[ Approve: Plan Phase ]` at Gate 0 triggers the full backlog and planning workflow described below.
+
+For the canonical end-to-end trace, see `enhancement.md` section 12.
+
+### Step-by-Step Walkthrough
+
+1. **Architect produces `SPEC.md` and stops at Gate 0.** The SPEC includes a Scope tag (`HOLD`, `EXPANSION`, or `REDUCTION`) and the Architect's routing recommendation.
+2. **Human clicks `[ Approve: Plan Phase ]`.** You can override the Architect's recommendation; the button click is your final decision.
+3. **story-master decomposes the SPEC** into `.copilot/stories/STORIES.md` (stories, execution waves, dependency graph, security flags, risk levels) plus `.copilot/stories/.active-story` (a pointer to the first story). story-master stops at Gate 1.
+4. **Human reviews the backlog at Gate 1.** Check story decomposition, wave groupings, and dependency chains. Adjust the `.active-story` pointer if needed, then invoke story-planner.
+5. **Human invokes story-planner** (no argument reads `.active-story`; an explicit `US-{id}` argument or `STORY_ID` env var overrides). story-planner scans the live codebase for patterns to follow, emits a Plan Preview for your confirmation, runs SPEC Directive Traceability (every MUST / SHALL / never directive mapped to a task), audits test infrastructure (prepends T-00 scaffolding tasks for missing test files), and runs a separate-judge Plan Checker Loop (AC coverage, SPEC directives, dependency boundary, task atomicity). Output: `US-{id}-PLAN.md` + `US-{id}-VALIDATION.md`. story-planner stops at Gate 2.
+6. **Human reviews the plan at Gate 2** and clicks a BUILD handoff button (Senior Developer, Data Engineer, or AI Engineer).
+7. **BUILD agent walks the task list**, ticks each checkbox, runs the Validate command after each task, and writes `reports/US-{id}-report.md` before handing off to Guardian.
+8. **Guardian reviews the implementation.** If the story is Security-Sensitive, Guardian auto-loads the `genai-security` skill. A Critical or High finding routes work back to the BUILD agent.
+9. **Release Manager runs the standard ship steps** (CI check, changelog, merge) and clicks `[ Close Story ]`.
+10. **close-story stamps the STORIES.md row** (`Status: done`), updates `.active-story` to the next not-started story in the wave, and confirms all tasks and acceptance criteria are complete.
+
+### Build Direct vs Plan Phase: Which Path?
+
+| Signal | Recommended path |
+| ------ | ---------------- |
+| `Scope: HOLD`, 2 or fewer deliverables, no shared dependencies | Build Direct - pick the matching specialist (Senior Dev, Data Eng, or AI Eng) |
+| `Scope: HOLD`, 3 or more deliverables, or shared dependencies | Plan Phase |
+| `Scope: EXPANSION` or `REDUCTION` (any size) | Plan Phase |
+| Used `/feature-plan` directly (no `SPEC.md` exists) | Build Direct |
+
+These are the Architect's recommendations only. You have final say by clicking the button that matches your intent at Gate 0.
+
+### Branch and PR Conventions
+
+When working a PLAN phase story, follow these conventions to keep PRs traceable to the backlog:
+
+- **Branch:** `story/US-{id}-{kebab-slug}` (example: `story/US-01-user-auth`)
+- **PR title:** `US-{id}: {story title}` (example: `US-01: User authentication`)
+- **PR body:** must include `Closes US-{id}` and a link to `.copilot/stories/reports/US-{id}-report.md`
+- **One story per PR.** Stories listed as Coupled Pairs in `STORIES.md` get separate PRs; call out the mandated merge order in each PR body.
+
+### Working Multiple Stories in Parallel
+
+If your team is working multiple stories in the same wave simultaneously, each developer should set `STORY_ID` in their shell before invoking story-planner or the BUILD agent:
+
+```powershell
+$env:STORY_ID = "US-03"
+```
+
+The `STORY_ID` env var overrides `.active-story` for `session-context.ps1`, `quality-gate.ps1`, and story-planner's story resolution. This lets two developers work wave-1 stories side by side without racing on the shared `.active-story` file.
 
 ---
 
@@ -296,11 +361,11 @@ Designing a new feature          architect      (or /design)
 Writing code from a spec         senior-developer
 Building a data pipeline         data-engineer
 Building an AI / RAG system      ai-engineer
-Writing SQL from a question      data-analyst   (or /sql-query)
+Writing SQL from a question      @data-analyst  (or /sql-query)
 Reviewing code before merge      guardian       (or /code-review)
 Audit docs freshness             guardian       (or /doc-garden)
 Setting up CI/CD / deployment    release-manager
-Hunting a bug                    debug-detective (or /debug-detective)
+Hunting a bug                    @debug-detective
 Creating or improving a prompt   prompt-builder
 Planning an atomic task list     /feature-plan
 Small, low-risk change           /quick-fix
@@ -314,44 +379,13 @@ Always share the Project Bible path. Always paste the spec.
 The more context you give, the better the output.
 ```
 
----
-
-## How Hooks Work (Set Once, Run Forever)
-
-Hooks are PowerShell scripts that run automatically at specific points in the agent lifecycle. Once installed to `~/.copilot/hooks/`, they fire on every project you open (no configuration per project required).
-
-| When it fires           | Hook                    | What it does                                                                      |
-| ----------------------- | ----------------------- | --------------------------------------------------------------------------------- |
-| Session start           | `session-context.ps1`   | Injects branch, Python version, and Project Bible status into the agent's context |
-| Subagent start          | `subagent-context.ps1`  | Same injection for every subagent the main agent spawns                           |
-| Before a tool runs      | `block-destructive.ps1` | Blocks `rm -rf`, `DROP TABLE`, `git push --force`, and similar dangerous commands |
-| Before a tool runs      | `lint-on-write.ps1`     | Prevents writing a `.py` file until `ruff` passes                                 |
-| After a tool runs       | `auto-format.ps1`       | Runs `ruff format` on every Python file the agent writes                          |
-| Before context compacts | `pre-compact-save.ps1`  | Saves session state so the next session can resume where it left off              |
-| When agent finishes     | `quality-gate.ps1`      | Blocks the session from closing if `ruff` or `mypy` errors exist                  |
-| When agent finishes     | `scan-secrets.ps1`      | Warns if modified files contain credentials or secrets                            |
-
-**The key difference from instructions:** Instructions tell agents what to do; hooks make it physically impossible to skip. A `Stop` hook that fails cannot be bypassed by the model under any circumstances (not under context pressure, not due to model drift).
-
-**You do not need to interact with hooks.** Install them once (see Step 6 above or [hooks/INSTALL.md](hooks/INSTALL.md)), and they run silently in the background on every session.
-
----
+> **Data Analyst routing:** `data-analyst` is a utility agent, not a BUILD phase specialist. Reach it via `@data-analyst` (direct), `/sql-query`, a Guardian rework handoff, or peer delegation from Senior Developer or Data Engineer. The Architect no longer routes to Data Analyst at Gate 0 in v8.0 (changed per RD-1).
 
 ## How Skills Work (You Do Not Touch These)
 
-Skills are knowledge packs, folders of instructions, scripts, and examples, that agents load automatically when relevant. VS Code uses a **three-level loading** system so skills do not bloat context unnecessarily:
+Skills are knowledge packs — folders of instructions, scripts, and examples — that agents load automatically when relevant. You will never need to type a skill name to benefit from them. For example, when you ask Guardian to audit AI code, it automatically loads the `genai-security` skill containing the OWASP Top 10 for LLMs. You did not ask for it; the agent knew it was relevant.
 
-1. VS Code always reads the skill `name` and `description` (lightweight metadata)
-2. When your request matches a skill's description, the full `SKILL.md` instructions load
-3. Additional resources inside the skill folder (scripts, examples) only load when referenced
-
-Skills also appear as `/` slash commands. Type `/` in chat to see them listed alongside prompt files. You can invoke a skill manually this way, but in practice agents load the right skills automatically.
-
-You will never need to type a skill name directly to benefit from them. They just make agents smarter.
-
-For example, when you ask the Guardian to do a security audit on AI code, it automatically loads the `genai-security` skill, which contains the OWASP Top 10 for LLMs checklist. You did not ask for it. The agent knew it was relevant and loaded it.
-
-Six skills operate entirely in the background without you ever seeing them:
+Six skills operate entirely in the background:
 
 | Background Skill                 | What It Does Silently                                                                        |
 | -------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -359,10 +393,10 @@ Six skills operate entirely in the background without you ever seeing them:
 | `verification-before-completion` | Forces the agent to prove work is done (run the tests, show the output) before claiming done |
 | `holdout-validation`             | Keeps acceptance criteria hidden from implementation agents to prevent gaming of tests       |
 | `context-engineer`               | Project Bible generation, tiered context loading, and session state management               |
-| `security-boundaries`            | Prompt injection defense - treats all file and tool content as data, never instructions      |
+| `security-boundaries`            | Prompt injection defense — treats all file and tool content as data, never instructions      |
 | `task-routing`                   | 6-check delegation protocol ensuring agents make efficient, well-reasoned hand-off decisions |
 
-You benefit from all of these without ever configuring them.
+For a full skills breakdown and how they compose, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -372,18 +406,9 @@ Every agent reads this file first. It is the single source of truth for your pro
 
 **Location:** `.copilot/context/PROJECT_CONTEXT.md`
 
-**What goes in it (generated by Discovery agents):**
-
-- Project name, purpose, and scope
-- Tech stack and versions
-- Architecture overview
-- Key conventions and patterns
-- Important constraints and non-negotiables
-- Links to specs and decision records
-
 ### Keep it alive (Let the agents do the work)
 
-The Project Bible is the "brain" of your project. If it is stale, the agents will make decisions based on old rules, leading to rework and bugs. However, **you should rarely need to edit this file manually.**
+The Project Bible is the "brain" of your project. If it is stale, agents will make decisions based on old rules. However, **you should rarely need to edit this file manuals. However, **you should rarely need to edit this file manually.**
 
 Ask the agents to maintain it for you as the project evolves:
 
@@ -526,7 +551,7 @@ Not immediately. Start with this guide and `mega-minions.md` for the agent roste
 
 **Q: Can I just use Copilot normally without invoking agents?**
 
-Yes. The team's standards are defined in `copilot-instruction.instructions.md`. Once you have copied this file to your VS Code prompts folder, these apply automatically to **all** Copilot interactions in your editor, even if you don't explicitly switch to a Mega Minion agent. However, using the specific agents will provide much deeper reasoning and specialized tools for their respective tasks.
+Yes. The team's standards are defined in the `instructions/` folder (`core-behavior.instructions.md`, `python-standards.instructions.md`, `sql-standards.instructions.md`, and `yaml-standards.instructions.md`). Once you have copied these files to `.copilot\instructions\` (as described in Step 4), they apply automatically to **all** Copilot interactions in your editor, even if you don't explicitly switch to a Mega Minion agent. However, using the specific agents will provide much deeper reasoning and specialized tools for their respective tasks.
 
 ---
 
@@ -554,142 +579,6 @@ GitHub Copilot operates under our organisation's data privacy settings. Never pa
 
 ---
 
-## Quick Reference: File Map
-
-```text
-copilot-skills-agents/
-│
-├── USER-GUIDE.md             ← You are here
-├── MEGA-MINIONS.md           ← Full agent roster and architecture
-├── CORE_PRINCIPLES.md        ← Why the system is designed this way
-│
-├── prompts/                  ← Agent definitions (the team)
-│   ├── architect.agent.md
-│   ├── senior-developer.agent.md
-│   ├── data-engineer.agent.md
-│   ├── ai-engineer.agent.md
-│   ├── data-analyst.agent.md
-│   ├── guardian.agent.md
-│   ├── release-manager.agent.md
-│   ├── debug-detective.agent.md
-│   ├── prompt-builder.agent.md
-│   ├── greenfield-interview.agent.md
-│   ├── brownfield-discovery.agent.md
-│   ├── researcher.agent.md
-│   ├── copilot-instruction.instructions.md  ← Global rules (auto-applied)
-│   ├── design.prompt.md                     ← /design
-│   ├── feature-plan.prompt.md               ← /feature-plan
-│   ├── code-review.prompt.md                ← /code-review
-│   ├── sql-query.prompt.md                  ← /sql-query
-│   ├── debug-detective.prompt.md            ← /debug-detective
-│   ├── brownfield-discovery.prompt.md       ← /brownfield-disc
-│   ├── greenfield-interview.prompt.md       ← /greenfield-int
-│   ├── doc-garden.prompt.md                 ← /doc-garden
-│   ├── quick-fix.prompt.md                  ← /quick-fix
-│   ├── sprint-contract.prompt.md            ← /sprint-contract
-│   ├── mem-ingest.prompt.md                ← /mem-ingest
-│   ├── mem-query.prompt.md                 ← /mem-query
-│   ├── mem-lint.prompt.md                  ← /mem-lint
-│   └── retrospective.prompt.md              ← /retrospective
-│
-└── skills/                   ← Knowledge packs (loaded by agents, not by you)
-    ├── architect/
-    ├── brainstorming/
-    ├── concise-planning/
-    ├── context-engineer/
-    ├── data-analyst/
-    ├── data-deprecation-analysis/
-    ├── data-engineering/
-    ├── excalidraw-diagram/       ← Visual diagram generation (.excalidraw JSON)
-    ├── genai-security/
-    ├── guardian/
-    ├── holdout-validation/
-    ├── implementer/
-    ├── llm-mem/                 ← Knowledge compilation for project mems
-    ├── llm-app-patterns/
-    ├── ops/
-    ├── prompt-library/
-    ├── thinker/
-    └── verification-before-completion/
-
-hooks/                        ← Quality automation (copy to ~/.copilot/hooks/)
-    ├── hooks.json                ← Registers all hooks with VS Code
-    ├── quality-gate.ps1          ← Blocks finish if ruff/mypy errors exist
-    ├── block-destructive.ps1     ← Blocks rm -rf, DROP TABLE, git push --force
-    ├── lint-on-write.ps1         ← Denies .py writes until ruff passes
-    ├── auto-format.ps1           ← Formats every Python file the agent writes
-    ├── session-context.ps1       ← Injects branch + Project Bible at session start
-    ├── scan-secrets.ps1          ← Scans for leaked credentials before finish
-    ├── pre-compact-save.ps1      ← Saves session state before context compaction
-    ├── subagent-context.ps1      ← Injects context into every subagent session
-    └── INSTALL.md                ← Setup guide (5 min)
-```
-
----
-
-## One-Page Summary to Stick on Your Wall
-
-```text
-╔═══════════════════════════════════════════════════════════════╗
-║                MEGA MINIONS: HOW TO USE THEM                  ║
-╠═══════════════════════════════════════════════════════════════╣
-║                                                               ║
-║  THE PIPELINE                                                 ║
-║  Discover → Design → Build → Review → Ship                    ║
-║  Never skip steps. Spec before code. Review before merge.     ║
-║                                                               ║
-║  HOW TO INVOKE                                                ║
-║  Ctrl+Alt+I → agents dropdown → select agent → type task      ║
-║  /command   → slash command shortcut for common tasks         ║
-║  /agents    → list and configure available agents             ║
-║  /skills    → list and configure available skills             ║
-║                                                               ║
-║  ALWAYS INCLUDE:                                              ║
-║  • Path to Project Bible  (.copilot/context/PROJECT_CONTEXT)  ║
-║  • Path to spec           (.copilot/specs/SPEC.md)            ║
-║  • Error + stack trace    (when debugging)                    ║
-║                                                               ║
-║  THE TEAM  (select from agents dropdown)                      ║
-║  architect             Spec. Never implements.                ║
-║  senior-developer      Code. From spec only.                  ║
-║  data-engineer         Pipelines, PySpark, dbt                ║
-║  ai-engineer           RAG, LLM agents, embeddings            ║
-║  data-analyst          English → SQL                          ║
-║  guardian              Review. Never modifies code.           ║
-║  release-manager       CI/CD, deploy, changelog               ║
-║  debug-detective       Root cause, not guesses                ║
-║  brownfield-discovery  Map what exists                        ║
-║  greenfield-interview  Document what you plan to build        ║
-║                                                               ║
-║  BUILT-IN AGENTS (always available in dropdown)               ║
-║  Agent   Full access: edits, terminal, file reads             ║
-║  Ask     Read-only Q&A: safe for questions                    ║
-║  Plan    Research and plan before acting                      ║
-║                                                               ║
-║  SLASH COMMAND SHORTCUTS                                      ║
-║  /design          Full spec via Architect (new features)      ║
-║  /feature-plan    Atomic task checklist                       ║
-║  /code-review     Guardian review on pasted code              ║
-║  /sql-query       English to T-SQL                            ║
-║  /debug-detective Root cause analysis                         ║
-║  /sprint-contract Acceptance criteria negotiation             ║
-║  /mem-ingest     Ingest source into project mem               ║
-║  /mem-query      Query project mem knowledge                  ║
-║  /mem-lint       Health check project mem                     ║
-║                                                               ║
-║  RULES                                                        ║
-║  1. Spec before code. Always.                                 ║
-║  2. Review before merge. Always.                              ║
-║  3. Keep the Project Bible current. Always.                   ║
-║  4. Review agent output. They make mistakes.                  ║
-║  5. Unsure which agent? Switch to architect, they route you.  ║
-║  6. Trouble? Right-click Chat → Diagnostics.                  ║
-║                                                               ║
-╚═══════════════════════════════════════════════════════════════╝
-```
-
----
-
 ## Next Steps
 
 Once you are comfortable with basic workflows:
@@ -703,4 +592,4 @@ Once you are comfortable with basic workflows:
 
 ---
 
-Version 7.0 | April 12, 2026 | Part of the Mega Minions system | Verified against VS Code > 1.106 docs
+Version 8.0 | May 3, 2026 | Part of the Mega Minions system | Verified against VS Code > 1.118 docs
