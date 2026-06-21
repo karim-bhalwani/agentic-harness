@@ -5,14 +5,14 @@ argument-hint: "[natural language query or database task]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Data Analyst Skill
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Translates natural language requests into optimized, production-safe T-SQL against Azure SQL / SQL Server. For detailed patterns, load the appropriate deep-dive reference.
 
@@ -51,14 +51,28 @@ Every SQL response MUST include:
 
 ## Query Strategy Decision Tree (Data Vault)
 
-| User Says                                     | Strategy                     | Pattern                                                              |
-| --------------------------------------------- | ---------------------------- | -------------------------------------------------------------------- |
-| "current", "latest", "active"                 | Current state via ROW_NUMBER | `ROW_NUMBER() OVER (PARTITION BY HK ORDER BY Process_Date DESC) = 1` |
-| "as of [date]", "historical snapshot"         | Point-in-time query          | PIT table or `WHERE Process_Date <= @AsOfDate` + ROW_NUMBER          |
-| "all changes", "history", "audit trail"       | Full satellite scan          | All rows ordered by Process_Date                                     |
-| "relationship", "linked to"                   | Hub-Link-Hub traversal       | Join through Link table                                              |
-| "active relationship", "current subscription" | Effectivity Sat filter       | Self-join with `MAX(Load_Date)` + `BETWEEN`                          |
-| "report", "dashboard", "summary"              | Information Mart first       | Check for Dim*/Fact* tables                                          |
+### Step 1: Identify Temporal Intent
+- **"current", "latest", "active"** → Current state query
+- **"as of [date]", "historical snapshot"** → Point-in-time query
+- **"all changes", "history", "audit trail"** → Full history scan
+
+### Step 2: Select Pattern by Intent
+
+#### Current State
+Use `ROW_NUMBER() OVER (PARTITION BY HK ORDER BY Process_Date DESC) = 1` to isolate latest record per entity.
+
+#### Point-in-Time
+Use PIT table if available, else apply `WHERE Process_Date <= @AsOfDate` + ROW_NUMBER.
+
+#### Full History
+Select all rows ordered by `Process_Date` (no filtering).
+
+### Step 3: Handle Relationships
+- **"relationship", "linked to"** → Join Hub → Link → Hub
+- **"active relationship", "current subscription"** → Filter EffSat with `MAX(Load_Date)` + `BETWEEN`
+
+### Step 4: Check for Pre-Built Views
+- **"report", "dashboard", "summary"** → Query Dim*/Fact* (Information Mart) tables first
 
 **For full DV navigation protocol**: load [data-vault-navigation.md](./references/data-vault-navigation.md)
 

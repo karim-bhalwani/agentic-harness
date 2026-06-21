@@ -1,19 +1,19 @@
 ---
 name: holdout-validation
-description: "Structural separation of test authorship from code authorship. Produces behavioral acceptance scenarios that implementation agents cannot see, evaluated independently by Guardian. Use when designing acceptance criteria, validating implementations against intent, or enforcing holdout-set discipline. DO NOT USE FOR: unit test writing (use guardian), implementation (use implementer), verifying task completion (use verification-before-completion), or general test strategy."
+description: "Structural separation of test authorship from code authorship. Produces behavioral acceptance scenarios that implementation agents cannot see, evaluated independently by Guardian. Use when designing acceptance criteria, validating implementations against intent, or enforcing holdout-set discipline. DO NOT USE FOR: unit test writing (use guardian), implementation (use implementer), verifying task completion (use verification-before-completion), or any other test strategies beyond holdout validation, including integration and performance testing."
 user-invocable: false
 disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: ["architect", "guardian", "verification-before-completion"]
 ---
 
 # Holdout Validation Skill - Structural Test Separation
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
 
 ## Dependencies
 
@@ -46,14 +46,38 @@ This addresses the documented pattern where reasoning models engage in test gami
 
 These rules are **structural constraints**, not behavioral suggestions. Reasoning models will use available information regardless of instructions.
 
-| Agent Role                                                                     | Access     | Rationale                                                                                                               |
-| ------------------------------------------------------------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Architect**                                                                  | WRITE only | Authors holdout scenarios during specification. Spec references the holdout file but does NOT include scenarios inline. |
-| **Implementation agents** (`senior-developer`, `data-engineer`, `ai-engineer`) | **NONE**   | MUST NOT read files in `.copilot/holdout/`. If requested, deny access.                                                  |
-| **Guardian**                                                                   | READ only  | Loads holdout scenarios during review and evaluates implementation against them.                                        |
-| **Context-engineer**                                                           | READ only  | Tracks holdout pass rates in retrospective documents.                                                                   |
+### Quick Reference
 
-**When holdouts don't exist**: Implementation agents proceed normally with spec-based testing. Guardian notes "No holdout scenarios found" in the review and recommends Architect provide them for future iterations.
+| Agent Role                                         | Access     |
+| -------------------------------------------------- | ---------- |
+| **Architect**                                     | WRITE only |
+| **Implementation agents** (dev, data, data-sci, ai) | **NONE**   |
+| **Guardian**                                      | READ only  |
+| **Context-engineer**                              | READ only  |
+
+### Detailed Rules by Role
+
+**Architect** – WRITE only
+- Authors holdout scenarios during specification
+- Spec references the holdout file but does NOT include scenarios inline
+
+**Implementation agents** (`senior-developer`, `data-engineer`, `data-scientist`, `ai-engineer`) – **NONE**
+- MUST NOT read files in `.copilot/holdout/`
+- If requested, deny access
+
+**Guardian** – READ only
+- Loads holdout scenarios during review
+- Evaluates implementation against them
+
+**Context-engineer** – READ only
+- Tracks holdout pass rates in retrospective documents
+
+### Exception: Missing Holdouts
+
+If holdout scenarios don't exist:
+- Implementation agents proceed normally with spec-based testing
+- Guardian notes "No holdout scenarios found" in the review
+- Guardian recommends Architect provide them for future iterations
 
 ## Holdout Scenario Structure
 
@@ -137,7 +161,7 @@ The holdout `README.md` should contain:
 ```markdown
 # Holdout Validation Scenarios
 
-**Access Rule:** Implementation agents (senior-developer, data-engineer, ai-engineer)
+**Access Rule:** Implementation agents (senior-developer, data-engineer, data-scientist, ai-engineer)
 MUST NOT read files in this directory. These scenarios are exclusively for
 Guardian evaluation during review.
 
@@ -179,7 +203,7 @@ Guardian evaluation during review.
 | Phase          | Input From                     | Output To                                            | Context                                            |
 | -------------- | ------------------------------ | ---------------------------------------------------- | -------------------------------------------------- |
 | Design         | `architect`                    | Holdout scenario files                               | Architect writes scenarios after spec              |
-| Implementation | Spec (no holdouts)             | `senior-developer` / `data-engineer` / `ai-engineer` | Developers work from spec only                     |
+| Implementation | Spec (no holdouts)             | `senior-developer` / `data-engineer` / `data-scientist` / `ai-engineer` | Developers work from spec only                     |
 | Review         | Holdout files + implementation | `guardian`                                           | Guardian evaluates implementation against holdouts |
 | Tracking       | Holdout evaluation report      | `context-engineer`                                   | Track holdout pass rates over time                 |
 

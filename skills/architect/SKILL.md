@@ -1,18 +1,18 @@
 ---
 name: architect
-description: "PIPELINE POSITION: specify (step 2 of 4: brainstorming → architect → concise-planning → implementer). Produce the formal SPEC.md after brainstorming has aligned intent. Defines module boundaries, API contracts, data models, and replaceability constraints. Output is a specification artifact at .copilot/specs/SPEC.md. DO NOT USE FOR: open-ended requirement exploration (use brainstorming FIRST), atomic task checklists for an already-approved design (use concise-planning), writing implementation code (use implementer), code review or security audit (use guardian), debugging errors (use systematic-debugging), or CI/CD pipeline design (use ops)."
+description: "PIPELINE POSITION: specify (step 2 of 4: brainstorming → architect → concise-planning → implementer). Produce the formal SPEC.md after brainstorming has aligned intent. Defines module boundaries, API contracts, data models, and replaceability constraints. Output is a specification artifact at .copilot/specs/SPEC.md. DO NOT USE FOR: unstructured requirement exploration (use brainstorming FIRST for alignment), atomic task checklists for an already-approved design (use concise-planning), writing implementation code (use implementer), code review or security audit (use guardian), debugging errors (use systematic-debugging), or CI/CD pipeline design (use ops). NOTE: Scope determination (REDUCTION/HOLD/EXPANSION) is part of the Architect role and comes first."
 argument-hint: "[system component to design]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: ["brainstorming", "thinker"]
 ---
 
 # Architect Skill - System Design & Specification
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: brainstorming, thinker
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: brainstorming, thinker
 
 > **Pipeline position**: **specify** (2 of 4) - `brainstorming` -> **`architect`** -> `concise-planning` -> `implementer`. This skill produces `.copilot/specs/SPEC.md`. It runs AFTER `brainstorming` has aligned intent and BEFORE `concise-planning` sequences execution.
 
@@ -66,17 +66,54 @@ Document answers in the spec under a **Scope Analysis** section (before Module B
 
 ## Mandatory Output: `SPEC.md` Template
 
-Every architectural design must produce or update a specification following this structure. All thirteen sections are required - a specification that omits any section leaves room for interpretation and is not considered complete.
+Every architectural design must produce or update a specification following this structure. **All thirteen sections are required** - a specification that omits any section leaves room for interpretation and is not considered complete.
+
+### Mandatory Frontmatter (Schema Version Contract)
+
+Every `SPEC.md` **MUST** begin with a YAML frontmatter block that declares the artifact schema version. Downstream agents (Guardian, Senior Developer, Data Engineer, AI Engineer) read this version and refuse to operate on schemas they do not recognise.
+
+```yaml
+---
+spec_schema_version: 1 # see tests/contracts/schema_versions.py
+version: "0.1" # this individual spec document
+status: "Draft" # Draft | In Review | Approved | Blocked | Deprecated
+date: "01-July-2026"
+owner: "<lead architect>"
+holdout_reference: ".copilot/holdout/HOLDOUT-<feature-name>.md"
+scope_mode: "EXPANSION" # REDUCTION | HOLD | EXPANSION
+---
+```
+
+The matching `HOLDOUT-<feature-name>.md` file MUST declare:
+
+```yaml
+---
+holdout_schema_version: 1
+feature: "<feature-name>"
+owner: "<lead architect>"
+scenarios: <count, 3-10 typical>
+---
+```
+
+Bumping a schema version is a **breaking change**: every consumer must be updated in lockstep. The full schema set lives under `tests/contracts/schemas/` and is validated by `tests/contracts/test_artifact_schemas.py`.
+
+### Core Sections (1–4): System Design & Structure
 
 1. **System Overview**: High-level goal, scope boundaries, identified business primitives, and the problem being solved. What is explicitly out of scope.
 2. **Module Boundaries**: Proposed directory and file layout; responsible module per concern; one-sentence description test for every module; Mermaid component diagram showing component flow.
 3. **API Contracts**: Method, path, payload, and response for every interface (RFC 7807 for errors). Includes event schemas for async interfaces. Input/output types and validation rules must be fully specified.
 4. **Data Models**: Table/object schemas with field types, nullability, validation rules, and index strategy. Includes read schema and write schema separately where they differ.
+
+### Operational Sections (5–9): Quality, Safety & Deployment
+
 5. **Error Handling**: Error taxonomy (categories and codes); which errors are recoverable vs fatal; retry strategy per category; logging and alerting obligations per severity. Must include an **Error & Rescue Map** (see below).
 6. **Security Considerations**: Authentication and authorization model; trust boundaries between modules; data sensitivity classification; secrets management approach; input validation requirements; known threat surface (STRIDE analysis for security-critical features).
 7. **Performance Requirements**: Latency targets (p50/p95/p99); throughput requirements; known bottlenecks and mitigation strategy; caching policy; resource constraints (memory, CPU, I/O).
 8. **Testing Strategy**: Unit test scope and coverage target; integration test boundaries; E2E scenarios for critical user workflows; determinism requirements (mocking time, network, randomness); CI tier per test type.
 9. **Deployment Considerations**: Target environment; configuration and environment variables; migration plan for schema changes; rollback procedure; observability hooks (logging, tracing, alerting).
+
+### Decision Sections (10–13): Unknowns, Risks & Acceptance
+
 10. **Open Questions**: Decisions that are unresolved at spec time, each with an owner and resolution deadline. These must be resolved before implementation begins.
 11. **Risks**: Identified design risks with likelihood, impact, and mitigation strategy. Includes architectural assumptions that, if wrong, would require significant rework.
 12. **Deferred Decisions**: Design choices deliberately postponed with documented rationale, acceptance criteria for when they must be revisited, and who owns the revisit.
@@ -152,23 +189,51 @@ ContentFilterError           | N <- GAP | --                         | 500 error
 
 ## Definition of Done
 
-- [ ] `SPEC.md` produced with all 13 sections present and complete
-- [ ] System Overview defines scope and out-of-scope boundaries explicitly
-- [ ] Module Boundaries: every module passes the "one-sentence description" test
-- [ ] API Contracts: all interfaces fully specified (types, validation, error responses)
-- [ ] Data Models: read and write schemas defined with nullability and validation rules
-- [ ] Error Handling: error taxonomy, retry strategy, and logging obligations defined
-- [ ] Security Considerations: trust boundaries, auth model, and threat surface documented
-- [ ] Performance Requirements: latency targets and throughput stated; bottlenecks identified
-- [ ] Testing Strategy: coverage target, CI tier per test type, and determinism requirements set
-- [ ] Deployment Considerations: environment, config, migration, and rollback documented
-- [ ] Open Questions: each has an owner and a resolution deadline; none remain unowned
-- [ ] Risks: each risk has likelihood, impact, and mitigation strategy
-- [ ] Deferred Decisions: rationale and revisit criteria documented; owner assigned
-- [ ] Acceptance Scenarios: holdout file created at `.copilot/holdout/HOLDOUT-<feature-name>.md`; spec references but does not include scenarios inline
-- [ ] Specification saved to `.copilot/specs/SPEC.md` for downstream agent access
+### Required Sections (All 13 Must Be Present)
+
+**System Design & Structure**
+
+- [ ] 1. System Overview: goal, scope, business primitives, out-of-scope boundaries
+- [ ] 2. Module Boundaries: directory layout, one-sentence test, Mermaid diagram
+- [ ] 3. API Contracts: method, path, payload, response, error codes (RFC 7807)
+- [ ] 4. Data Models: schemas with field types, nullability, validation, indexes
+
+**Quality, Safety & Deployment**
+
+- [ ] 5. Error Handling: taxonomy, rescue map, retry strategy, logging obligations
+- [ ] 6. Security Considerations: auth, trust boundaries, threat surface (STRIDE)
+- [ ] 7. Performance Requirements: latency targets (p50/p95/p99), bottlenecks
+- [ ] 8. Testing Strategy: coverage target, integration boundaries, CI tier
+- [ ] 9. Deployment Considerations: environment, config, migration, rollback
+
+**Decision & Risk Management**
+
+- [ ] 10. Open Questions: unresolved decisions with owner and deadline
+- [ ] 11. Risks: likelihood, impact, and mitigation per risk
+- [ ] 12. Deferred Decisions: rationale, revisit criteria, owner
+- [ ] 13. Acceptance Scenarios: reference to `.copilot/holdout/HOLDOUT-<feature-name>.md` (not inline)
+
+### Design Quality Gates
+
+**Architecture & Dependencies**
+
 - [ ] Dependency graph verified acyclic (no circular dependencies)
 - [ ] Replaceability confirmed: modules can be reimplemented from interface alone
+- [ ] Every module passes "one-sentence description" test
+
+**Specification Completeness**
+
+- [ ] Error & Rescue Map complete (every codepath → failure mode → rescue action)
+- [ ] No critical gaps in Error & Rescue Map (rows with RESCUED=N must be resolved)
+- [ ] All API interfaces include RFC 7807 error response format
+- [ ] Data models specify read schema and write schema separately where they differ
+
+### Artifact & Approval
+
+- [ ] Specification saved to `.copilot/specs/SPEC.md` for downstream agent access
+- [ ] Holdout file created at `.copilot/holdout/HOLDOUT-<feature-name>.md`
+- [ ] `spec_schema_version` declared in SPEC frontmatter and present in `tests/contracts/schema_versions.SUPPORTED_SCHEMA_VERSIONS`
+- [ ] `holdout_schema_version` declared in HOLDOUT frontmatter
 - [ ] Spec reviewed and accepted by implementer or stakeholder before implementation begins
 
 ## Constraints

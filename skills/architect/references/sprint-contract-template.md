@@ -1,6 +1,6 @@
 # Sprint Contract Template
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 Used by [`/sprint-contract`](../../../prompts/sprint-contract.prompt.md). The contract is a design-time simulation of the builder/Guardian negotiation that catches ambiguity before code is written. No code or review is produced here.
 

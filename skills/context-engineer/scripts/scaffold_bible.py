@@ -8,11 +8,11 @@ The agent then fills each file with real content. This prevents any file from
 being silently skipped if the agent is interrupted or runs out of context.
 
 Usage (agent context):
-    uv run skills/context-engineer/scripts/scaffold_bible.py --output-dir .copilot/context
+    uv run ~/.copilot/skills/context-engineer/scripts/scaffold_bible.py --output-dir .copilot/context
 
 Usage (with mode):
-    uv run skills/context-engineer/scripts/scaffold_bible.py --output-dir .copilot/context --mode greenfield
-    uv run skills/context-engineer/scripts/scaffold_bible.py --output-dir .copilot/context --mode brownfield
+    uv run ~/.copilot/skills/context-engineer/scripts/scaffold_bible.py --output-dir .copilot/context --mode greenfield
+    uv run ~/.copilot/skills/context-engineer/scripts/scaffold_bible.py --output-dir .copilot/context --mode brownfield
 """
 
 from __future__ import annotations

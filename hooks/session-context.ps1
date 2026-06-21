@@ -1,4 +1,4 @@
-# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+# Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 #
 # session-context.ps1
 # SessionStart hook: inject project context at the start of every agent session.
@@ -51,6 +51,24 @@ else {
 
 # --- Active venv ---
 $venvStatus = if ($env:VIRTUAL_ENV) { $env:VIRTUAL_ENV } else { 'none' }
+
+# --- Reset subagent budget counter for new session ---
+# Paired with cap-subagent-budget.ps1. Wiping the file on SessionStart guarantees
+# each interactive session starts with a fresh budget.
+$stateDir = Join-Path $projectRoot '.copilot\state'
+if (-not (Test-Path $stateDir)) {
+    New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
+}
+$budgetPath = Join-Path $stateDir 'subagent-budget.json'
+$budgetSeed = [ordered]@{
+    session_start = (Get-Date).ToUniversalTime().ToString('o')
+    total         = 0
+    by_agent      = @{}
+}
+try {
+    ($budgetSeed | ConvertTo-Json -Depth 3) | Set-Content -Path $budgetPath -Encoding UTF8 -ErrorAction Stop
+}
+catch { }
 
 # --- Session State ---
 $sessionStatePath = Join-Path $projectRoot '.copilot\state\SESSION_STATE.md'
@@ -141,7 +159,7 @@ $ctx = @"
 - Pipeline phase: $pipelinePhase
 - Artifacts:     $artifactList
 - Active story:  $storyStatus
-- Hook harness:  v1.3 (11 hooks: quality-gate, scan-secrets, block-holdout, block-destructive, lint-on-write, auto-format, session-context, subagent-context, pre-compact-save, scan-user-prompt, subagent-verify)
+- Hook harness:  v1.5 (13 hooks: quality-gate, scan-secrets, retrospective-check, block-holdout, block-destructive, lint-on-write, auto-format, artifact-manifest, session-context, subagent-context, pre-compact-save, scan-user-prompt, subagent-verify)
 "@
 
 if ($storyWarnings.Count -gt 0) {

@@ -5,54 +5,58 @@ argument-hint: "[pipeline or data task]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Data Engineering Skill
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 Unified reference for data pipeline design, implementation, and optimization. Covers the full stack: schema design, Spark tuning, dbt patterns, SQL optimization, and data quality.
 
 ## Behavioral Directives
 
-- **One clear approach**: recommend a single implementation path. Present alternatives only when genuinely viable with different tradeoffs (e.g., latency vs. cost). Do NOT list anti-patterns as options.
+- **One clear approach**: recommend a single implementation path. Present alternatives only when they meet performance benchmarks within 10% of the primary recommendation and have distinct tradeoffs (e.g., latency vs. cost, complexity vs. maintainability). Do NOT list anti-patterns as options.
 - **Discovery before implementation**: before writing pipeline code, verify: source schema shape, target write mode, partition strategy, and idempotency guarantees.
 - **Fail fast, explain clearly**: error messages from validators and quality checks must double as remediation instructions for the next agent or human.
 
-## Decision Tree
+## Pipeline Routing Guide
 
-Use this tree to route to the correct pattern before writing any code.
+Answer these four questions in order to determine the correct pattern:
 
-```text
-User request -> What kind of pipeline?
-|
-+-- Batch (historical / full-scan source)
-|   +-- Raw ingestion (no transforms) -> Bronze layer (append-only, schema-on-read)
-|   +-- Dedup / conform / SCD -> Silver layer (MERGE, schema enforcement)
-|   |   +-- SCD Type 1 (overwrite) -> whenMatchedUpdateAll
-|   |   +-- SCD Type 2 (history) -> Data Vault Satellites or add _valid_from/_valid_to
-|   +-- Aggregation / star schema -> Gold layer (Materialized View or pre-aggregated table)
-|   +-- Orchestration -> Airflow DAG (idempotent tasks, execution_date partitioning)
-|
-+-- Streaming / incremental source
-|   +-- File ingestion (cloud storage) -> Auto Loader or Spark Structured Streaming
-|   +-- CDC / change feed -> MERGE with sequence column for ordering
-|   +-- Append-only events -> Streaming write with checkpointing
-|   +-- Windowed aggregation -> Stateful streaming with watermark
-|
-+-- Transformation framework?
-|   +-- SQL-first, multi-model lineage -> dbt (staging -> intermediate -> marts)
-|   +-- Complex logic, UDFs, ML features -> PySpark DataFrame API
-|   +-- Hybrid -> dbt for SQL models, PySpark for heavy transforms
-|
-+-- Data quality
-|   +-- Schema validation at entry -> StructType enforcement or dbt schema tests
-|   +-- Business rule checks -> Great Expectations suite or dbt custom generic tests
-|   +-- Monitoring & alerting -> Row count / null rate / freshness checks
-```
+### 1. What is your data source type?
+
+- **Batch** (historical snapshots, full scans, scheduled loads) → Go to **Step 2**
+- **Streaming** (real-time events, CDC, append-only feeds) → Go to **Streaming Patterns** below
+
+### 2. For batch pipelines: What transformation scope?
+
+- **No transformation** (raw ingestion) → Use **Bronze Layer** (append-only, schema-on-read)
+- **Deduplication, conformance, SCD** → Use **Silver Layer** (MERGE with schema enforcement)
+  - Type 1 SCD (overwrite current) → Use `whenMatchedUpdateAll` in MERGE
+  - Type 2 SCD (preserve history) → Use Data Vault Satellites or `_valid_from` / `_valid_to` columns
+- **Aggregation, star schema** → Use **Gold Layer** (Materialized View or pre-aggregated table)
+
+### 3. What transformation framework?
+
+- **SQL-dominant, multiple models, clear lineage** → Use **dbt** (staging → intermediate → marts)
+- **Complex logic, UDFs, feature engineering** → Use **PySpark DataFrame API**
+- **Both SQL and complex logic** → Use **dbt for SQL models + PySpark for heavy transforms**
+
+### 4. Data quality requirements?
+
+- **Schema validation at entry** → Apply StructType enforcement or dbt schema tests in Bronze/Staging
+- **Business rule checks** → Implement Great Expectations suite or dbt custom generic tests in Silver/Intermediate
+- **Monitoring & alerting** → Add row count / null rate / freshness checks on Gold layer
+
+### Streaming Patterns
+
+- **File ingestion** (cloud storage) → Use Auto Loader or Spark Structured Streaming
+- **CDC or change feed** → Use MERGE with sequence column for deterministic ordering
+- **Append-only events** → Use Streaming write with checkpointing
+- **Windowed aggregation** → Use stateful streaming with watermark
 
 ## Medallion Architecture
 

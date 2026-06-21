@@ -1,7 +1,7 @@
 # OWASP Top 10 for Agentic Applications (2026) - Detailed Checklist
 
 **Source:** [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications/)
-**Version:** 2026 (December 2025)
+**Version:** 9.0 (December 2025)
 
 Use this reference for detecting, mitigating, and testing risks specific to autonomous AI agent systems.
 

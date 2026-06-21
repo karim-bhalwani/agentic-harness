@@ -6,15 +6,15 @@ disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   source: "Extracted from copilot-instruction.instructions.md Section 9 to reduce auto-loaded context"
   dependencies: []
 ---
 
 # Task Routing Protocol
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 ## When to Load This Skill
 
@@ -104,7 +104,7 @@ These patterns are proven to degrade agent system performance. Avoid them.
 
 ## Context Isolation
 
-See `skills/subagent-execution/SKILL.md` Section Context Isolation Principle for the canonical rules. Summary: pass the task spec, file paths, acceptance criteria, and prior decisions only, never the full session history or unrelated reasoning.
+See `skills/subagent-execution/SKILL.md` section "Context Mode: Fresh vs Inherited" for the canonical rules. Summary: default to fresh context (task spec, file paths, acceptance criteria only); use inherited context only when explicitly justified (continuation, prior-attempt awareness).
 
 For structured multi-task execution with two-stage review, load `skills/subagent-execution/SKILL.md`.
 
@@ -134,17 +134,6 @@ The Architect now presents four handoff buttons after writing `SPEC.md`. Three a
 ### Data Analyst routing in v8.0
 
 The Architect handoff to `data-analyst` was removed (RD-1). Data Analyst remains a utility agent reachable via four retained paths: `@data-analyst` mention, `/sql-query` slash command, Guardian rework handoff for SQL-heavy code, and peer delegation from Senior Developer / Data Engineer per the 6-check protocol above. **DO NOT** invent an Architect-to-Data-Analyst handoff in v8.0 designs.
-
-### Analyst story close path (Owner: data-analyst in STORIES.md)
-
-When story-master tags a story `Type: Technical, Owner: data-analyst`, the story bypasses the full BUILD-phase machinery (no story-planner, no PLAN.md, no VALIDATION.md). It is NOT an unverified path -- it has a defined four-step close sequence:
-
-1. Human invokes `@data-analyst` with the story context.
-2. `@data-analyst` writes the SQL deliverable.
-3. `@guardian` reviews the SQL (injection risks, performance, output correctness) and writes approval to `.copilot/artifacts/review-report.md`. Use the Guardian SQL rework handoff for this step.
-4. Human invokes `close-story`. It detects `Owner: data-analyst`, skips PLAN.md and VALIDATION.md checks, verifies the Guardian review report is present and PASS-only, then stamps `STORIES.md` under file lock.
-
-Summary: Guardian review is mandatory for analyst stories. The Guardian review report (`review-report.md`) is the quality gate that replaces the implementation report + VALIDATION.md on this path. `close-story` enforces this gate before stamping.
 
 ### Analyst story close path (Owner: data-analyst in STORIES.md)
 

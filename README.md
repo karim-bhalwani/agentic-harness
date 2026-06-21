@@ -1,24 +1,26 @@
 # Copilot Skills, Hooks & Agents Collection
 
-![Version](https://img.shields.io/badge/version-8.0-blue)
+![Version](https://img.shields.io/badge/version-9.0-blue)
 ![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen)
 ![Domain](https://img.shields.io/badge/domain-Data%20%2B%20AI%20Engineering-9933ff)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![VS Code](https://img.shields.io/badge/VS%20Code-Copilot%20Compatible-0078d4)
-![Agents](https://img.shields.io/badge/agents-15-blue)
-![Skills](https://img.shields.io/badge/skills-24-blue)
-![Hooks](https://img.shields.io/badge/hooks-11-blue)
+![Agents](https://img.shields.io/badge/agents-16-blue)
+![Skills](https://img.shields.io/badge/skills-25-blue)
+![Hooks](https://img.shields.io/badge/hooks-14-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**Architect:** Karim Bhalwani | **Version:** 8.0 | **Updated:** 2026-05-03
+**Architect:** Karim Bhalwani | **Version:** 9.0 | **Updated:** 01-July-2026
 
 ---
 
 ## What Is This?
 
-A production-ready **multi-agent development crew** for GitHub Copilot in VS Code. Instead of one general-purpose AI, you get 15 specialized agents that collaborate through a shared pipeline: discover → design → (plan) → build → review → ship.
+A production-ready **multi-agent development crew** for GitHub Copilot in VS Code. Instead of one general-purpose AI, you get 16 specialized agents that collaborate through a shared pipeline: discover → design → (plan) → build → review → ship.
 
-Each agent has a defined role, knows its limits, and hands work off to the next agent in the chain. Domain knowledge lives in 24 on-demand skills. Quality invariants are enforced by 11 platform-level hooks that the model cannot override.
+Each agent has a defined role, knows its limits, and hands work off to the next agent in the chain. Domain knowledge lives in 25 on-demand skills. Quality invariants are enforced by 13 platform-level hooks that the model cannot override.
+
+> **How counts are tallied:** headline numbers track files on disk, one `*.agent.md` per agent (the hidden `researcher` is included), one `skills/<name>/` directory per skill, one `*.prompt.md` per prompt, and one `*.ps1` per hook. The `audit.py` count-sync check fails the build if any badge or tagline drifts from these counts.
 
 **The short version:** spec before code, one agent per phase, hooks enforce what instructions can't.
 
@@ -28,10 +30,10 @@ Each agent has a defined role, knows its limits, and hands work off to the next 
 
 | Component                                             | Count | What it does                                                                                                                  |
 | ----------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Agents** (`.agent.md`) & **Prompts** (`.prompt.md`) | 15+13 | Specialized personas (architect, senior-developer, guardian, etc.) + slash commands (/design, /code-review, /quick-fix, etc.) |
-| **Skills** (`SKILL.md`)                               | 24    | Domain knowledge packs loaded on demand: data-engineering, genai-security, implementer, etc.                                  |
+| **Agents** (`.agent.md`) & **Prompts** (`.prompt.md`) | 16+13 | Specialized personas (architect, senior-developer, guardian, etc.) + slash commands (/design, /code-review, /quick-fix, etc.) |
+| **Skills** (`SKILL.md`)                               | 25    | Domain knowledge packs loaded on demand: data-engineering, genai-security, implementer, etc.                                  |
 | **Instructions** (`.instructions.md`)                 | 4     | Global rules auto-applied to every session (core behavior, Python, SQL, YAML standards)                                       |
-| **Hooks** (`.ps1`)                                    | 11    | Platform-level enforcement: quality gates, secrets scan, destructive command blocking, etc.                                   |
+| **Hooks** (`.ps1`)                                    | 14    | Platform-level enforcement: quality gates, secrets scan, destructive command blocking, etc.                                   |
 
 ---
 
@@ -40,7 +42,7 @@ Each agent has a defined role, knows its limits, and hands work off to the next 
 ### 1. Prerequisites
 
 - VS Code 1.118+ with GitHub Copilot
-- [UV](UV-GUIDE.md) — Python package manager (`irm https://astral.sh/uv/install.ps1 | iex`)
+- [UV](UV-GUIDE.md)  -  Python package manager (`irm https://astral.sh/uv/install.ps1 | iex`)
 
 ### 2. Install agents & prompts
 
@@ -76,7 +78,7 @@ Get-ChildItem "$hooksPath\*" | Unblock-File
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
-Verify: open Copilot Chat → Command Palette → "Chat: Configure Hooks". You should see 11 hooks registered.
+Verify: open Copilot Chat → Command Palette → "Chat: Configure Hooks". You should see 14 hooks registered.
 
 > Full hook setup and troubleshooting: [hooks/INSTALL.md](hooks/INSTALL.md)
 

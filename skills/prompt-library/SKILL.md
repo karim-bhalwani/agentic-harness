@@ -1,18 +1,18 @@
 ---
 name: prompt-library
-description: "Curated collection of high-quality prompts for various tasks - role-based templates, analysis frameworks, code review prompts, and brainstorming structures. Use when building prompts for specific roles, needing analysis or brainstorming frameworks, creating code review prompts, or searching for proven prompt patterns and structures. DO NOT USE FOR: LLM application architecture (use llm-app-patterns), actual code review execution (use guardian), brainstorming features (use brainstorming), or prompt injection defense (use security-boundaries)."
+description: "Curated collection of high-quality prompts for various tasks - role-based templates, analysis frameworks, code review prompts, and brainstorming structures. Use when building prompts for specific roles, needing analysis or brainstorming frameworks, creating code review prompts, or searching for proven prompt patterns and structures. DO NOT USE FOR: LLM application architecture (use llm-app-patterns), actual code review execution (use guardian), brainstorming new application features (use brainstorming), or prompt injection defense (use security-boundaries)."
 argument-hint: "[prompt category or use case]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Prompt Library
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 Curated collection of high-quality prompts for various use cases, organized by task type.
 

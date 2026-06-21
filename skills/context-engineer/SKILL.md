@@ -1,19 +1,19 @@
 ---
 name: context-engineer
-description: "Initialize project infrastructure, generate context files, maintain project memory, and track decisions. Covers Project Bible generation, tiered context loading, bug-solution tracking, architectural decision records, and cross-session memory. Use when setting up projects, auditing environments, generating context documentation, maintaining project memory, or tracking decisions. DO NOT USE FOR: system architecture design (use architect), wiki knowledge persistence (use llm-mem), implementation tasks (use implementer), or debugging errors (use systematic-debugging)."
+description: "Initialize project infrastructure, generate context files, maintain project memory, and track decisions. Covers Project Bible generation, tiered context loading, bug-solution tracking, architectural decision records, and cross-session memory. Use when setting up projects, auditing environments, generating context documentation, maintaining project memory, or tracking decisions. DO NOT USE FOR: high-level system architecture design, such as defining module boundaries and selecting technologies (use architect), wiki knowledge persistence (use llm-mem), feature implementation tasks, such as writing code for specific features (use implementer), or debugging runtime errors (use systematic-debugging)."
 user-invocable: false
 disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Context Engineer Skill - Project Context & Memory
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Unified reference for project initialization, context management, and persistent memory.
 
@@ -129,6 +129,7 @@ Load [session_state_schema.md](./references/session_state_schema.md) for the ful
 - [scripts/verify_bible.py](./scripts/verify_bible.py) - Verification gate for the Project Bible. Exits 1 if any of the 6 files is still a stub or missing.
 - [scripts/scaffold_session_state.py](./scripts/scaffold_session_state.py) - Create `.copilot/state/SESSION_STATE.md` from the schema template. Idempotent; does not overwrite existing files.
 - [scripts/verify_session_state.py](./scripts/verify_session_state.py) - Verify `SESSION_STATE.md` exists and contains all required schema sections and a valid `Status:` value.
+- [scripts/context_cache.py](./scripts/context_cache.py) - Manage the `## Context Cache` section in `SESSION_STATE.md`. Agents query this before reading shared files (`SPEC.md`, `STORIES.md`, `PROJECT_CONTEXT.md`) and add entries after reading. Commands: `add`, `query`, `list`, `clear`.
 
 ## References
 

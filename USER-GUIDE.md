@@ -11,10 +11,10 @@
 
 Your architect has handed you a standardised AI development system built into GitHub Copilot. It contains:
 
-- **15 custom AI agents**, specialist assistants for each phase of development
-- **24 skills**, knowledge packs agents load automatically when needed
+- **16 custom AI agents**, specialist assistants for each phase of development
+- **25 skills**, knowledge packs agents load automatically when needed
 - **13 prompt shortcuts**, slash commands that wire structured workflows to the right agent
-- **11 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, holdout access enforcement, destructive command blocking, prompt-injection detection, and post-subagent artifact verification
+- **13 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, destructive command blocking, prompt-injection detection, post-subagent artifact verification, retrospective reminders, and artifact manifest logging
 - **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
 This is your team's **standard**. Everyone uses the same agents, the same patterns, and the same quality bar. That is the point.
@@ -141,7 +141,7 @@ Discover  →  Design  →  [Plan]  →  Build  →  Review  →  Ship
 | **Discover** | `greenfield-interview` or `brownfield-discovery`      | Document what exists / what you plan to build   |
 | **Design**   | `architect`                                           | Turn requirements into a detailed specification |
 | **Plan**     | `story-master`, then `story-planner`                  | Decompose SPEC into stories and per-story plans (Gate 0: Plan Phase path only) |
-| **Build**    | `senior-developer`, `data-engineer`, or `ai-engineer` | Implement from the spec                         |
+| **Build**    | `senior-developer`, `data-engineer`, `data-scientist`, or `ai-engineer` | Implement from the spec                         |
 | **Review**   | `guardian`                                            | Read-only audit for quality and security        |
 | **Ship**     | `release-manager`                                     | CI/CD, changelogs, deployment                   |
 
@@ -383,7 +383,7 @@ The more context you give, the better the output.
 
 ## How Skills Work (You Do Not Touch These)
 
-Skills are knowledge packs — folders of instructions, scripts, and examples — that agents load automatically when relevant. You will never need to type a skill name to benefit from them. For example, when you ask Guardian to audit AI code, it automatically loads the `genai-security` skill containing the OWASP Top 10 for LLMs. You did not ask for it; the agent knew it was relevant.
+Skills are knowledge packs  -  folders of instructions, scripts, and examples  -  that agents load automatically when relevant. You will never need to type a skill name to benefit from them. For example, when you ask Guardian to audit AI code, it automatically loads the `genai-security` skill containing the OWASP Top 10 for LLMs. You did not ask for it; the agent knew it was relevant.
 
 Six skills operate entirely in the background:
 
@@ -393,7 +393,7 @@ Six skills operate entirely in the background:
 | `verification-before-completion` | Forces the agent to prove work is done (run the tests, show the output) before claiming done |
 | `holdout-validation`             | Keeps acceptance criteria hidden from implementation agents to prevent gaming of tests       |
 | `context-engineer`               | Project Bible generation, tiered context loading, and session state management               |
-| `security-boundaries`            | Prompt injection defense — treats all file and tool content as data, never instructions      |
+| `security-boundaries`            | Prompt injection defense  -  treats all file and tool content as data, never instructions      |
 | `task-routing`                   | 6-check delegation protocol ensuring agents make efficient, well-reasoned hand-off decisions |
 
 For a full skills breakdown and how they compose, see [ARCHITECTURE.md](ARCHITECTURE.md).

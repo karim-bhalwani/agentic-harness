@@ -1,7 +1,7 @@
 # Mega Minions - Hook Harness: Install Guide
 
 **Architect:** Karim Bhalwani
-**Version:** 8.0 | **Updated:** 2026-05-03
+**Version:** 9.0 | **Updated:** 01-July-2026
 **Platform:** Windows (PowerShell)
 
 ---
@@ -16,7 +16,7 @@ For a comprehensive guide to what each hook does, lifecycle coverage, and config
 
 ## Hooks Included
 
-This package includes 11 hook scripts plus `hooks.json` configuration. See [README.md](README.md) for the complete hook inventory and what each one does.
+This package includes 13 hook scripts plus `hooks.json` configuration. See [README.md](README.md) for the complete hook inventory and what each one does.
 
 ## Installation
 
@@ -83,7 +83,7 @@ Add these to your VS Code `settings.json` (`Ctrl+Shift+P` → "Open User Setting
 2. Type `/hooks` in chat, or
 3. Open Command Palette (`Ctrl+Shift+P`) → "Chat: Configure Hooks"
 
-You should see the 11 hooks listed (Stop x2, PreToolUse x3, PostToolUse x1, SessionStart x1, SubagentStart x1, PreCompact x1, UserPromptSubmit x1, SubagentStop x1).
+You should see the 14 hooks listed (Stop x3, PreToolUse x3, PostToolUse x2, SessionStart x1, SubagentStart x1, PreCompact x1, UserPromptSubmit x1, SubagentStop x1).
 
 ---
 
@@ -95,14 +95,17 @@ Runs `ruff check .` and `mypy . --quiet` before the agent session can close. If 
 
 **Env vars:**
 
-| Variable            | Default | Effect                                    |
-| ------------------- | ------- | ----------------------------------------- |
-| `SKIP_QUALITY_GATE` | `false` | Set `true` to skip entirely               |
-| `GUARD_MODE`        | `block` | Set `warn` to log errors without blocking |
+| Variable            | Default | Effect                                                                 |
+| ------------------- | ------- | ---------------------------------------------------------------------- |
+| `SKIP_QUALITY_GATE` | `false` | Set `true` to skip entirely                                            |
+| `SKIP_WAVE_GATE`    | `false` | Set `true` to bypass only the PLAN-phase wave parallelism check        |
+| `GUARD_MODE`        | `block` | Set `warn` to log errors without blocking                              |
+
+The wave check fires only when `.copilot/stories/STORIES.md` exists. It enforces: every story in wave N must reach `done` before any story in wave N+1 leaves `not-started`.
 
 holdout.ps1 (PreToolUse)
 
-Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent is a BUILD agent (senior-developer, data-engineer, ai-engineer). Converts the instruction-level holdout access boundary from the holdout-validation skill into a deterministic enforcement gate. Guardian, architect, holdout-validation, and other non-BUILD agents pass through. Unknown agent types also pass through (cannot enforce without identity).
+Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent is a BUILD agent (senior-developer, data-engineer, ai-engineer, data-scientist). Converts the instruction-level holdout access boundary from the holdout-validation skill into a deterministic enforcement gate. Guardian, architect, holdout-validation, and other non-BUILD agents pass through. Unknown agent types also pass through (cannot enforce without identity).
 
 **Intercepted tools:** `read_file`, `list_dir`, `grep_search`, `file_search`, `run_in_terminal`
 
@@ -111,12 +114,14 @@ Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent
 | Variable             | Default | Effect                                                                         |
 | -------------------- | ------- | ------------------------------------------------------------------------------ |
 | `SKIP_HOLDOUT_GUARD` | `false` | Set `true` to bypass entirely (invalidates holdout evaluation for the session) |
+| `GOVERNANCE_LEVEL`   | `standard` | `open` logs-only, `standard`/`strict`/`locked` deny BUILD-agent holdout access |
+| `HOOK_LOG_DIR`       | `.copilot/state/hook-logs` | Override JSONL log output directory |
 
 ### block-
 
 ### block-holdout.ps1 (PreToolUse)
 
-Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent is a BUILD agent (senior-developer, data-engineer, ai-engineer). Converts the instruction-level holdout access boundary from the holdout-validation skill into a deterministic enforcement gate. Guardian, architect, holdout-validation, and other non-BUILD agents pass through. Unknown agent types also pass through (cannot enforce without identity).
+Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent is a BUILD agent (senior-developer, data-engineer, ai-engineer, data-scientist). Converts the instruction-level holdout access boundary from the holdout-validation skill into a deterministic enforcement gate. Guardian, architect, holdout-validation, and other non-BUILD agents pass through. Unknown agent types also pass through (cannot enforce without identity).
 
 **Intercepted tools:** `read_file`, `list_dir`, `grep_search`, `file_search`, `run_in_terminal`
 
@@ -138,6 +143,24 @@ Intercepts every `run_in_terminal` call and blocks any command matching a danger
 | ------------------------ | --------- | -------------------------------------------------------------------------------- |
 | `SKIP_DESTRUCTIVE_GUARD` | `false`   | Set `true` to skip entirely                                                      |
 | `TOOL_GUARD_ALLOWLIST`   | _(empty)_ | Comma-separated substrings to allow through (e.g. `my-safe-script,test-cleanup`) |
+| `GOVERNANCE_LEVEL`       | `standard` | `open` logs-only, `standard`/`strict`/`locked` block dangerous commands |
+| `HOOK_LOG_DIR`           | `.copilot/state/hook-logs` | Override JSONL log output directory |
+
+### cap-subagent-budget.ps1 (PreToolUse)
+
+Enforces per-session caps on subagent launches. Prevents misbehaving orchestrators from fanning out into unbounded parallel subagents (especially the hidden Researcher) and burning through token budget.
+
+Maintains a counter file at `.copilot/state/subagent-budget.json` (initialized by session-context.ps1). On each `runSubagent` tool call, atomically increments the per-agent counter and compares against configured caps. If over budget, denies the tool call with a detailed reason.
+
+**Env vars:**
+
+| Variable                    | Default | Effect                                                                   |
+| --------------------------- | ------- | ----------------------------------------------------------------------- |
+| `SKIP_SUBAGENT_BUDGET`      | `false` | Set `true` to disable entirely (emergency circuit breaker)              |
+| `SUBAGENT_BUDGET_TOTAL`     | `30`    | Total subagent launches per session                                     |
+| `SUBAGENT_BUDGET_RESEARCHER` | `10`   | Cap specifically for the hidden Researcher agent                        |
+| `SUBAGENT_BUDGET_<AGENT>`   | _(none)_ | Per-agent override in UPPER_SNAKE case (e.g. `SUBAGENT_BUDGET_GUARDIAN=5`) |
+| `GOVERNANCE_LEVEL`          | `standard` | `open` logs-only, others enforce caps                                |
 
 ### auto-format.ps1 (PostToolUse)
 
@@ -149,6 +172,17 @@ After every file write by the agent, runs `ruff format` on `.py` files. Runs `np
 | ------------------ | ------- | --------------------------- |
 | `SKIP_AUTO_FORMAT` | `false` | Set `true` to skip entirely |
 
+### artifact-manifest.ps1 (PostToolUse)
+
+After every file write by the agent, appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` recording timestamp, agent id, tool name, file path, and role (`artifact` / `state` / `scratch` / `unknown`). Gives future sessions a cheap grep-able index of what was produced. Zero LLM tokens.
+
+**Env vars:**
+
+| Variable                  | Default | Effect                      |
+| ------------------------- | ------- | --------------------------- |
+| `SKIP_ARTIFACT_MANIFEST`  | `false` | Set `true` to skip entirely |
+| `AGENT_ID`                | `unknown` | Identifier recorded in each entry |
+
 ### session-context.ps1 (SessionStart)
 
 At the start of every agent session, injects: git branch, last commit, Python version, project root, Project Bible status (`~/.copilot/context/PROJECT_CONTEXT.md` check), and active venv.
@@ -159,14 +193,16 @@ At the start of every agent session, injects: git branch, last commit, Python ve
 
 At session end, scans all files modified since last commit for 13 credential patterns (AWS, GCP, Azure, GitHub PATs, private keys, Stripe, Slack, npm tokens, JWTs, connection strings). Skips obvious placeholder values (example, dummy, changeme, etc.).
 
-**Default mode is `warn`** - findings are logged but do not block the session.
+**Default mode is governance-driven**. With `GOVERNANCE_LEVEL=standard`, findings block session end.
 
 **Env vars:**
 
 | Variable            | Default | Effect                                                       |
 | ------------------- | ------- | ------------------------------------------------------------ |
 | `SKIP_SECRETS_SCAN` | `false` | Set `true` to skip entirely                                  |
-| `SCAN_MODE`         | `warn`  | Set `block` to prevent agent finishing when secrets detected |
+| `SCAN_MODE`         | derived from governance | Explicit override (`warn` or `block`) |
+| `GOVERNANCE_LEVEL`  | `standard` | `open` forces warn-mode, all others default to block |
+| `HOOK_LOG_DIR`      | `.copilot/state/hook-logs` | Override JSONL log output directory |
 
 ### lint-on-write.ps1 (PreToolUse)
 
@@ -212,14 +248,16 @@ Inspects every user-submitted prompt before the model sees it. Detects two class
 - **Prompt injection markers**: substrings like `ignore previous instructions`, `jailbreak`, `system prompt`, `disregard the above`.
 - **Credential patterns**: AWS access keys, GitHub PATs, OpenAI keys, Slack tokens, JWTs, private key blocks.
 
-In `warn` mode (default, registered in `hooks.json`) the hook injects a security notice via `additionalContext` so the model treats the flagged content as data, never instructions. In `block` mode the hook exits 2 to reject the prompt.
+In `warn` mode (default in `GOVERNANCE_LEVEL=standard`) the hook injects a security notice via `additionalContext` so the model treats the flagged content as data, never instructions. In `block` mode the hook exits 2 to reject the prompt (default in `strict`/`locked` governance unless explicitly overridden).
 
 **Env vars:**
 
 | Variable                | Default | Effect                                                                 |
 | ----------------------- | ------- | ---------------------------------------------------------------------- |
 | `SKIP_SCAN_USER_PROMPT` | `false` | Set `true` to disable scanning                                         |
-| `PROMPT_SCAN_MODE`      | `warn`  | Set to `block` to reject suspicious prompts (high false-positive risk) |
+| `PROMPT_SCAN_MODE`      | derived from governance | Explicit override (`warn` or `block`) |
+| `GOVERNANCE_LEVEL`      | `standard` | `standard` keeps warn-mode, `strict`/`locked` escalate to block |
+| `HOOK_LOG_DIR`          | `.copilot/state/hook-logs` | Override JSONL log output directory |
 
 ### subagent-verify.ps1 (SubagentStop)
 
@@ -232,7 +270,20 @@ The hook is conservative: it only runs a verifier if the artifact directory alre
 | Variable               | Default             | Effect                                                     |
 | ---------------------- | ------------------- | ---------------------------------------------------------- |
 | `SKIP_SUBAGENT_VERIFY` | `false`             | Set `true` to disable post-subagent verification           |
-| `SUBAGENT_VERIFY_MODE` | `warn` (registered) | Set to `block` to enforce blocking on verification failure |
+| `SUBAGENT_VERIFY_MODE` | derived from governance | Explicit override (`warn` or `block`) |
+| `GOVERNANCE_LEVEL`     | `standard`          | `open`/`standard` warn on verifier failures, `strict`/`locked` block |
+| `HOOK_LOG_DIR`         | `.copilot/state/hook-logs` | Override JSONL log output directory |
+
+### retrospective-check.ps1 (Stop)
+
+Counts completed workflow cycles (story reports under `.copilot/stories/reports/`) and prints a "retrospective due" banner once per interval crossing (default every 5). This converts the self-measurement loop from a discipline you must remember into a prompt you are nudged toward. Non-blocking: it never stops the session, it only reminds you to run `/retrospective`. The high-water mark is stored in `.copilot/state/retrospective-counter.txt` so a reminder fires only once per threshold.
+
+**Env vars:**
+
+| Variable                   | Default | Effect                                              |
+| -------------------------- | ------- | --------------------------------------------------- |
+| `SKIP_RETROSPECTIVE_CHECK` | `false` | Set `true` to disable retrospective reminders       |
+| `RETROSPECTIVE_INTERVAL`   | `5`     | Number of completed cycles between reminders        |
 
 ---
 

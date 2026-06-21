@@ -52,24 +52,24 @@ close-story uses a file lock (`.copilot/stories/.STORIES.md.lock`) to prevent co
 Remove-Item .copilot/stories/.STORIES.md.lock
 ```
 
-Never commit the lock file — it is in `.gitignore`.
+Never commit the lock file  -  it is in `.gitignore`.
 
 ---
 
 ## Onboarding a New Member
 
-1. Read [MEGA-MINIONS.md](MEGA-MINIONS.md) — 15-minute pipeline overview.
-2. Follow [USER-GUIDE.md](USER-GUIDE.md) — install prompts, skills, hooks.
+1. Read [MEGA-MINIONS.md](MEGA-MINIONS.md)  -  15-minute pipeline overview.
+2. Follow [USER-GUIDE.md](USER-GUIDE.md)  -  install prompts, skills, hooks.
 3. Confirm `.copilot/config.yml` has `team_mode: team`.
-4. Run `/start-here` — tells you exactly which agent to invoke next.
+4. Run `/start-here`  -  tells you exactly which agent to invoke next.
 5. Get your story assignment from the tech lead and set `$env:STORY_ID`.
 
 ---
 
 ## Anti-Patterns
 
-- **Committing `.STORIES.md.lock`** — blocks every developer until manually deleted from remote.
-- **Starting Wave 2 before Wave 1 blockers are `done`** — story-planner enforces this; do not bypass it with `/feature-plan`.
-- **Merging Coupled Pairs out of order** — CI does not enforce merge sequence; treat the Coupled Pairs table in `STORIES.md` as binding.
-- **Forgetting `STORY_ID` in a new shell** — inherits parent shell value; both sessions check the same story. Always set explicitly.
-- **Running close-story before Guardian and Release Manager** — causes "report missing" block. Required sequence: BUILD → Guardian → Release Manager → `[ Close Story ]`.
+- **Committing `.STORIES.md.lock`**  -  blocks every developer until manually deleted from remote.
+- **Starting Wave 2 before Wave 1 blockers are `done`**  -  story-planner enforces this; do not bypass it with `/feature-plan`.
+- **Merging Coupled Pairs out of order**  -  CI does not enforce merge sequence; treat the Coupled Pairs table in `STORIES.md` as binding.
+- **Forgetting `STORY_ID` in a new shell**  -  inherits parent shell value; both sessions check the same story. Always set explicitly.
+- **Running close-story before Guardian and Release Manager**  -  causes "report missing" block. Required sequence: BUILD → Guardian → Release Manager → `[ Close Story ]`.

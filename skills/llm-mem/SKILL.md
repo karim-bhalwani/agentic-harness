@@ -5,14 +5,14 @@ argument-hint: "[source to ingest, question to query, or 'lint']"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # LLM MEM Skill - Knowledge Compilation & Persistence
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 Build and maintain a persistent, compounding knowledge mem for any project. Raw sources go in, interlinked mem articles come out. The mem grows richer with every source ingested and every question asked.
 
@@ -53,7 +53,7 @@ Everything lives under a single `llmmem/` directory in the **project repo**, ver
 Triggers only on the **first Ingest**. Run the scaffold script (idempotent: skips files that exist):
 
 ```bash
-uv run skills/llm-mem/scripts/scaffold_mem.py
+uv run ~/.copilot/skills/llm-mem/scripts/scaffold_mem.py
 ```
 
 This creates only what is missing; it never overwrites existing files:
@@ -64,7 +64,7 @@ This creates only what is missing; it never overwrites existing files:
 - `llmmem/mem/index.md` - heading `# Knowledge Base Index`, empty body
 - `llmmem/mem/log.md` - heading `# mem Log`, empty body
 
-Verify structure at any time with `uv run skills/llm-mem/scripts/verify_mem.py`. The verifier also surfaces raw files that have no matching mem coverage (use `--strict` to fail on uncovered raw files in CI contexts).
+Verify structure at any time with `uv run ~/.copilot/skills/llm-mem/scripts/verify_mem.py`. The verifier also surfaces raw files that have no matching mem coverage (use `--strict` to fail on uncovered raw files in CI contexts).
 
 If Query or Lint runs before any mem exists, tell the user: "Run an ingest first to initialize the mem." Do not auto-create.
 

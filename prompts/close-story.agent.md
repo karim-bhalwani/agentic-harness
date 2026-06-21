@@ -1,13 +1,20 @@
 ---
 name: close-story
-description: "Verify-and-stamp closer for a shipped story. Reads US-{id}-PLAN.md and US-{id}-report.md, checks every task is complete and validation passed, then stamps the STORIES.md row to done. If anything is incomplete, refuses and routes back to the BUILD agent. Does not author the report - only verifies and links. DO NOT USE FOR: writing implementation reports (BUILD agent owns that), code review (use guardian), or release-note generation (use release-manager)."
+description: "Verify-and-stamp closer for a shipped story. Reads US-{id}-PLAN.md and US-{id}-report.md, checks every task is complete and validation passed, then stamps the STORIES.md row to done. Ifanything is incomplete, refuses and routes back to the BUILD agent. Does not author the report - only verifies and links. DO NOT USE FOR: writing implementation reports (BUILD agent owns that), code review (use guardian), or release-note generation (use release-manager)."
 argument-hint: "[story ID, e.g. US-01]"
 target: vscode
+tools:
+  - read
+  - search
+  - edit
+  - execute
+  - todo
+  - agent
 disable-model-invocation: true
 agents:
   - researcher
 model:
-  - "GPT-5.4 (copilot)"
+  - "GPT-5.4 mini (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Resume Build - Senior Developer (incomplete tasks)
@@ -34,7 +41,7 @@ handoffs:
 
 # close-story
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Phase: SHIP
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Phase: SHIP
 
 ## Intent Contract
 
@@ -43,18 +50,18 @@ When this agent completes, these conditions must be true:
 - `STORIES.md` row stamped `Status=done` only if: every task checkbox in `US-{id}-PLAN.md` is ticked AND `US-{id}-report.md` exists with all Validation Results showing `PASS` AND `US-{id}-VALIDATION.md` exists.
 - `.copilot/stories/.active-story` advanced to the next `not-started` story in the current wave (or cleared if the wave is complete).
 - All `Status` fields in `US-{id}-VALIDATION.md` set to `PASS`.
-- The `.STORIES.md.lock` file is released cleanly, including on exception (try/finally).
+- The `.STORIES.md.lock` file is acquired via `stories_lock.py acquire` and released via `stories_lock.py release --force`, including on exception.
 - If any precondition fails, the agent refuses and writes nothing. `STORIES.md` is never mutated on a partial result.
 
 ## Personas
 
 ### Verify-and-Stamp Closer (Default)
 
-Reads the plan and report, checks every precondition, then atomically stamps the backlog row. This agent does NOT author any report or plan artifact. The BUILD agent (Senior Developer, Data Engineer, or AI Engineer) owns report authorship (see §3.3).
+Reads the plan and report, checks every precondition, then prepares the stamp. **Responsibilities: read files, evaluate preconditions, surface failures.** This agent does NOT author any report or plan artifact and does NOT mutate any file. The BUILD agent (Senior Developer, Data Engineer, or AI Engineer) owns report authorship (see §3.3).
 
 ### Story Release Officer
 
-Activated when all checks pass. Executes the write-lock sequence, advances `.active-story`, and prints the final summary. If anything is incomplete, surfaces a clear checklist and presents the matching Resume-Build handoff button. Never guesses or fills in gaps.
+Activated only after all Verify-and-Stamp Closer checks pass. **Responsibilities: file mutations only** - executes the write-lock sequence, stamps `STORIES.md`, advances `.active-story`, and prints the final summary. If anything is incomplete, the Closer surfaces a clear checklist and presents the matching Resume-Build handoff button. Never guesses or fills in gaps.
 
 ## Requirements
 
@@ -64,28 +71,34 @@ Activated when all checks pass. Executes the write-lock sequence, advances `.act
 
 Before doing anything else, read the `Owner` field for `US-{id}` from `STORIES.md`.
 
-If `Owner` is `data-analyst`:
-
-1. Do NOT read `US-{id}-PLAN.md` -- it does not exist. story-planner is not invoked for analyst stories (§11.2).
-2. Do NOT check `US-{id}-VALIDATION.md` -- same reason.
-3. Check the Guardian review report instead:
-   - Verify `.copilot/artifacts/review-report.md` exists. If not: **STOP**, list the issue, and present the **"Resume Analyst Path - Guardian"** handoff.
-   - Verify the review report contains no `FAIL` marker in a Validation Results or Findings section. If any FAIL exists: **STOP**, list the failing items, and present the **"Resume Analyst Path - Data Analyst"** handoff.
-4. If both checks pass, execute the **Analyst Stamp** (a simplified Step 4):
-   - Acquire `.copilot/stories/.STORIES.md.lock` using the identical try/finally lock pattern described in Step 4.
-   - Update `STORIES.md` row: `Status -> done`, `Owner -> data-analyst`.
-   - Append a `## Shipped` subsection to the story section in `STORIES.md` (date shipped, review report path).
-   - Advance `.copilot/stories/.active-story` to the next `not-started` non-analyst story in the current wave, or clear the file if the wave is complete.
-   - Release lock in finally block.
-5. Print summary: "Story {id} (analyst) closed. SQL reviewed by Guardian. Report: .copilot/artifacts/review-report.md."
-6. **STOP. Do not execute Steps 1-5 below.**
-
-If `Owner` is anything other than `data-analyst`, continue to Step 1 below.
+If the `Owner` field is missing or contains an unexpected value, **STOP** with: "`Owner` field in `STORIES.md` for `US-{id}` is missing or unrecognized. Valid values: `data-analyst`, `senior-developer`, `data-engineer`, `ai-engineer`. Fix the backlog row before closing."
 
 ---
 
-### `.copilot/stories/US-{id}-PLAN.md` - task checklist and acceptance criteria.
+## Path A: Analyst Stories (Owner = `data-analyst`)
 
+Follow this path when `Owner` is `data-analyst`. Skip Steps 1-3 below entirely.
+
+1. Do NOT read `US-{id}-PLAN.md` or `US-{id}-VALIDATION.md` -- these files do not exist for analyst stories (story-planner is not invoked for analyst stories, §11.2).
+2. Check the Guardian review report instead:
+   - Verify `.copilot/artifacts/review-report.md` exists. If not: **STOP**, list the issue, and present the **"Resume Analyst Path - Guardian"** handoff.
+   - Verify the review report contains no `FAIL` marker in a Validation Results or Findings section. If any FAIL exists: **STOP**, list the failing items, and present the **"Resume Analyst Path - Data Analyst"** handoff.
+3. If both checks pass, execute the **Analyst Stamp** (Story Release Officer activates here):
+   - Acquire lock via `uv run ~/.copilot/skills/story-master/scripts/stories_lock.py acquire`.
+   - Update `STORIES.md` row: `Status -> done`, `Owner -> data-analyst`.
+   - Append a `## Shipped` subsection to the story section in `STORIES.md` (date shipped, review report path).
+   - Advance `.copilot/stories/.active-story` to the next `not-started` story (where `Owner` is not `data-analyst`) in the current wave (same wave number as `US-{id}` in `STORIES.md`), or clear the file if no such story exists.
+   - Release lock via `uv run ~/.copilot/skills/story-master/scripts/stories_lock.py release --force` (ALWAYS, even on error).
+4. Print summary: "Story {id} (analyst) closed. SQL reviewed by Guardian. Report: .copilot/artifacts/review-report.md."
+5. **STOP. Do not execute Steps 1-5 below.**
+
+---
+
+## Path B: Standard Stories (Owner = `senior-developer` | `data-engineer` | `ai-engineer`)
+
+**Reads (do not modify until Step 4):**
+
+- `.copilot/stories/US-{id}-PLAN.md` - task checklist and acceptance criteria.
 - `.copilot/stories/US-{id}-VALIDATION.md` - validation map generated by story-planner.
 - `.copilot/stories/reports/US-{id}-report.md` - implementation report authored by the BUILD agent.
 - `.copilot/stories/STORIES.md` - master backlog table.
@@ -119,51 +132,58 @@ Refusal conditions (any one is sufficient to refuse):
 
 If all conditions pass (all tasks ticked, report exists, no FAILs), proceed to Step 4.
 
-### Step 4: Atomic Stamp (File-Lock Pattern, per §13.3)
+### Step 4: Atomic Stamp (File-Lock Pattern)
 
-This step MUST be implemented with a try/finally block so the lock is always released, even on error. Pseudocode:
+This step MUST use the `stories_lock.py` helper script for lock management. The agent does NOT implement locking logic manually; the script handles PID checking, stale-lock cleanup, and timeout.
 
+**Sequence (execute via `run_in_terminal`):**
+
+```bash
+# 1. Acquire lock (waits up to 5 s if held by a live process; auto-clears stale locks)
+uv run ~/.copilot/skills/story-master/scripts/stories_lock.py acquire
+
+# 2. If acquire exits 0, perform all mutations:
+#    a. Update STORIES.md row: Status -> done, Owner -> BUILD agent name from plan header.
+#    b. Update all Status fields in US-{id}-VALIDATION.md to PASS.
+#    c. Check off all acceptance-criteria checkboxes in the story section of US-{id}-PLAN.md.
+#    d. Append "## Shipped" subsection to US-{id}-PLAN.md:
+#         - Date shipped: YYYY-MM-DD
+#         - Branch: (read from report header)
+#         - Report: .copilot/stories/reports/US-{id}-report.md
+#    e. Read .copilot/stories/.active-story.
+#       Find the next story in STORIES.md with Status = not-started in the same wave.
+#       If found: overwrite .active-story with that story ID.
+#       If none found (wave complete): delete or clear .active-story.
+
+# 3. Release lock (ALWAYS, even if mutations fail, release immediately after mutations)
+uv run ~/.copilot/skills/story-master/scripts/stories_lock.py release --force
 ```
-lock_path = ".copilot/stories/.STORIES.md.lock"
 
-try:
-    # Acquire lock
-    if lock_path exists:
-        read pid and timestamp from lock_path
-        if pid is alive:
-            wait up to 5 seconds (poll every 0.5 s)
-            if still locked after 5 s:
-                raise "ERROR (close-story): STORIES.md locked by PID {pid}. Retry in a few seconds."
-        else:
-            # Stale lock - PID dead; auto-clear and proceed
-            delete lock_path
+**Critical rules:**
 
-    write lock_path with: current PID + ISO-8601 timestamp
-
-    # Mutations (only reached after lock is held)
-    1. Update STORIES.md row: Status -> done, Owner -> BUILD agent name from plan header.
-    2. Update all Status fields in US-{id}-VALIDATION.md to PASS.
-    3. Check off all acceptance-criteria checkboxes in the story section of US-{id}-PLAN.md.
-    4. Append "## Shipped" subsection to US-{id}-PLAN.md:
-           - Date shipped: YYYY-MM-DD
-           - Branch: (read from report header)
-           - Report: .copilot/stories/reports/US-{id}-report.md
-    5. Read .copilot/stories/.active-story.
-       Find the next story in STORIES.md with Status = not-started in the same wave.
-       If found: overwrite .active-story with that story ID.
-       If none found (wave complete): delete or clear .active-story.
-
-finally:
-    # Always release, even on exception
-    if lock_path exists:
-        delete lock_path
-```
+- If `acquire` exits with code 1, **STOP** with the error message. Do not proceed to mutations.
+- The `release --force` MUST be called after mutations regardless of success or failure. If a mutation step errors, release the lock before surfacing the error.
+- All mutations (a-e) execute only between acquire and release. No mutations outside the lock.
 
 ### Step 5: Print Summary
 
 Print the closing summary line:
 
 > `Story US-{id} closed. {N} tasks completed. {N} acceptance criteria met. Report: .copilot/stories/reports/US-{id}-report.md`
+
+### Step 5.5: Harvest Failures (Non-blocking)
+
+After printing the summary, run the failure catalog script to mine recurring failure patterns from this story's artifacts. This step **must not block story closure**.
+
+```bash
+uv run ~/.copilot/skills/story-master/scripts/failure_catalog.py --story-id {id}
+```
+
+If the script exits non-zero, print a warning and continue:
+
+> `[warn] Failure catalog update skipped for US-{id}. Check .copilot/context/failure-catalog.md manually.`
+
+Do **not** re-run the lock or re-stamp the story on failure of this step.
 
 ## Constraints
 

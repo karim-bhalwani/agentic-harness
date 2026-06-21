@@ -5,14 +5,14 @@ argument-hint: "[diagram topic or system to visualize]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Excalidraw Diagram Creator
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: none
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: none
 
 ## Overview
 

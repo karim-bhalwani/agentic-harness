@@ -2,8 +2,8 @@
 name: "SQL Coding Standards"
 description: "T-SQL and SQL coding conventions: uppercase keywords, CTEs over nested subqueries, and aliasing rules for Azure SQL and SQL Server."
 applyTo: "**/*.sql"
-version: "8.0"
-updated: "2026-05-03"
+version: "9.0"
+updated: "01-July-2026"
 ---
 
 # SQL Coding Standards
@@ -14,7 +14,7 @@ updated: "2026-05-03"
 
 - Uppercase all SQL keywords (`SELECT`, `FROM`, `WHERE`, `JOIN`, `GROUP BY`, `ORDER BY`, etc.).
 - Prefer CTEs (`WITH` clauses) over nested subqueries for readability and debuggability.
-- Alias all tables and columns in multi-table queries. Fully qualify ambiguous column references.
+- Alias all tables and columns in multi-table queries, and use schema prefixes to fully qualify ambiguous column references.
 - Always include schema prefix: write `dbo.TableName`, never bare `TableName`. Prevents ambiguity when multiple schemas exist.
 
 ---

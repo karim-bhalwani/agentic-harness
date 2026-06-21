@@ -13,8 +13,14 @@
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\scan-secrets.ps1\"",
         "timeout": 30,
         "env": {
-          "SCAN_MODE": "block"
+          "GOVERNANCE_LEVEL": "standard"
         }
+      },
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/retrospective-check.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\retrospective-check.ps1\"",
+        "timeout": 15
       }
     ],
     "PreToolUse": [
@@ -22,19 +28,34 @@
         "type": "command",
         "command": "pwsh -File ~/.copilot/hooks/block-holdout.ps1",
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\block-holdout.ps1\"",
-        "timeout": 10
+        "timeout": 10,
+        "env": {
+          "GOVERNANCE_LEVEL": "standard"
+        }
       },
       {
         "type": "command",
         "command": "pwsh -File ~/.copilot/hooks/block-destructive.ps1",
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\block-destructive.ps1\"",
-        "timeout": 15
+        "timeout": 15,
+        "env": {
+          "GOVERNANCE_LEVEL": "standard"
+        }
       },
       {
         "type": "command",
         "command": "pwsh -File ~/.copilot/hooks/lint-on-write.ps1",
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\lint-on-write.ps1\"",
         "timeout": 20
+      },
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/cap-subagent-budget.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\cap-subagent-budget.ps1\"",
+        "timeout": 10,
+        "env": {
+          "GOVERNANCE_LEVEL": "standard"
+        }
       }
     ],
     "PostToolUse": [
@@ -43,6 +64,12 @@
         "command": "pwsh -File ~/.copilot/hooks/auto-format.ps1",
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\auto-format.ps1\"",
         "timeout": 30
+      },
+      {
+        "type": "command",
+        "command": "pwsh -File ~/.copilot/hooks/artifact-manifest.ps1",
+        "windows": "powershell -Command \"& ~\\.copilot\\hooks\\artifact-manifest.ps1\"",
+        "timeout": 10
       }
     ],
     "SessionStart": [
@@ -76,7 +103,7 @@
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\scan-user-prompt.ps1\"",
         "timeout": 10,
         "env": {
-          "PROMPT_SCAN_MODE": "warn"
+          "GOVERNANCE_LEVEL": "standard"
         }
       }
     ],
@@ -87,7 +114,7 @@
         "windows": "powershell -Command \"& ~\\.copilot\\hooks\\subagent-verify.ps1\"",
         "timeout": 30,
         "env": {
-          "SUBAGENT_VERIFY_MODE": "warn"
+          "GOVERNANCE_LEVEL": "standard"
         }
       }
     ]

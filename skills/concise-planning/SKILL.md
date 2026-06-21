@@ -5,14 +5,14 @@ argument-hint: "[task to plan]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: ["thinker"]
 ---
 
 # Concise Planning
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: thinker
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: thinker
 
 > **Pipeline position**: **sequence** (3 of 4) - `brainstorming` -> `architect` -> **`concise-planning`** -> `implementer`. This skill produces a verb-first checklist. It runs AFTER design is approved and BEFORE code is written.
 

@@ -7,7 +7,7 @@ Run this BEFORE declaring the Project Bible complete. If any file is still a stu
 or missing, the agent MUST NOT proceed to the Commit phase.
 
 Usage (agent context):
-    uv run skills/context-engineer/scripts/verify_bible.py --output-dir .copilot/context
+    uv run ~/.copilot/skills/context-engineer/scripts/verify_bible.py --output-dir .copilot/context
 
 Exit codes:
     0 = All files present and filled

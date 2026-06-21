@@ -1,4 +1,4 @@
-# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+# Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 #
 # scan-secrets.ps1
 # Stop hook: scan all files modified in this session for leaked credentials.
@@ -11,12 +11,80 @@
 #   SKIP_SECRETS_SCAN=true  - bypass entirely (emergency circuit breaker)
 #   SCAN_MODE=warn           - log findings without blocking
 #   SCAN_MODE=block          - block agent from finishing when secrets detected (default) (default)
+#   GOVERNANCE_LEVEL=open|standard|strict|locked (defaults to standard behavior)
+#   HOOK_LOG_DIR=<path>      - override structured hook log directory
 #
 # Lifecycle: fires on Stop event. Checks stop_hook_active to avoid infinite loops.
 # Requires git — skips gracefully if not in a git repository.
 
 [CmdletBinding()]
 param()
+
+function Get-GovernanceLevel {
+    $level = if ($env:GOVERNANCE_LEVEL) { $env:GOVERNANCE_LEVEL.ToLowerInvariant() } else { 'standard' }
+    if ($level -notin @('open', 'standard', 'strict', 'locked')) { return 'standard' }
+    return $level
+}
+
+function Resolve-ScanMode {
+    param([string]$GovernanceLevel)
+
+    if ($env:SCAN_MODE) { return $env:SCAN_MODE }
+
+    switch ($GovernanceLevel) {
+        'open' { return 'warn' }
+        default { return 'block' }
+    }
+}
+
+function Get-HookLogPath {
+    $logDir = if ($env:HOOK_LOG_DIR) {
+        $env:HOOK_LOG_DIR
+    }
+    else {
+        Join-Path (Get-Location).Path '.copilot\state\hook-logs'
+    }
+
+    try {
+        $null = New-Item -ItemType Directory -Path $logDir -Force -ErrorAction Stop
+        return Join-Path $logDir 'scan-secrets.jsonl'
+    }
+    catch {
+        return $null
+    }
+}
+
+function Write-HookLog {
+    param(
+        [string]$Event,
+        [string]$Mode,
+        [string]$GovernanceLevel,
+        [string]$Decision,
+        [int]$FilesScanned,
+        [int]$FindingCount
+    )
+
+    $path = Get-HookLogPath
+    if (-not $path) { return }
+
+    $entry = [ordered]@{
+        timestamp     = (Get-Date).ToUniversalTime().ToString('o')
+        hook          = 'scan-secrets'
+        event         = $Event
+        mode          = $Mode
+        governance    = $GovernanceLevel
+        decision      = $Decision
+        files_scanned = $FilesScanned
+        finding_count = $FindingCount
+    }
+
+    try {
+        Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
+    }
+    catch {
+        # Logging failure must never fail the hook decision path.
+    }
+}
 
 # --- Circuit breaker ---
 if ($env:SKIP_SECRETS_SCAN -eq 'true') {
@@ -36,7 +104,8 @@ if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
     }
 }
 
-$mode = if ($env:SCAN_MODE) { $env:SCAN_MODE } else { 'block' }
+$governanceLevel = Get-GovernanceLevel
+$mode = Resolve-ScanMode -GovernanceLevel $governanceLevel
 
 # --- Require git ---
 $null = & git rev-parse --is-inside-work-tree 2>&1
@@ -75,6 +144,7 @@ Select-Object -Unique
 
 if ($allFiles.Count -eq 0) {
     Write-Host 'Secrets scan: no modified files to scan'
+    Write-HookLog -Event 'scan_complete' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FilesScanned 0 -FindingCount 0
     exit 0
 }
 
@@ -121,6 +191,8 @@ if ($findingCount -gt 0) {
         $reason = "Secrets scan: $findingCount potential secret(s) detected. Resolve before finishing. " +
         "Set SCAN_MODE=warn to log without blocking, or SKIP_SECRETS_SCAN=true to bypass."
 
+        Write-HookLog -Event 'secrets_found' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'deny' -FilesScanned $allFiles.Count -FindingCount $findingCount
+
         $output = [ordered]@{
             hookSpecificOutput = [ordered]@{
                 hookEventName = 'Stop'
@@ -133,10 +205,12 @@ if ($findingCount -gt 0) {
         exit 0   # exit 0 so VS Code parses the JSON; decision=block prevents close
     }
     else {
+        Write-HookLog -Event 'secrets_found' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FilesScanned $allFiles.Count -FindingCount $findingCount
         Write-Host "Secrets scan: $findingCount potential secret(s) found (warn mode). Set SCAN_MODE=block to enforce blocking."
     }
 }
 else {
+    Write-HookLog -Event 'scan_complete' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FilesScanned $allFiles.Count -FindingCount 0
     Write-Host 'Secrets scan: no secrets detected'
 }
 

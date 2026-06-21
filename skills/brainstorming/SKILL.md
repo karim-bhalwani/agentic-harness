@@ -5,14 +5,13 @@ argument-hint: "[idea or feature to explore]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
-  dependencies: ["thinker", "concise-planning"]
+  version: "9.0"
+  updated: "01-July-2026"
 ---
 
 # Brainstorming Ideas Into Designs
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: thinker, concise-planning
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: thinker, concise-planning
 
 > **Pipeline position**: **explore** (1 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> `implementer`. This skill produces aligned understanding, NOT a spec, NOT a plan, NOT code.
 
@@ -25,11 +24,31 @@ Load the following via `read_file` before using this skill. Skills marked ★ ha
 
 ---
 
-> **HARD-GATE**
+> **HARD-GATE: Design-First Approval**
 >
-> Do NOT write any code, scaffold any project, modify any file, or take ANY implementation action until you have (1) presented the design to the user, (2) the user has explicitly approved it, and (3) you have completed the Spec Self-Review below.
+> **Before any implementation action**, you must:
 >
-> This applies to EVERY task regardless of perceived simplicity. "This is too simple to need a design" is not an exception - it is a rationalization. Simple bugs can also have architectural implications. The gate applies.
+> 1. Present the design to the user
+> 2. Receive explicit user approval
+> 3. Complete the Spec Self-Review (below)
+>
+> This applies **to EVERY task** regardless of simplicity. No exceptions.
+
+### Constraints & Restrictions
+
+**DO NOT:**
+
+- Write any code or touch implementation files
+- Scaffold projects or modify file structure
+- Plan deployment strategies
+- Take any action before design approval
+
+**DO:**
+
+- Focus on design and architecture only
+- Validate design incrementally with stakeholder
+- Explore 2-3 alternatives before settling
+- Pass approved designs to `architect` or `implementer`
 
 ---
 
@@ -46,11 +65,27 @@ Start by understanding the current project context, then ask questions one at a 
 - **Lead with your recommended answer or assumption** - the user confirms or corrects, rather than thinking from scratch
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+- Focus on understanding: purpose, constraints, specific measurable outcomes that define project success
+
+### Stress-testing an existing plan
+
+When the user has a specific plan or design to stress-test (not a fuzzy idea but a concrete proposal), switch to **stress-test mode** instead of open exploration.
+
+**Stress-test mode rules:**
+
+- Walk each branch of the decision tree, resolving dependencies one at a time.
+- Ask **one question per message**. Never batch questions - asking multiple at once is bewildering.
+- **Lead each question with your recommended answer.** The user confirms, corrects, or rejects - they never answer from scratch.
+- If a question can be answered by exploring the codebase, explore the codebase instead of asking.
+- Continue until every branch of the decision tree is resolved and no open questions remain.
+
+**Completion criterion**: every decision-tree branch is resolved. State "no open design questions remain" with a summary of decisions made.
+
+---
 
 ### Exploring approaches
 
-- Propose 2-3 different approaches with trade-offs
+- Propose exactly three different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
 

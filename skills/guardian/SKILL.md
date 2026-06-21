@@ -5,14 +5,14 @@ argument-hint: "[code to review]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Guardian Skill - QA, Security, Testing & Performance
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Unified reference for code quality gates. For extended procedures (doc staleness, entropy, wiki health, quality grading, feedback rules), load the deep-dive reference.
 
@@ -78,7 +78,7 @@ For GenAI/LLM security, load the `genai-security` skill.
 
 ## Calibration
 
-Load calibration examples when judgment is uncertain:
+Load calibration examples when findings are borderline or severity is unclear:
 
 - [true_positives.md](./references/calibration_examples/true_positives.md) - Bugs Guardian MUST catch
 - [false_positives.md](./references/calibration_examples/false_positives.md) - Patterns that look suspicious but are correct

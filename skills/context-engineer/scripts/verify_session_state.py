@@ -5,7 +5,7 @@ Verify .copilot/state/SESSION_STATE.md exists and contains all required
 schema sections per skills/context-engineer/references/session_state_schema.md.
 
 Usage (agent context):
-    uv run skills/context-engineer/scripts/verify_session_state.py
+    uv run ~/.copilot/skills/context-engineer/scripts/verify_session_state.py
 
 Exit codes:
     0 = File present and schema-conformant

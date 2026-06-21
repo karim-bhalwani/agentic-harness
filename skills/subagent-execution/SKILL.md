@@ -5,14 +5,14 @@ argument-hint: "[approved plan or list of tasks to execute]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: ["task-routing", "guardian", "verification-before-completion"]
 ---
 
 # Subagent Execution Skill
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: task-routing, guardian, verification-before-completion
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: task-routing, guardian, verification-before-completion
 
 ## Dependencies
 
@@ -24,18 +24,61 @@ Load the following via `read_file` before using this skill.
 
 ---
 
-## Context Isolation Principle
+## Context Mode: Fresh vs Inherited
 
-> **Subagents must NEVER inherit the orchestrator's session history.**
->
-> Construct exactly what each subagent needs: the spec section, the relevant files, the task description, and the acceptance criteria. Nothing else. This prevents context pollution in the subagent and preserves the orchestrator's own context budget for coordination work.
+Every subagent delegation must explicitly choose one of two context modes.
+Never leave this implicit; the choice has a direct, large impact on token cost and correctness.
 
-Each subagent dispatch must include:
+### Fresh Context (default - use this unless inherited is explicitly justified)
 
-1. The task specification (what to build, in/out scope)
-2. The file paths they may read and modify
-3. The acceptance criteria their output must satisfy
-4. The output format (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED - see below)
+The subagent starts with a clean context window. It receives ONLY:
+
+1. The task description (what to do, what files to touch, scope in/out)
+2. Relevant file paths (what it may read and modify)
+3. Explicit acceptance criteria (what DONE looks like)
+4. Required output format (`DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` / `BLOCKED`)
+
+**Use fresh context for**:
+- Independent tasks that can be fully specified without session history
+- Parallel branches (two subagents working different files simultaneously)
+- Specialist tasks (Debug Detective investigating a single error)
+- Any task where the subagent does not need to know what was tried before
+
+**Token impact**: Fresh context costs only the task packet (~500-2K tokens input).
+Inheriting a 40K-token parent session costs 40K tokens input per child. At 3 children,
+that is 120K tokens vs 6K tokens for the same work.
+
+### Inherited Context (use sparingly, with explicit justification)
+
+The subagent receives the full accumulated parent session history.
+
+**Use inherited context only when**:
+- The subagent is a direct continuation (e.g., Guardian reviewing code written 2 steps ago)
+- The subagent needs to understand WHAT WAS ALREADY TRIED to avoid repeating it
+- The task cannot be meaningfully specified without the session history
+
+**Inherited context is NOT justified by**:
+- Convenience ("easier to just pass everything")
+- Uncertainty ("not sure what it needs, give it everything")
+- Default ("this is how we've always done it")
+
+### Dispatch Template
+
+When constructing any subagent dispatch, include the context mode explicitly:
+
+```text
+CONTEXT MODE: fresh | inherited
+TASK: [one sentence]
+FILES TO READ: [list of relative paths]
+FILES TO MODIFY: [list of relative paths]
+SCOPE IN: [what to do]
+SCOPE OUT: [what NOT to do]
+ACCEPTANCE CRITERIA:
+  - [criterion 1]
+  - [criterion 2]
+OUTPUT FORMAT: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
+OUTPUT PATH: [where to write the result, if any]
+```
 
 ---
 
@@ -51,6 +94,18 @@ Every subagent must return exactly one of these statuses:
 | `BLOCKED`            | Cannot proceed due to architectural conflict or missing capability | Escalate to architect; do not re-dispatch without resolution |
 
 **Never re-dispatch a BLOCKED task with only a prompt change.** BLOCKED means the task requires structural resolution, not more context.
+
+---
+
+## Failure Taxonomy
+
+| Failure Mode | Symptom | Immediate Recovery |
+|---|---|---|
+| `context_pollution` | Subagent asks about topics from parent session it should not know | Re-dispatch with fresh context only. Parent context was leaked. |
+| `blocked_redispatch` | Same task re-dispatched with only a prompt change after `BLOCKED` | STOP. `BLOCKED` requires structural resolution, not more context. Escalate to architect. |
+| `missing_acceptance_criteria` | Subagent returns `DONE` but output cannot be verified | The dispatch was malformed. Redispatch with explicit acceptance criteria. |
+| `artifact_path_unknown` | Subagent produced output but orchestrator cannot find it | Require designated output paths in every dispatch. Never accept implicit output locations. |
+| `needs_context_loop` | Same subagent returns `NEEDS_CONTEXT` more than once for the same gap | The gap is structural, not informational. Escalate to architect. |
 
 ---
 

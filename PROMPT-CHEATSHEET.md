@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Scope:** Copy-paste prompts and slash commands for every agent, every phase  
-**Version:** 8.0 | **Updated:** 2026-05-03
+**Version:** 9.0 | **Updated:** 01-July-2026
 
 Copy-paste prompts for every agent and every phase. Find your situation, grab the example, go.
 

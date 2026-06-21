@@ -8,11 +8,23 @@ tools:
   - agent
 ---
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+{% if input:target %}
 Review the following code: **${input:target}**
 
 **Process** (do not duplicate skill content here, always defer to the skill):
+{% else %}
+**Error**: Missing or invalid target. Please provide a file, folder, or PR to review via the `target` parameter.
+
+Example usage:
+
+- `target: src/main.js`
+- `target: ./api/controllers`
+- `target: PR#42`
+
+Cannot proceed without a valid review target.
+{% endif %}
 
 1. Load `skills/guardian/SKILL.md` via `read_file`. The skill is the single source of truth for review scope (Security / Correctness / Performance / Maintainability / Architecture), severity calibration, and report format.
 2. Run the Review Workflow defined in that skill against `${input:target}`.

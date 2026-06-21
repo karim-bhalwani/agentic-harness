@@ -1,13 +1,13 @@
 ---
 name: story-master
-description: "Houses the scaffold_stories.py and verify_stories.py scripts used by the story-master agent (prompts/story-master.agent.md) to generate and validate STORIES.md backlog files. This skill is not directly invocable; it is a script-housing skill that the story-master agent shells out to. DO NOT USE FOR: backlog decomposition itself (that is the story-master agent in prompts/), code review (use guardian), or implementation planning (use story-planner agent)."
+description: "Houses the scaffold_stories.py and verify_stories.py scripts used by the story-master agent (prompts/story-master.agent.md) to generate and validate STORIES.md backlog files. This skill is not directly invocable; it is a script-housing skill that the story-master agent shells out to. This skill provides only scaffolding and verification functionality; backlog decomposition is handled by the story-master agent, code review by guardian, and implementation planning by story-planner agent."
 user-invocable: false
 disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
@@ -24,4 +24,4 @@ from breaking the downstream `close-story` verification step.
 | Script                                                         | Purpose                                                                                                                                                                                |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [./scripts/scaffold_stories.py](./scripts/scaffold_stories.py) | Generates a `.copilot/stories/STORIES.md` skeleton with the summary table header, execution wave placeholder sections, and coupled-pairs table. story-master fills in the rows.        |
-| [./scripts/verify_stories.py](./scripts/verify_stories.py)     | Validates a `STORIES.md` file against the §3.1 schema. Checks column set, enum values, dependency references, H3 detail sections, and wave consistency. Exits 0 on pass, 1 on failure. |
+| [./scripts/verify_stories.py](./scripts/verify_stories.py)     | Validates a `STORIES.md` file against the §3.1 schema through modular checks: (1) column set validation, (2) enum values validation, (3) dependency references validation, (4) H3 detail sections validation, (5) wave consistency validation. Exits 0 on pass, 1 on failure. |

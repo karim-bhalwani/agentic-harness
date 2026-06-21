@@ -1,18 +1,17 @@
 ---
 name: systematic-debugging
-description: "Use when a bug, error, or unexpected behavior needs investigation. Enforces evidence-first root cause analysis before any fix attempt. Load before any debugging session - covers all failure modes from data pipelines to API errors to LLM misbehavior. DO NOT USE FOR: code review without a specific error (use guardian), implementing known fixes (use implementer), performance profiling without failures (use guardian), or architecture design (use architect)."
+description: "Use when a bug, error, or unexpected behavior needs investigation. Enforces evidence-first root cause analysis before any fix attempt. Load before any debugging session - covers software-related failure modes related to active errors and bugs (data pipelines, API errors, LLM misbehavior). DO NOT USE FOR: code review without a specific error (use guardian), implementing known fixes (use implementer), performance profiling without failures (use guardian), or architecture design (use architect)."
 argument-hint: "[error message, bug description, or failing behavior]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
-  dependencies: ["verification-before-completion"]
+  version: "9.0"
+  updated: "01-July-2026"
 ---
 
 # Systematic Debugging Skill
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: verification-before-completion
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: verification-before-completion
 
 ## Dependencies
 
@@ -55,9 +54,63 @@ Stop and re-read the Iron Law if you notice yourself doing any of these:
 
 ---
 
+## Failure Taxonomy
+
+Use this table to identify failure mode and follow the recovery path immediately.
+Do not improvise recovery. Do not retry without matching a failure mode first.
+
+| Failure Mode               | Symptom                                                    | Immediate Recovery                                               |
+| -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| `root_cause_unconfirmed`   | Same fix applied 3+ times, still failing                   | STOP. Return to Phase 1. Re-read error from scratch.             |
+| `stale_file_content`       | `replace_string_in_file` match fails                       | Re-read the file before retrying. Never retry on stale content.  |
+| `hypothesis_not_tested`    | "I think this is the issue" → fix applied without test     | Form a test first. Confirm the hypothesis before any edit.       |
+| `reproducer_missing`       | Cannot reproduce the failure consistently                  | Do not fix what you cannot reproduce. Add instrumentation first. |
+| `test_evaluator_mismatch`  | Fix passes local test, CI or acceptance still fails        | Check test scope. Are you fixing the symptom or the cause?       |
+| `scope_creep_during_debug` | Editing multiple files simultaneously to "cover all cases" | Revert extra changes. Fix one location at a time.                |
+| `three_strike_loop`        | Same file or test fails 3 times after your fixes           | Stop. Surface to the user. Do not attempt a 4th fix alone.       |
+
+---
+
 ## 4-Phase Investigation Methodology
 
 ### Phase 1: Root Cause Investigation
+
+**Build a tight feedback loop before any hypothesis.** A red-capable, deterministic, agent-runnable command is the skill. Without one, every hypothesis is a guess. Spend disproportionate effort here - be aggressive, be creative.
+
+#### Constructing the loop - try in order
+
+1. **Failing test** at whatever seam reaches the bug (unit, integration, e2e).
+2. **Curl / HTTP script** against a running dev server.
+3. **CLI invocation** with a fixture input, diffing stdout against a known-good snapshot.
+4. **Headless browser script** (Playwright / Puppeteer) - drives the UI, asserts on DOM/console/network.
+5. **Replay a captured trace** - save a real request/payload/event log to disk; replay it through the code path in isolation.
+6. **Throwaway harness** - spin up a minimal subset of the system that exercises the bug code path with a single function call.
+7. **Property / fuzz loop** - if the bug is "sometimes wrong output", run 1000 random inputs and look for the failure mode.
+8. **Bisection harness** - if the bug appeared between two known states (commit, dataset, version), automate `git bisect run` it.
+9. **Differential loop** - run the same input through old-version vs new-version and diff outputs.
+
+#### Tighten the loop
+
+Once you have a loop, tighten it: Can I make it faster? (Cache setup, skip unrelated init.) Can I make the signal sharper? (Assert on the specific symptom, not "didn't crash".) Can I make it more deterministic? (Pin time, seed RNG, isolate filesystem, freeze network.)
+
+For non-deterministic bugs: the goal is a **higher reproduction rate**, not a clean repro. Loop the trigger 100×, parallelise, add stress, narrow timing windows. A 50%-flake bug is debuggable; 1% is not - keep raising the rate until it is.
+
+#### When you genuinely cannot build a loop
+
+Stop and say so explicitly. List what you tried. Ask the user for: (a) access to the environment that reproduces it, (b) a captured artifact (log dump, HAR file, core dump, screen recording with timestamps), or (c) permission to add temporary production instrumentation. **Do not proceed to Phase 2 without a loop.**
+
+#### Loop completion criterion - hard gate before Phase 2
+
+Name **one command** you have already run at least once (paste the invocation and its output). It must be:
+
+- [ ] **Red-capable** - drives the actual bug code path and asserts the exact symptom. Not "runs without erroring" - it must catch this specific bug.
+- [ ] **Deterministic** - same verdict every run (or a pinned high-reproduction rate for flaky bugs).
+- [ ] **Fast** - seconds, not minutes.
+- [ ] **Agent-runnable** - you can run it unattended.
+
+> If you catch yourself reading code to form a theory before this checklist is complete, **stop** - jumping straight to a hypothesis is the exact failure this gate prevents.
+
+---
 
 **Objective**: Gather enough evidence to form testable hypotheses.
 
@@ -109,12 +162,13 @@ Stop and re-read the Iron Law if you notice yourself doing any of these:
 
 **Objective**: Apply the minimal fix that resolves the root cause without side effects.
 
-1. **Write a failing test first** - create a test that reproduces the bug. It must fail before the fix and pass after.
+1. **Write a failing test first** - create a test that reproduces the bug. It must fail before the fix and pass after. Write it at the **correct seam** - one where the test exercises the real bug pattern as it occurs at the call site. If no correct seam exists (the only available seam is too shallow, or the architecture prevents locking down the bug), **that itself is the finding**: note it, do not force a shallow test, and flag it at the post-mortem step.
 2. **Apply the fix** - one change. If the fix requires multiple changes in unrelated locations, that is a signal the root cause analysis is incomplete.
 3. **Run the failing test** - confirm it now passes.
 4. **Run the full test suite** - confirm no regressions.
 5. **3-strike architectural escalation** - if fixes keep breaking sibling tests, stop. The root cause is architectural, not local. Escalate to `architect`.
 6. **Load `verification-before-completion`** - complete the evidence gate before declaring done.
+7. **Post-mortem** - ask: "What would have prevented this bug?" If the answer involves architectural change (no good test seam, tangled callers, hidden coupling), hand off to `architect` with the specifics - make the recommendation **after** the fix is in, when you have more information than when you started.
 
 ---
 

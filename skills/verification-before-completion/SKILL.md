@@ -6,14 +6,14 @@ disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Verification Before Completion
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 ## When to Load This Skill
 
@@ -66,6 +66,16 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified        | Test passes once               |
 | Agent completed       | VCS diff shows changes          | Agent reports "success"        |
 | Requirements met      | Line-by-line checklist          | Tests passing                  |
+
+## Failure Taxonomy
+
+| Failure Mode | Symptom | Immediate Recovery |
+|---|---|---|
+| `claim_without_evidence` | "Tests pass" stated without running tests | Run the command. Get the output. State the claim with the output as evidence. |
+| `partial_verification` | Only some tests run; claiming full pass | Run the full suite. Partial runs are not verification. |
+| `stale_evidence` | Citing a test run from earlier in the session | Re-run. Evidence expires. A pass 10 steps ago is not current evidence. |
+| `agent_self_report_trusted` | Accepting subagent "success" without VCS diff check | Run `git diff` or check file modification timestamps. Agent reports are claims, not evidence. |
+| `exit_code_ignored` | Command ran but exit code not checked | Exit code 0 = success. Any other = failure. Always check. |
 
 ## Red Flags - STOP
 

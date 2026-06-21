@@ -49,4 +49,4 @@ Human gate time per story: ~10–15 minutes.
 
 ## Sub-Day Stories
 
-`Effort: S` stories go through the same loop — they just complete faster. Planning typically finishes clean on the first plan-checker iteration. You can complete a full story (plan → build → close) in a single session.
+`Effort: S` stories go through the same loop  -  they just complete faster. Planning typically finishes clean on the first plan-checker iteration. You can complete a full story (plan → build → close) in a single session.

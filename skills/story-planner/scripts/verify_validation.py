@@ -167,7 +167,11 @@ def verify_validation(path: Path) -> list[Problem]:
             if col not in header_cells:
                 problems.append(
                     Problem(
-                        problem=(f"Task Validation Matrix is missing column: '{col}'."),
+                        problem=(
+                            "Task Validation Matrix is missing column: '{}'.".format(
+                                col
+                            )
+                        ),
                         fix=f"Add '{col}' to the Task Validation Matrix header row.",
                     )
                 )
@@ -182,7 +186,7 @@ def verify_validation(path: Path) -> list[Problem]:
             if not any(cell.strip() for cell in row):
                 continue
 
-            if status_idx >= 0 and status_idx < len(row):
+            if 0 <= status_idx < len(row):
                 val = row[status_idx].strip()
                 if val and val not in VALID_STATUSES and "TODO" not in val:
                     problems.append(
@@ -198,7 +202,7 @@ def verify_validation(path: Path) -> list[Problem]:
                         )
                     )
 
-            if infra_idx >= 0 and infra_idx < len(row):
+            if 0 <= infra_idx < len(row):
                 val = row[infra_idx].strip()
                 if val and val not in VALID_INFRASTRUCTURE and "TODO" not in val:
                     problems.append(

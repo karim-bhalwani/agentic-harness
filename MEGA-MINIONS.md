@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**15 Agents • 24 Skills • 13 Prompts • 11 Hooks • 6-Phase Pipeline**
+**16 Agents • 25 Skills • 14 Prompts • 14 Hooks • 6-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -11,14 +11,14 @@
 ```
 
 **Architect:** Karim Bhalwani  
-**Version:** 8.0 | 3rd May 2026  
+**Version:** 9.0 | 3rd May 2026  
 **Scope:** Data Engineering, GenAI/LLM, ML Engineering
 
 ---
 
 ## Welcome to the Team
 
-The **Mega Minions** are a collection of 15 custom AI agents, 24 specialized skills, 13 parameterized prompt files, and 11 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
+The **Mega Minions** are a collection of 16 custom AI agents, 25 specialized skills, 13 parameterized prompt files, and 13 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
 
 Think of them as a squad of specialists, not a single jack-of-all-trades. The Architect draws the blueprints. The Senior Developer writes the code. The Guardian reviews it. The Release Manager ships it. Each one stays in their lane and passes the baton when it is time.
 
@@ -167,7 +167,7 @@ These three agents form the optional PLAN phase, activated when the human choose
 **Inputs:** `SPEC.md`, `PROJECT_CONTEXT.md`  
 **Outputs:** `.copilot/stories/STORIES.md`, `.copilot/stories/.active-story`  
 **Hands off to:** Human (Gate 1 - no auto-handoff). Human then invokes story-planner with a chosen story ID.  
-**DO NOT USE FOR:** Writing per-story implementation plans (use story-planner), ad-hoc one-off tasks without a spec (use feature-plan), system design (use architect), code review (use guardian), or implementation (use senior-developer, data-engineer, or ai-engineer).
+**DO NOT USE FOR:** Writing per-story implementation plans (use story-planner), ad-hoc one-off tasks without a spec (use feature-plan), system design (use architect), code review (use guardian), or implementation (use senior-developer, data-engineer, data-scientist, or ai-engineer).
 
 ---
 
@@ -180,7 +180,7 @@ These three agents form the optional PLAN phase, activated when the human choose
 **Inputs:** `STORIES.md` (story row), referenced `SPEC.md` section, `PROJECT_CONTEXT.md`  
 **Outputs:** `.copilot/stories/US-{id}-PLAN.md`, `.copilot/stories/US-{id}-VALIDATION.md`  
 **Hands off to:** Senior Developer, Data Engineer, or AI Engineer (human clicks Gate 2 handoff button). Also hands off to Architect if a Risk: Spike story or spec conflict is discovered.  
-**DO NOT USE FOR:** Ad-hoc tasks with no spec (use feature-plan), backlog decomposition (use story-master), implementation (use senior-developer, data-engineer, or ai-engineer), or code review (use guardian).
+**DO NOT USE FOR:** Ad-hoc tasks with no spec (use feature-plan), backlog decomposition (use story-master), implementation (use senior-developer, data-engineer, data-scientist, or ai-engineer), or code review (use guardian).
 
 ---
 
@@ -240,6 +240,16 @@ These four do the heavy lifting. Each one is a domain specialist who implements 
 **When to call:** Natural language to SQL, Azure SQL/SSMS queries, Data Vault querying, T-SQL optimization.  
 **What it does:** Translates business questions into optimized T-SQL with proper CTEs, aliased joins, and copy-ready scripts. Understands Data Vault patterns (Hubs, Links, Satellites) and SSMS workflows. Always explains the query logic.  
 **Hands off to:** Guardian, Data Engineer (if pipeline work needed), or Architect (if schema redesign needed)
+
+---
+
+#### Data Scientist
+
+> _"Give me a business question and a dataset. I will profile, model, validate, and tell you what the numbers actually mean."_
+
+**When to call:** Exploratory data analysis (EDA), statistical hypothesis testing, predictive modeling (classification / regression with scikit-learn / XGBoost), time series forecasting (Prophet, SARIMA, gradient-boosted lag features), A/B experiment design and analysis.  
+**What it does:** Profiles datasets before modeling, audits for target leakage, splits data BEFORE feature engineering (no leakage), cross-validates on training data, evaluates on held-out test exactly once, and compares every model against a dummy/naive baseline. Produces SHAP feature importance, calibration diagnostics, and structured evaluation reports. Runs power analysis and SRM detection for experiments. Loads the `data-science` skill for domain patterns. Personas: EDA Analyst (default), Modeling Engineer, Forecaster, Experimenter.  
+**Hands off to:** Guardian, Data Engineer (if a production pipeline is needed to feed the model), AI Engineer (if the model needs to be served behind an API or LLM agent), or Architect (if the modeling spec is flawed)
 
 ---
 
@@ -309,7 +319,7 @@ Skills are the **silent workers behind the scenes**. They are not agents you tal
 
 ```text
   ┌──────────────────────────────────────────────────────────────────────┐
-  │                    SKILLS TOOLKIT (24 SKILLS)                        │
+  │                    SKILLS TOOLKIT (25 SKILLS)                        │
   │                                                                      │
   │  Any Mega Minion can grab what they need:                            │
   │                                                                      │
@@ -358,7 +368,7 @@ Skills are the **silent workers behind the scenes**. They are not agents you tal
   │  │ proof gate │ │ ation gate │ │ backlog    │ │                    │ │
   │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
   │                                                                      │
-  │  All 24 skills auto-load on demand. You never invoke them manually.  │
+  │  All 25 skills auto-load on demand. You never invoke them manually.  │
   └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -391,7 +401,7 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
   Type /mem-query       → Query accumulated project mem knowledge
   Type /mem-lint        → Health check the project mem
   Type /pre-mortem      → Guardian analyzes code for fragility against future edits
-  Type /start-here      → Quick start walkthrough for new users
+  Type /start-here      → Pipeline status check / next-action router
 
   Direct Agent Invocation (no slash command):
   Type @brownfield-discovery  → Map your existing codebase
@@ -469,7 +479,7 @@ Every AI model has a **context window**, a limited amount of text it can hold in
 
 ## Know Your Hooks
 
-The hook harness (`hooks/`, 11 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
+The hook harness (`hooks/`, 12 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
 
 Copy the `hooks/` directory to `~/.copilot/hooks/` to activate them. They fire automatically on VS Code agent lifecycle events.
 
@@ -478,9 +488,10 @@ Copy the `hooks/` directory to `~/.copilot/hooks/` to activate them. They fire a
 | `quality-gate.ps1` | `Stop` | Runs lint + typecheck before the agent declares done. Blocks completion if the project's quality commands fail. |
 | `scan-secrets.ps1` | `Stop` | Scans all staged files for credentials, API keys, and secret patterns. Blocks (or warns) before anything leaves the session. |
 | `block-destructive.ps1` | `PreToolUse` | Intercepts `run_in_terminal` calls and blocks dangerous commands: `rm -rf`, `Remove-Item -Recurse`, `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, and more. Allows temp-path bypasses and an allowlist escape hatch. |
-| `scan-user-prompt.ps1` | `PreToolUse` | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. |
+| `scan-user-prompt.ps1` | `UserPromptSubmit` | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. |
 | `lint-on-write.ps1` | `PreToolUse` | Runs the project linter on any file the agent is about to write. Catches style and syntax errors before they land. |
 | `auto-format.ps1` | `PostToolUse` | Runs the project formatter on files the agent just wrote. Keeps diffs clean without agent involvement. |
+| `artifact-manifest.ps1` | `PostToolUse` | Appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` for every agent file write (timestamp, agent, tool, path, role). Gives future sessions a cheap grep-able index of produced artifacts. |
 | `session-context.ps1` | `SessionStart` | Injects Project Bible path, active story, branch, last commit, Python version, and pipeline phase into the agent's startup context. |
 | `subagent-context.ps1` | `SubagentStart` | Passes project root, active story, and pipeline phase to each subagent at launch, so delegated agents start with the right context. |
 | `subagent-verify.ps1` | `SubagentStop` | After a subagent finishes, runs the relevant `verify_*.py` script to confirm expected artifacts (spec, story backlog, plan, review report, session state) actually landed and are not stubs. Blocks if verification fails. |
@@ -503,14 +514,14 @@ The Mega Minions are not magic. They are **well-structured prompts that guide AI
 
 3. **Hallucination risk** - solved by evidence gates (verification-before-completion), read-only review (Guardian), and the researcher agent for fact-checking.
 
-4. **Quality contract reliability** - solved by the hook harness (11 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, and post-subagent artifact verification at the platform level. Instructions ask; hooks enforce.
+4. **Quality contract reliability** - solved by the hook harness (12 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, post-subagent artifact verification, and artifact manifest logging at the platform level. Instructions ask; hooks enforce.
 
 The beauty is in the composition. No single Mega Minion is extraordinary on its own. But when they work together (discovery feeds design, design feeds implementation, implementation feeds review, review feeds release) the whole becomes significantly greater than the sum of the parts.
 
-This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 11 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
+This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 12 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
 
 **Give them context. Let them specialize. Verify their output. Ship with confidence.**
 
 ---
 
-_The Mega Minions, 15 agents, 24 skills, 13 prompts, 11 hooks, one team._
+_The Mega Minions, 16 agents, 25 skills, 14 prompts, 14 hooks, one team._

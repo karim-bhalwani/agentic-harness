@@ -10,7 +10,7 @@ or user persists the report. This verifier is the safety net to ensure the
 report actually landed before downstream gating runs.
 
 Usage (release-manager / orchestrator context):
-    uv run skills/guardian/scripts/verify_review.py
+    uv run ~/.copilot/skills/guardian/scripts/verify_review.py
 
 Exit codes:
     0 = Report present and non-empty

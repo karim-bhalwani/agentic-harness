@@ -1,19 +1,19 @@
 ---
 name: thinker
-description: "Specialized in structured reasoning, mental scaffolding, and breaking down complex problems. Use at the start of every task to ensure deep, transparent, and auditable thinking before taking action. DO NOT USE FOR: generating plans or checklists (use concise-planning), brainstorming with the user (use brainstorming), implementation (use implementer), or producing any output artifact directly."
+description: "Specialized in structured reasoning, mental scaffolding, and breaking down complex problems. Use at the start of every task to ensure deep, transparent, and auditable thinking before taking action. DO NOT USE FOR: brainstorming with the user (use brainstorming), implementation (use implementer), or producing final deliverable artifacts (complete documents, code, designs). Thinker produces intermediate outputs like reasoning scaffolds and action plans for handoff to implementer or architect."
 user-invocable: false
 disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
 # Thinker Skill - Cognitive Reasoning & Scaffolding
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 ## Overview
 

@@ -7,8 +7,8 @@ Run this when an agent reaches a natural breakpoint and needs to write state
 but is starting from scratch (no prior file). Idempotent: skips if file exists.
 
 Usage (agent context):
-    uv run skills/context-engineer/scripts/scaffold_session_state.py
-    uv run skills/context-engineer/scripts/scaffold_session_state.py --agent architect --status active
+    uv run ~/.copilot/skills/context-engineer/scripts/scaffold_session_state.py
+    uv run ~/.copilot/skills/context-engineer/scripts/scaffold_session_state.py --agent architect --status active
 
 Reference: skills/context-engineer/references/session_state_schema.md
 """
@@ -51,6 +51,13 @@ TEMPLATE = """\
 None
 
 ## Context Pointers
+
+-
+
+## Context Cache
+
+> Check here before reading a file. Add an entry after reading.
+> Managed by `context_cache.py`. Format: `- [HASH]: path | L{{start}}-{{end}} | one-line summary`
 
 -
 

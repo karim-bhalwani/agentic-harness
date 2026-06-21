@@ -1,4 +1,4 @@
-# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+# Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 #
 # subagent-context.ps1
 # SubagentStart hook: inject environment context into every subagent session.
@@ -52,6 +52,16 @@ $bibleStatus = if (Test-Path $biblePath) { 'available' } else { 'NOT FOUND' }
 
 # --- Active venv ---
 $venvStatus = if ($env:VIRTUAL_ENV) { $env:VIRTUAL_ENV } else { 'none' }
+
+# --- Persist active agent so artifact-manifest.ps1 can attribute writes ---
+# (VS Code does not pass agent identity to PostToolUse; this file is the bridge.)
+if ($agentType -and $agentType -ne 'unknown') {
+    $stateDir = Join-Path $projectRoot '.copilot\state'
+    if (-not (Test-Path $stateDir)) {
+        New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
+    }
+    Set-Content -Path (Join-Path $stateDir '.active-agent') -Value $agentType -NoNewline -Encoding UTF8
+}
 
 # --- Build context string (compact for subagent budget) ---
 $ctx = @"

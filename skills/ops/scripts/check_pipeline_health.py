@@ -143,11 +143,7 @@ def _load_deprecated_runners() -> set[str]:
     configured = os.getenv("DEPRECATED_GITHUB_RUNNERS", "")
     if not configured.strip():
         return set(_DEFAULT_DEPRECATED_RUNNERS)
-    parsed = {
-        item.strip()
-        for item in configured.split(",")
-        if item.strip()
-    }
+    parsed = {item.strip() for item in configured.split(",") if item.strip()}
     return parsed if parsed else set(_DEFAULT_DEPRECATED_RUNNERS)
 
 
@@ -277,13 +273,13 @@ def _check_file(path: Path) -> Iterator[PipelineIssue]:
                 # GitHub Actions job IDs can be letter/digit-led
                 # and use
                 # letters, digits, underscores, and hyphens.
-                job_match = re.match(
-                    r"^(\s+)([a-zA-Z0-9][a-zA-Z0-9_-]*)\s*:",
-                    line
-                )
+                job_match = re.match(r"^(\s+)([a-zA-Z0-9][a-zA-Z0-9_-]*)\s*:", line)
                 if job_match:
                     candidate_indent = len(job_match.group(1))
-                    if current_job_indent is None or candidate_indent == current_job_indent:
+                    if (
+                        current_job_indent is None
+                        or candidate_indent == current_job_indent
+                    ):
                         # New job found — flush previous
                         if current_job_name and not current_job_has_timeout:
                             yield PipelineIssue(
@@ -317,11 +313,7 @@ def _check_file(path: Path) -> Iterator[PipelineIssue]:
                     current_job_has_timeout = True
 
     # Finalize: last job in file might still be open
-    if (
-        in_jobs_block
-        and current_job_name
-        and not current_job_has_timeout
-    ):
+    if in_jobs_block and current_job_name and not current_job_has_timeout:
         yield PipelineIssue(
             severity=IssueSeverity.INFO,
             file=str(path),

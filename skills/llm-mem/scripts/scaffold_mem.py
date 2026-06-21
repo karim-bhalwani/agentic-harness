@@ -14,8 +14,8 @@ Files/directories created (when missing):
     llmmem/mem/log.md
 
 Usage (agent context):
-    uv run skills/llm-mem/scripts/scaffold_mem.py
-    uv run skills/llm-mem/scripts/scaffold_mem.py --root ./llmmem
+    uv run ~/.copilot/skills/llm-mem/scripts/scaffold_mem.py
+    uv run ~/.copilot/skills/llm-mem/scripts/scaffold_mem.py --root ./llmmem
 """
 
 from __future__ import annotations

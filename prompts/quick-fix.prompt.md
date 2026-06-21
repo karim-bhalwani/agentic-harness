@@ -9,9 +9,11 @@ tools:
   - execute
 ---
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 Apply this quick fix: **${input:fix}**
+
+If the input fix description is invalid or unclear, respond with: "The fix description is ambiguous. Please clarify."
 
 **Eligibility check** (all must be true, otherwise use `/feature-plan` instead):
 
@@ -19,7 +21,7 @@ Apply this quick fix: **${input:fix}**
 - Under ~20 lines changed
 - No new dependencies introduced
 - No architectural or API contract changes
-- Correct outcome is obvious and easily verifiable
+- Fix description includes a clear expected outcome, verifiable through automated tests or a defined manual checklist
 - Not a security-critical code path
 
 If ANY condition is false, stop and say: "This exceeds quick-fix scope. Use `/feature-plan` to plan it properly."

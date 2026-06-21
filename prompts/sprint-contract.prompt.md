@@ -7,9 +7,17 @@ tools:
   - search
 ---
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
-> **Retired on the Plan Phase path.** If a `.copilot/stories/US-{id}-PLAN.md` exists for this feature, that file already contains the GIVEN/WHEN/THEN acceptance criteria, out-of-scope list, and verification methods. Running this prompt afterwards re-validates the Architect's own output and burns tokens. Use this prompt only on the Build Direct path (Gate 0 selected `Build Direct`) or for legacy non-story work that bypasses the pipeline. The Plan Phase path replaces sprint-contract with `story-planner`.
+> **When to use this prompt:**
+>
+> 1. Check if `.copilot/stories/US-{id}-PLAN.md` exists for this feature. If yes, that file already contains acceptance criteria and verification methods - skip this prompt.
+> 2. Use this prompt only if:
+>    - Gate 0 selected `Build Direct` (Build Direct path), OR
+>    - Work bypasses the pipeline (legacy non-story work)
+> 3. Do not use for features on the Plan Phase path (those use `story-planner` instead).
+>
+> **Note:** This is design-time simulation only. Do not use for re-validation after initial contract creation, as it burns tokens without adding value.
 
 Negotiate a sprint contract for: **${input:feature}**
 

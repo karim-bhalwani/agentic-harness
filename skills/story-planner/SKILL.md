@@ -1,13 +1,13 @@
 ---
 name: story-planner
-description: "Houses scaffold_plan.py, scaffold_validation.py, verify_plan.py, and verify_validation.py used by the story-planner agent (prompts/story-planner.agent.md) to generate and validate per-story planning artifacts (US-NN-PLAN.md and US-NN-VALIDATION.md). This skill is not directly invocable; it is a script-housing skill that the story-planner agent shells out to. DO NOT USE FOR: per-story implementation planning itself (that is the story-planner agent in prompts/), backlog decomposition (use story-master agent), code review (use guardian), or implementation (use senior-developer, data-engineer, or ai-engineer)."
+description: "Houses scaffold_plan.py, scaffold_validation.py, verify_plan.py, and verify_validation.py used by the story-planner agent (prompts/story-planner.agent.md) to generate and validate per-story planning artifacts (US-NN-PLAN.md and US-NN-VALIDATION.md). This skill is not directly invocable; it is a script-housing skill that the story-planner agent shells out to."
 user-invocable: false
 disable-model-invocation: true
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 

@@ -1,18 +1,18 @@
 ---
 name: genai-security
-description: "Security auditing for GenAI/LLM applications. Covers OWASP Top 10 for LLMs (2025), OWASP Top 10 for Agentic Applications (2026), MITRE ATLAS mapping, GenAI threat modeling, prompt injection defense, and AI red teaming. Use when reviewing LLM-powered applications, RAG pipelines, AI agents, prompt templates, or any system integrating generative AI. DO NOT USE FOR: general code security review without LLM components (use guardian), building LLM apps (use llm-app-patterns), runtime prompt injection rules (use security-boundaries), or infrastructure security."
+description: "Security auditing for GenAI/LLM applications. Primary focus: OWASP Top 10 for LLMs (2025). Use for LLM-powered applications, RAG pipelines, AI agents, prompt templates, and generative AI integrations. For agentic risks, prompt injection patterns, MITRE ATLAS mappings, threat modeling, or red teaming, load specific reference documents. NOT for: general code security (use guardian), building LLM apps (use llm-app-patterns), runtime rules (use security-boundaries), or infrastructure."
 argument-hint: "[LLM application to audit]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: ["guardian", "llm-app-patterns"]
 ---
 
 # GenAI Security Skill
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Tiered: core (~140 lines) + on-demand references
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Tiered: core (~140 lines) + on-demand references
 
 Specialized security reference for GenAI applications. Extends Guardian with AI-specific threat models sourced from [OWASP GenAI Security Project](https://genai.owasp.org/).
 

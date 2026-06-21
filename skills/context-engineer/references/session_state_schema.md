@@ -58,6 +58,13 @@
 - [path/to/relevant/file]
 - [path/to/another/file]
 
+## Context Cache
+
+> Check here before reading any file. Add an entry after reading to prevent redundant reads.
+> Managed by `context_cache.py`. Format: `- [HASH]: path | L{start}-{end} | one-line summary`
+
+-
+
 ## Decisions Made This Session
 
 [Key decisions that affect downstream work]

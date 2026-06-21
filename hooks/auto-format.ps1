@@ -1,4 +1,4 @@
-# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+# Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 #
 # auto-format.ps1
 # PostToolUse hook: auto-format files after every agent file write.

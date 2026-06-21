@@ -1,4 +1,4 @@
-# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+# Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 #
 # scan-user-prompt.ps1
 # UserPromptSubmit hook: scan pasted user content for prompt-injection markers
@@ -11,6 +11,8 @@
 # Env vars:
 #   SKIP_SCAN_USER_PROMPT=true  - bypass entirely (emergency circuit breaker)
 #   PROMPT_SCAN_MODE=warn|block - default warn
+#   GOVERNANCE_LEVEL=open|standard|strict|locked (defaults to standard behavior)
+#   HOOK_LOG_DIR=<path>         - override structured hook log directory
 #
 # Output: JSON with hookSpecificOutput.additionalContext (warn) or exit 2 (block)
 # Exit 0 in warn mode regardless of detections (warning only).
@@ -18,10 +20,76 @@
 [CmdletBinding()]
 param()
 
+function Get-GovernanceLevel {
+    $level = if ($env:GOVERNANCE_LEVEL) { $env:GOVERNANCE_LEVEL.ToLowerInvariant() } else { 'standard' }
+    if ($level -notin @('open', 'standard', 'strict', 'locked')) { return 'standard' }
+    return $level
+}
+
+function Resolve-PromptScanMode {
+    param([string]$GovernanceLevel)
+
+    if ($env:PROMPT_SCAN_MODE) { return $env:PROMPT_SCAN_MODE }
+
+    switch ($GovernanceLevel) {
+        'strict' { return 'block' }
+        'locked' { return 'block' }
+        default { return 'warn' }
+    }
+}
+
+function Get-HookLogPath {
+    $logDir = if ($env:HOOK_LOG_DIR) {
+        $env:HOOK_LOG_DIR
+    }
+    else {
+        Join-Path (Get-Location).Path '.copilot\state\hook-logs'
+    }
+
+    try {
+        $null = New-Item -ItemType Directory -Path $logDir -Force -ErrorAction Stop
+        return Join-Path $logDir 'scan-user-prompt.jsonl'
+    }
+    catch {
+        return $null
+    }
+}
+
+function Write-HookLog {
+    param(
+        [string]$Event,
+        [string]$Mode,
+        [string]$GovernanceLevel,
+        [string]$Decision,
+        [int]$FindingCount
+    )
+
+    $path = Get-HookLogPath
+    if (-not $path) { return }
+
+    $entry = [ordered]@{
+        timestamp     = (Get-Date).ToUniversalTime().ToString('o')
+        hook          = 'scan-user-prompt'
+        event         = $Event
+        mode          = $Mode
+        governance    = $GovernanceLevel
+        decision      = $Decision
+        finding_count = $FindingCount
+    }
+
+    try {
+        Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
+    }
+    catch {
+        # Logging failure must never block/alter hook behavior.
+    }
+}
+
 # --- Circuit breaker ---
 if ($env:SKIP_SCAN_USER_PROMPT -eq 'true') { exit 0 }
 
-$mode = if ($env:PROMPT_SCAN_MODE) { $env:PROMPT_SCAN_MODE } else { 'warn' }
+$governanceLevel = Get-GovernanceLevel
+$mode = Resolve-PromptScanMode -GovernanceLevel $governanceLevel
 
 # --- Read stdin ---
 $rawInput = [Console]::In.ReadToEnd()
@@ -86,7 +154,13 @@ foreach ($s in $secretPatterns) {
     }
 }
 
-if ($findings.Count -eq 0) { exit 0 }
+if ($findings.Count -eq 0) {
+    Write-HookLog -Event 'scan_complete' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FindingCount 0
+    exit 0
+}
+
+$decision = if ($mode -eq 'block') { 'deny' } else { 'allow' }
+Write-HookLog -Event 'findings_detected' -Mode $mode -GovernanceLevel $governanceLevel -Decision $decision -FindingCount $findings.Count
 
 # --- Report ---
 if ($mode -eq 'block') {

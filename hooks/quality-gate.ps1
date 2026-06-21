@@ -1,4 +1,4 @@
-# Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+# Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 #
 # quality-gate.ps1
 # Stop hook: enforce ruff lint + ty type check before agent declares done,
@@ -6,6 +6,7 @@
 #
 # Env vars:
 #   SKIP_QUALITY_GATE=true   - bypass entirely (emergency circuit breaker)
+#   SKIP_WAVE_GATE=true       - bypass only the PLAN-phase wave parallelism check
 #   GUARD_MODE=warn           - log errors without blocking (default: block)
 #   STORY_ID                  - active story override (precedence: env > .active-story file)
 #
@@ -74,6 +75,83 @@ if ($storyId) {
             elseif (-not (Test-Path $reportPath)) {
                 # All tasks checked but no report
                 $errors.Add("ERROR (quality-gate): Story $storyId has no implementation report. Fix: write .copilot/stories/reports/$storyId-report.md (see enhancement.md section 3.3 schema). Next agent: same BUILD agent.")
+            }
+        }
+    }
+}
+
+# --- Wave-gating (PLAN-phase parallelism enforcement) ---
+# STORIES.md declares wave numbers per story. Story N+1 cannot be 'in-progress'
+# or 'done' until every story in wave N is 'done'. This prevents the BUILD
+# phase from skipping waves and silently violating the agreed dependency order.
+#
+# Activation: only runs when .copilot/stories/STORIES.md exists.
+# Bypass: SKIP_WAVE_GATE=true.
+# Format expected: the §3.1 Summary Table (canonical) - column order:
+#   ID | Title | Type | Wave | Depends On | Priority | Effort | Security | Holdout | Risk | Status | Owner
+# Also accepts a bullet-list fallback for ad-hoc usage:
+#   - **US-001** | wave: 1 | status: done | <title>
+if ($env:SKIP_WAVE_GATE -ne 'true') {
+    $storiesPath = Join-Path (Get-Location).Path '.copilot\stories\STORIES.md'
+    if (Test-Path $storiesPath) {
+        $storiesContent = Get-Content $storiesPath -Raw -ErrorAction SilentlyContinue
+        if ($storiesContent) {
+            # Build {wave -> [{id, status}]}
+            $byWave = @{}
+            $foundAnyRow = $false
+
+            # Primary parser: Summary Table rows (12 pipe-separated cells starting with US-id).
+            $tableRowRegex = '(?im)^\s*\|\s*(US-[\w-]+)\s*\|[^\|\r\n]*\|[^\|\r\n]*\|\s*(\d+)\s*\|[^\|\r\n]*\|[^\|\r\n]*\|[^\|\r\n]*\|[^\|\r\n]*\|[^\|\r\n]*\|[^\|\r\n]*\|\s*([\w-]+)\s*\|'
+            $tableRows = [regex]::Matches($storiesContent, $tableRowRegex)
+            foreach ($m in $tableRows) {
+                $sid = $m.Groups[1].Value
+                $wave = [int]$m.Groups[2].Value
+                $status = $m.Groups[3].Value.ToLowerInvariant()
+                if (-not $byWave.ContainsKey($wave)) { $byWave[$wave] = @() }
+                $byWave[$wave] += @{ id = $sid; status = $status }
+                $foundAnyRow = $true
+            }
+
+            # Fallback parser: bullet-list pattern.
+            if (-not $foundAnyRow) {
+                $bulletRegex = '(?im)^\s*[-*]\s*\*\*?\s*(US-[\w-]+)\s*\*\*?\s*\|\s*wave\s*:\s*(\d+)\s*\|\s*status\s*:\s*([\w-]+)'
+                $bulletRows = [regex]::Matches($storiesContent, $bulletRegex)
+                foreach ($m in $bulletRows) {
+                    $sid = $m.Groups[1].Value
+                    $wave = [int]$m.Groups[2].Value
+                    $status = $m.Groups[3].Value.ToLowerInvariant()
+                    if (-not $byWave.ContainsKey($wave)) { $byWave[$wave] = @() }
+                    $byWave[$wave] += @{ id = $sid; status = $status }
+                    $foundAnyRow = $true
+                }
+            }
+
+            if ($foundAnyRow) {
+                # Walk waves in ascending order. For each wave w, if any later
+                # wave w' > w has a story whose status is not 'not-started',
+                # then every wave-w story MUST already be 'done'.
+                $sortedWaves = $byWave.Keys | Sort-Object
+                $violations = [System.Collections.Generic.List[string]]::new()
+                foreach ($w in $sortedWaves) {
+                    $laterStarted = $false
+                    foreach ($wl in $sortedWaves) {
+                        if ($wl -le $w) { continue }
+                        foreach ($s in $byWave[$wl]) {
+                            if ($s.status -ne 'not-started') { $laterStarted = $true; break }
+                        }
+                        if ($laterStarted) { break }
+                    }
+                    if ($laterStarted) {
+                        $unfinished = @($byWave[$w] | Where-Object { $_.status -ne 'done' })
+                        foreach ($u in $unfinished) {
+                            $violations.Add("Wave $w story $($u.id) is '$($u.status)' but a later wave already started. Finish wave $w before opening the next wave.")
+                        }
+                    }
+                }
+
+                if ($violations.Count -gt 0) {
+                    $errors.Add("ERROR (quality-gate / wave-gating): " + ($violations -join ' | ') + " Bypass with SKIP_WAVE_GATE=true if you accept the risk. Next agent: story-master (re-sequence) or finish blocking wave first.")
+                }
             }
         }
     }

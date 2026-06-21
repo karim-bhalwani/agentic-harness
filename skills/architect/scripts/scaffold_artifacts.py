@@ -17,8 +17,8 @@ Note: This is a minimal-stub scaffold (the verification gate target).
 For a richer programmatic SPEC template, see scaffold_spec.py in this folder.
 
 Usage (agent context):
-    uv run skills/architect/scripts/scaffold_artifacts.py
-    uv run skills/architect/scripts/scaffold_artifacts.py --specs-dir .copilot/specs --holdout-dir .copilot/holdout
+    uv run ~/.copilot/skills/architect/scripts/scaffold_artifacts.py
+    uv run ~/.copilot/skills/architect/scripts/scaffold_artifacts.py --specs-dir .copilot/specs --holdout-dir .copilot/holdout
 """
 
 from __future__ import annotations
@@ -27,6 +27,16 @@ import argparse
 from pathlib import Path
 
 SPEC_STUB = """\
+---
+spec_schema_version: 1
+version: "0.1"
+status: "Draft"
+date: "YYYY-MM-DD"
+owner: "<lead architect>"
+holdout_reference: ".copilot/holdout/HOLDOUT.md"
+scope_mode: "EXPANSION"
+---
+
 # [System Name] - Technical Specification
 
 > **Status:** STUB - awaiting content from architect.
@@ -74,6 +84,13 @@ See `.copilot/holdout/HOLDOUT.md` for behavioral acceptance scenarios.
 """
 
 HOLDOUT_STUB = """\
+---
+holdout_schema_version: 1
+feature: "<feature-name>"
+owner: "<lead architect>"
+scenarios: 3
+---
+
 # Holdout - Behavioral Acceptance Scenarios
 
 > **Status:** STUB - awaiting content from architect.

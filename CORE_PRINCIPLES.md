@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Architect:** Karim Bhalwani  
-**Version:** 8.0 | **Updated:** 2026-05-03  
+**Version:** 9.0 | **Updated:** 01-July-2026  
 **Scope:** Multi-agent orchestration for data & AI systems
 
 ---
@@ -124,7 +124,7 @@ During review, the Guardian loads the holdout scenarios and evaluates the implem
 
 This is borrowed directly from machine learning practice. You do not evaluate a model on its training data. You use a holdout set. The principle is the same: a model that can see the answer key will use it. Design the system so it cannot.
 
-**The limitation:** In VS Code's agent model, this separation is enforced by instructions, not by file system permissions. There is no physical barrier preventing an implementation agent from reading `.copilot/holdout/`. The constraint is behavioral ("you MUST NOT read holdout files"), not structural in the strictest sense. If VS Code ever supports file-level agent permissions, the holdout directory should be the first thing locked down.
+**The enforcement model:** Holdout blindness is enforced at two layers. The first is behavioral: every build agent's instructions state "you MUST NOT read holdout files." The second is structural: the `block-holdout.ps1` PreToolUse hook deterministically denies any `read_file`, `list_dir`, `grep_search`, `file_search`, or `run_in_terminal` call that targets `.copilot/holdout/` when the calling agent is one of the four identified build agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist). For those agents the constraint is a hard barrier the model cannot override, not merely an instruction. The residual gap is callers the hook cannot identify: when no `agent_type` is present the hook passes through, so instruction-level blindness remains the only layer for unidentified or ad-hoc agents. Closing that last gap requires VS Code to expose reliable agent identity (or file-level agent permissions) upstream.
 
 ---
 
@@ -220,21 +220,21 @@ Auditability is not overhead. It is the mechanism by which trust is earned.
 
 ---
 
-## The Deliberate Tension: Why Fifteen Agents?
+## The Deliberate Tension: Why Sixteen Agents?
 
-DeepMind's research shows that more agents can make systems worse when coordination overhead exceeds the value of parallelism. So why does this system have fifteen agents instead of five or six?
+DeepMind's research shows that more agents can make systems worse when coordination overhead exceeds the value of parallelism. So why does this system have sixteen agents instead of five or six?
 
 The answer is specialization-through-scoping, not specialization-through-duplication.
 
 **The coordination math matters.** A twelve-person human team creates sixty-six communication pathways: $n(n-1)/2$. Every pathway is a potential conversation, clarification, meeting, or message thread. Add one person and twelve new pathways appear instantly. Coordination grows faster than the team itself.
 
-Fifteen agents in this system do not create sixty-six pathways. The pipeline is linear. Each handoff has exactly one sender and one receiver. Fifteen agents produce fourteen handoff points, each with a defined contract (the spec, the review report, the deployment manifest). There is no peer-to-peer communication between agents. The Senior Developer never messages the Data Engineer. The AI Engineer never debates the Guardian. The coordination surface is structurally bounded by the pipeline, not by the agent count.
+Sixteen agents in this system do not create sixty-six pathways. The pipeline is linear. Each handoff has exactly one sender and one receiver. Sixteen agents produce fifteen handoff points, each with a defined contract (the spec, the review report, the deployment manifest). There is no peer-to-peer communication between agents. The Senior Developer never messages the Data Engineer. The AI Engineer never debates the Guardian. The coordination surface is structurally bounded by the pipeline, not by the agent count.
 
-This is the architectural answer to the coordination problem. Human teams pay a quadratic communication tax. Agent pipelines pay a linear handoff tax. The fifteen agents are viable precisely because they do not communicate like a twelve-person team.
+This is the architectural answer to the coordination problem. Human teams pay a quadratic communication tax. Agent pipelines pay a linear handoff tax. The sixteen agents are viable precisely because they do not communicate like a twelve-person team.
 
 Each agent's system prompt is tightly focused on one domain. The Data Engineer prompt contains PySpark patterns, Delta Lake writes, and dbt models. It does not contain RAG pipelines or SQL optimization or deployment patterns. This tight scoping reduces context pollution; the model is not distracted by domain knowledge it does not need for the current task.
 
-Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer. The agents are routing and workflow scaffolding. The 24 skills handle everything from black-box design patterns to GenAI security auditing to structured reasoning frameworks. Each one is loaded only when the task domain matches, saving token budget for actual reasoning.
+Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer. The agents are routing and workflow scaffolding. The 25 skills handle everything from black-box design patterns to GenAI security auditing to structured reasoning frameworks. Each one is loaded only when the task domain matches, saving token budget for actual reasoning.
 
 The agents follow identical workflow patterns (state machine, retry, escalation) but with different domain _content_. Adding a new domain (say, mobile engineering) means creating a new agent prompt with domain-specific content and a matching skill, not redesigning the workflow. The template is proven; only the content changes.
 
@@ -252,11 +252,11 @@ The tradeoff is explicit: we accept more agents (and more handoff points) in exc
 
 Honesty about limitations is more useful than confidence about strengths.
 
-**It does not physically enforce holdout blindness.** The holdout validation system relies on instruction-level constraints, not file system permissions. VS Code does not support file-level agent access controls. If an implementation agent ignores the "do not read holdout files" instruction, the structural separation breaks. This is acknowledged and documented. The fix requires tooling changes upstream, not design changes here.
+**It does not fully enforce holdout blindness for every caller.** The holdout boundary is enforced structurally by the `block-holdout.ps1` hook for the four identified build agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist): those agents are hard-denied access to `.copilot/holdout/` before the tool runs. The gap is unidentified callers: when the hook cannot determine the agent type, it passes through and only instruction-level constraints apply. Full coverage requires reliable agent-identity signals (or file-level access controls) from VS Code upstream.
 
-**It does not automatically run retrospectives.** The self-measurement system provides templates and triggers, but someone has to actually use them. The Context Engineer skill prompts for a retrospective after every five workflows, but if the prompt is ignored, no measurement happens. Discipline is required.
+**It does not automatically run retrospectives.** The self-measurement system provides templates and triggers, and the `retrospective-check.ps1` Stop hook now emits a reminder once a configurable number of story reports accumulate (default five). But the reminder still requires someone to act on it: the hook surfaces the prompt, it does not generate the retrospective itself. Discipline is still required to turn the signal into measurement.
 
-**It does not prove that fifteen agents is optimal.** The current agent count is a design choice, not a research finding. The justification: tighter scoping, reduced context pollution, is reasonable but unproven at this scale. The retrospective system exists partly to generate the evidence needed to validate or revise this choice.
+**It does not prove that sixteen agents is optimal.** The current agent count is a design choice, not a research finding. The justification: tighter scoping, reduced context pollution, is reasonable but unproven at this scale. The retrospective system exists partly to generate the evidence needed to validate or revise this choice.
 
 **It does not replace human judgment for ambiguous decisions.** The system handles tasks with clear specifications extremely well. It handles tasks with ambiguous specifications less well. When the specification itself requires judgment: "should we prioritize latency or consistency?", a human must make the call. The Greenfield Interview and Brownfield Discovery agents are designed to surface these decisions, but they cannot make them.
 

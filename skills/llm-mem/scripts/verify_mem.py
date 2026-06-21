@@ -12,8 +12,8 @@ Checks:
   exists OR the index.md mentions the raw file (loose coupling check)
 
 Usage (agent context):
-    uv run skills/llm-mem/scripts/verify_mem.py
-    uv run skills/llm-mem/scripts/verify_mem.py --root ./llmmem --strict
+    uv run ~/.copilot/skills/llm-mem/scripts/verify_mem.py
+    uv run ~/.copilot/skills/llm-mem/scripts/verify_mem.py --root ./llmmem --strict
 
 Exit codes:
     0 = Structure intact (warnings printed)

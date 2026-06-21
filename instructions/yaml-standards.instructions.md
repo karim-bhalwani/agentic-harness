@@ -2,8 +2,8 @@
 name: "YAML Coding Standards"
 description: "YAML formatting conventions: 2-space indentation, no tabs, and anchors/aliases for deduplication in config files."
 applyTo: "**/*.{yaml,yml}"
-version: "8.0"
-updated: "2026-05-03"
+version: "9.0"
+updated: "01-July-2026"
 ---
 
 # YAML Coding Standards
@@ -13,8 +13,10 @@ updated: "2026-05-03"
 ## YAML Style
 
 - 2-space indentation. No tabs.
+  - If a YAML file contains mixed indentation styles (tabs and spaces), reject the file and provide an error message specifying the issue.
 - Use YAML anchors (`&anchor`) and aliases (`*anchor`) to reduce duplication in repeated config blocks.
 - Start standalone YAML files with a `---` document marker.
+  - If a standalone YAML file does not start with a `---` document marker, reject the file and provide an error message specifying the issue.
 
 ---
 
@@ -24,7 +26,7 @@ updated: "2026-05-03"
   - Booleans: `"true"`, `"false"`, `"yes"`, `"no"`, `"on"`, `"off"`
   - Null: `"null"`, `"~"`
   - Version numbers and numeric strings: `"1.0"`, `"08"` (leading zero = octal in some parsers)
-- Use `null` (not `~`) for explicit null values - `null` is unambiguous and readable.
+- Use `null` for explicit null values. The use of `~` is not allowed to ensure consistency and parser compatibility.
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Architect:** Karim Bhalwani  
-**Version:** 8.0 | **Updated:** 2026-05-03  
+**Version:** 9.0 | **Updated:** 01-July-2026  
 **Scope:** Multi-layer system design for data & LLM systems
 
 **Is this document for you?**
@@ -158,7 +158,7 @@ Work flows through a strict linear pipeline. Each phase has exactly one sender a
 
 On-call specialists (Debug Detective, Prompt Builder, Researcher) operate outside this pipeline and are invoked when needed. The Researcher is hidden (only other agents can invoke it as a subagent). Gate 0 is a routing decision between Design and Plan, not a phase of its own.
 
-This linear topology means 15 agents produce handoff points bounded by the pipeline structure, not by the agent count. The coordination surface is linear rather than quadratic (n(n-1)/2).
+This linear topology means 16 agents produce handoff points bounded by the pipeline structure, not by the agent count. The coordination surface is linear rather than quadratic (n(n-1)/2).
 
 ---
 
@@ -215,7 +215,7 @@ This pattern enables reuse: the same agent (e.g., `senior-developer`) can be inv
 
 ### Context-as-Architecture
 
-Context engineering is not about "giving the model more information." It is about constructing the right information, in the right shape, at the right time, and discarding everything else. In a system with 15 agents, 24 skills, and a token budget that is both expensive and finite, context management is an architectural concern, not a convenience feature.
+Context engineering is not about "giving the model more information." It is about constructing the right information, in the right shape, at the right time, and discarding everything else. In a system with 16 agents, 25 skills, and a token budget that is both expensive and finite, context management is an architectural concern, not a convenience feature.
 
 The system implements context management through three mechanisms: **tiered loading**, **session state**, and **subagent isolation**.
 
@@ -306,7 +306,7 @@ From the actual agent files:
 
 The holdout validation system illustrates this precisely. Palisade Research (February 2025) documented that reasoning models, including o3 and Claude 3.7, engaged in test gaming even when explicitly told not to. They hardcoded return values. They rewrote tests to match buggy code. The behavioral instruction "do not look at the tests" is insufficient because reasoning models will use available information.
 
-The solution is structural: implementation agents are structurally blind to holdout files. The instruction is "you MUST NOT read files in `.copilot/holdout/`," but the design does not rely on the instruction alone. The Architect writes holdout scenarios during specification and stores them in a separate directory. The spec references that scenarios exist but never includes them inline. The Guardian loads them during review. The entity writing the code never sees the criteria it will be evaluated against.
+The solution is structural: implementation agents are structurally blind to holdout files. The instruction is "you MUST NOT read files in `.copilot/holdout/`," but the design does not rely on the instruction alone. The `block-holdout.ps1` PreToolUse hook deterministically denies any read, list, search, or terminal command targeting `.copilot/holdout/` when the caller is one of the four build agents, turning the instruction into a hard barrier. The Architect writes holdout scenarios during specification and stores them in a separate directory. The spec references that scenarios exist but never includes them inline. The Guardian loads them during review. The entity writing the code never sees the criteria it will be evaluated against.
 
 ### The Validation Chain
 
@@ -353,6 +353,7 @@ Harness engineering is the discipline of shaping the environment in which a mode
 | Data Engineer | Data pipeline construction | Build | Build RAG pipelines |
 | AI Engineer | LLM/RAG system construction | Build | Design data schemas |
 | Data Analyst | Natural language to SQL | Build (utility) | Modify application code |
+| Data Scientist | EDA, modeling, forecasting, experiments | Build | Deploy models to production |
 | Guardian | Code review and security audit | Review | Modify code (strictly read-only) |
 | Release Manager | CI/CD pipelines and deployment | Ship | Write application code |
 | close-story | Verify story completion, stamp STORIES.md | Ship (PLAN path) | Advance active story without full validation |
@@ -389,16 +390,17 @@ Subagents are the mechanism for keeping context windows clean during complex ope
 
 Instruction-level guardrails shape agent behavior through textual guidance. A complementary layer operates at the platform level, outside the model entirely.
 
-The `hooks/` directory contains 11 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
+The `hooks/` directory contains 12 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
 
 | Hook | Event | Contract Enforced |
 |---|---|---|
 | `quality-gate.ps1` | Stop | Session cannot close while `ruff` or `ty` errors exist (auto-skipped when no `.py` files were modified) |
 | `scan-secrets.ps1` | Stop | Scans all modified files for leaked credentials, API keys, and secret patterns before the session ends. Runs in block mode by default. |
 | `block-destructive.ps1` | PreToolUse | Denies `run_in_terminal` calls matching destructive patterns: `rm -rf`, `Remove-Item -Recurse` (any param order), `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, `Clear-Content`, `del /s /q`, `Format-Volume`. Bypasses temp-dir paths; supports `TOOL_GUARD_ALLOWLIST` escape hatch. |
-| `scan-user-prompt.ps1` | PreToolUse | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. Emits a security notice in warn mode; blocks in block mode. |
+| `scan-user-prompt.ps1` | UserPromptSubmit | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. Emits a security notice in warn mode; blocks in block mode. |
 | `lint-on-write.ps1` | PreToolUse | Denies `.py` file writes until `ruff check` passes on the proposed content |
 | `auto-format.ps1` | PostToolUse | Runs `ruff format` on every Python file the agent writes |
+| `artifact-manifest.ps1` | PostToolUse | Appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` for every agent file write (timestamp, agent, tool, path, role). Gives future sessions a cheap grep-able index of produced artifacts. Zero LLM tokens. |
 | `session-context.ps1` | SessionStart | Injects branch, last commit, venv status, Python version, Project Bible presence, active story, pipeline artifact detection, and inferred pipeline phase into every new session |
 | `subagent-context.ps1` | SubagentStart | Injects project root, active story, and pipeline phase into every subagent at launch so delegated agents start with the right context |
 | `subagent-verify.ps1` | SubagentStop | After a subagent finishes, runs the relevant `verify_*.py` to confirm expected artifacts actually landed and are not stubs. Covers: spec (architect), review report (guardian), Project Bible (brownfield/greenfield), session state (builder agents), story backlog (story-master), and story plan + validation (story-planner). Blocks if verification fails; warn mode available via `SUBAGENT_VERIFY_MODE=warn`. |
@@ -468,7 +470,7 @@ Skills with `disable-model-invocation: true` (the thinker, verification-before-c
 - **Background skills** (thinker, verification-before-completion, context-engineer) inject quality scaffolding silently. They load automatically when relevant conditions are met but are invisible to the user.
 - **Gating skills** (security-boundaries, task-routing, holdout-validation) load only when specific triggers occur (untrusted content, delegation decision, spec design/review).
 
-The load-before-use pattern prevents context bloat. If all 24 skills were pre-loaded, the agent's context window would be consumed by domain knowledge before any task-specific reasoning could begin.
+The load-before-use pattern prevents context bloat. If all 25 skills were pre-loaded, the agent's context window would be consumed by domain knowledge before any task-specific reasoning could begin.
 
 ### Skill Composition
 
@@ -514,15 +516,15 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 
 ---
 
-### Decision 3: Holdout Validation via Instruction-Level Blindness
+### Decision 3: Holdout Validation via Hook-Enforced Blindness
 
-**Choice**: Implementation agents are instructed not to read `.copilot/holdout/` files. The Architect writes holdout scenarios during specification. The Guardian evaluates against them during review.
+**Choice**: Implementation agents are instructed not to read `.copilot/holdout/` files, and the `block-holdout.ps1` PreToolUse hook deterministically denies the access for the four identified build agents. The Architect writes holdout scenarios during specification. The Guardian evaluates against them during review.
 
-**Alternatives Considered**: File-system-level access controls (not supported by VS Code's agent model), unit tests authored by a separate test-writing agent (still visible to implementation agents), no holdout system (rely on Guardian review alone).
+**Alternatives Considered**: Instruction-only enforcement (defeated by reasoning models that game tests), file-system-level access controls (not supported by VS Code's agent model), unit tests authored by a separate test-writing agent (still visible to implementation agents), no holdout system (rely on Guardian review alone).
 
-**Rationale**: Research shows reasoning models game tests even when told not to (Palisade Research, February 2025). Structural separation (making the criteria invisible to the entity being evaluated) is the only reliable mechanism. Instruction-level enforcement is the strongest mechanism currently available in VS Code's agent model.
+**Rationale**: Research shows reasoning models game tests even when told not to (Palisade Research, February 2025). Structural separation (making the criteria invisible to the entity being evaluated) is the only reliable mechanism. The hook converts instruction-level blindness into deterministic enforcement for the build agents, intercepting `read_file`, `list_dir`, `grep_search`, `file_search`, and `run_in_terminal` before they execute.
 
-**Trade-off**: This is a known limitation. The blindness is behavioral, not physical. If an implementation agent ignores the "MUST NOT read holdout files" instruction, the separation breaks. The fix requires upstream tooling changes (file-level agent permissions in VS Code), not design changes in this system.
+**Trade-off**: Enforcement is complete for the four identified build agents but conditional on agent identity. When the hook cannot determine the caller's `agent_type`, it passes through, so unidentified or ad-hoc callers fall back to instruction-level blindness only. Closing that residual gap requires upstream tooling (reliable agent identity or file-level agent permissions in VS Code), not design changes in this system.
 
 ---
 
@@ -538,9 +540,9 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 
 ---
 
-### Decision 5: 15 Agents with Tight Scoping Over 5-6 Generalist Agents
+### Decision 5: 16 Agents with Tight Scoping Over 5-6 Generalist Agents
 
-**Choice**: 15 agents, each with a narrowly scoped system prompt focused on one domain or pipeline phase.
+**Choice**: 16 agents, each with a narrowly scoped system prompt focused on one domain or pipeline phase.
 
 **Alternatives Considered**: 5-6 generalist agents that combine roles (e.g., a single "Builder" agent for all implementation), 20+ micro-agents with even narrower scope, dynamically spawned agents per task.
 
@@ -586,7 +588,7 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 
 ## What Was Deliberately Left Out
 
-**Dynamic agent spawning**: The system uses a fixed registry of 15 agents. There is no mechanism to dynamically create new agents at runtime based on task characteristics. This was left out because the current roster covers the target domains (Data, GenAI, ML Engineering) and adding dynamic spawning would require a meta-agent layer with its own coordination overhead.
+**Dynamic agent spawning**: The system uses a fixed registry of 16 agents. There is no mechanism to dynamically create new agents at runtime based on task characteristics. This was left out because the current roster covers the target domains (Data, GenAI, ML Engineering) and adding dynamic spawning would require a meta-agent layer with its own coordination overhead.
 
 **Cross-agent shared memory within a session**: Agents communicate through artifacts and handoffs, not through a shared memory store. A shared memory system would reduce handoff friction but introduce consistency challenges (which agent's write wins?) and blur the clean separation between pipeline phases.
 

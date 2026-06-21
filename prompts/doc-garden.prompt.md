@@ -8,12 +8,27 @@ tools:
   - execute
 ---
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
-Audit the documentation in this repository for freshness, accuracy, and internal consistency.
+Audit the documentation in this repository for:
+
+- **Freshness**: Documentation reflects current product versions, features, and API behaviors; outdated timestamps or deprecated references.
+- **Accuracy**: Technical content is correct, code examples run without errors, and claims are verifiable against source code or specifications.
+- **Internal Consistency**: Definitions, terminology, and guidance are uniform across all docs; cross-references are valid; no contradictory instructions.
 
 **Scope**: ${input:scope}
 
-**Workflow**: Load `skills/guardian/references/doc-audit-checklist.md` via `read_file`. The checklist is the single source of truth for the 6 audit categories, severity definitions, the `audit.py --lint` cross-check, and the Doc Health Report format. Follow it; do not paraphrase here.
+**Priority 1: Load Audit Criteria**
+Load `skills/guardian/references/doc-audit-checklist.md` via `read_file`. If inaccessible, halt and report: "Critical: doc-audit-checklist.md is inaccessible. Cannot proceed without audit criteria."
 
-**Output**: `.copilot/artifacts/doc-health-report.md` (overwrite if it exists), plus a one-paragraph summary in this conversation pointing the user at the Critical findings first.
+**Priority 2: Audit One Category at a Time**
+For each of the 6 categories in the checklist (in order), scan the documentation and record findings with severity levels. Focus on one category completely before moving to the next.
+
+**Priority 3: Validate Cross-References**
+Execute `audit.py --lint` to check for broken links and version mismatches.
+
+**Priority 4: Generate Report**
+Create `.copilot/artifacts/doc-health-report.md` with all findings, organized by severity (Critical first, then High, Medium).
+
+**Priority 5: Summarize**
+Provide a one-paragraph summary in conversation, highlighting Critical findings only.

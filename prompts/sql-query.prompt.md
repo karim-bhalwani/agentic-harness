@@ -7,9 +7,24 @@ tools:
   - search
 ---
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
-Answer this data question in T-SQL: **${input:question}**
+Answer this data question in T-SQL: **${input:question}** (e.g., "What is the total sales for last month?")
+
+If the input question is invalid or nonsensical, respond with an error message explaining the issue and requesting clarification.
+
+**Handling ambiguous or incomplete questions**:
+
+- **Missing time frame**: If the question lacks temporal specificity (e.g., "What are the top customers?"), ask the user to specify a date range or period.
+- **Undefined metrics**: If the question references undefined fields (e.g., "sales by region" without specifying revenue, units, or orders), ask for clarification on which metric to use.
+- **Missing scope/filter**: If the question is too broad (e.g., "Show all data"), ask the user to narrow the scope by business unit, product, customer segment, or other relevant dimension.
+- **Ambiguous references**: If table or column names could map to multiple database objects, list the available options and ask which one applies.
+
+Example responses:
+
+- "Your question lacks a time frame. Could you specify whether you mean 'this month,' 'last quarter,' or a custom date range?"
+- "You asked for 'sales.' Do you mean total revenue, number of orders, or units sold?"
+- "Which region(s) should I include - all regions, a specific country, or a particular sales territory?"
 
 **Database context** (fill in what you know):
 

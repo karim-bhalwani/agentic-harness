@@ -7,21 +7,38 @@ tools:
   - search
 ---
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani |
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
 Design: **${input:feature}**
 
-**Before starting**, read:
+## Step 1: Gather Context
 
+Read the following files:
 - `.copilot/context/PROJECT_CONTEXT.md` (Project Bible - required; if not found, ask the user to run `brownfield-discovery` or `greenfield-interview` first)
 - Any existing specs in `.copilot/specs/`
 
-**Scope mode** - identify the one that applies and confirm with the user if unsure:
+## Step 2: Determine Scope Mode
+
+Identify which scope mode applies:
 
 - **REDUCTION** - simplifying or removing existing functionality
 - **HOLD** - new feature within existing architecture (no new modules, no new API surface)
 - **EXPANSION** - new module, new API contract, or cross-cutting change
 
-Run the full Architect workflow per the `architect` skill. Produce the specification at `.copilot/specs/SPEC.md`.
+If the appropriate scope mode cannot be determined confidently, ask the user to confirm by providing additional context.
 
-Do NOT begin implementation. The spec must be reviewed and approved before any code is written.
+## Step 3: Run Architect Workflow
+
+Execute the full Architect workflow per the `architect` skill to produce a comprehensive specification covering:
+- Module boundaries
+- API contracts
+- Data models
+- Error handling
+- Security
+- Acceptance scenarios
+
+## Step 4: Produce and Review
+
+Write the specification to `.copilot/specs/SPEC.md`.
+
+**Do NOT begin implementation.** The spec must be reviewed and approved before any code is written.

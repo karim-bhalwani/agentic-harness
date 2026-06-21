@@ -5,16 +5,16 @@ argument-hint: "[feature or code to implement]"
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: ["architect", "guardian", "verification-before-completion"]
 ---
 
 # Implementer Skill - High-Integrity Development
 
-> Version: 8.0 | Updated: 2026-05-03 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
+> Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
 
-> **Pipeline position**: **build** (4 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> **`implementer`**. This skill produces working, tested code. It runs LAST. Earlier steps may be compressed for small changes (use `/quick-fix`) but never skipped for non-trivial work.
+> **Pipeline position**: **build** (4 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> **`implementer`**. This skill produces working, tested code. It runs LAST. Earlier steps may be compressed for localized changes affecting fewer than 10 lines and not impacting external APIs (use `/quick-fix`) but never skipped for non-trivial work.
 
 ## Dependencies
 
@@ -82,10 +82,29 @@ This replaces "Read Spec" for small tasks. For anything with architectural impli
    - [ ] Code is minimal to pass this test (no speculative features)
    - [ ] Tests pass before any refactoring (**never refactor while RED**)
 
-3. **Draft Code**: Implement business logic according to architecture boundaries.
-4. **Validate**: Run lints, type checks, and tests.
-5. **Self-Review** (before handoff): Re-read every changed file as a reviewer would. Check against the original spec/mini-contract. Fix issues in-place before requesting external review. See checklist below.
-6. **Refactor**: Simplify and clean up code while maintaining test passes.
+3. **Pre-Write Gate (Simplicity Ladder)**: Before writing any code for a task, stop at the first rung that holds. Do not proceed past the rung that resolves the need:
+
+   ```
+   1. Does this need to exist at all?          → no: skip it (YAGNI)
+   2. Does the stdlib already do this?         → use it
+   3. Does a native platform feature cover it? → use it
+   4. Does an already-installed dep solve it?  → use it
+   5. Is this one line?                        → write one line
+   6. Only then: write the minimum that works
+   ```
+
+   **Not negotiable** regardless of rung: input validation at trust boundaries, error handling that prevents data loss, security checks, accessibility, and anything the spec explicitly requires. The ladder reduces volume, never correctness.
+
+   When you intentionally stop at an early rung and a known ceiling exists (e.g., O(n²) scan, global lock, naive heuristic), mark it with a `minion:` comment naming the ceiling and upgrade path:
+
+   ```python
+   # minion: linear scan sufficient for now; upgrade to binary search if list > 1000 items
+   ```
+
+4. **Draft Code**: Implement business logic according to architecture boundaries.
+5. **Validate**: Run lints, type checks, and tests.
+6. **Self-Review** (before handoff): Re-read every changed file as a reviewer would. Check against the original spec/mini-contract. Fix issues in-place before requesting external review. See checklist below.
+7. **Refactor**: Simplify and clean up code while maintaining test passes.
 
 ### Self-Review Checklist (Step 5)
 
@@ -98,6 +117,16 @@ Before declaring work done or handing off to Guardian:
 5. **Fix in-place** - if any issue is found, fix it now (don't log it for later)
 
 This is a semantic review ("did I do the right thing well?"), not a mechanical gate ("did the linter pass?"). It complements, not replaces, the verification-before-completion skill.
+
+## Failure Taxonomy
+
+| Failure Mode              | Symptom                                                    | Immediate Recovery                                                                     |
+| ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `stale_file_content`      | `replace_string_in_file` fails to match                    | Re-read the file first. Never retry an edit on content you read more than 2 steps ago. |
+| `scope_overreach`         | Touching files not in the spec or task scope               | Revert. Edit only what the spec explicitly requires.                                   |
+| `placeholder_code`        | Writing `# TODO`, `pass`, or `...` in production paths     | Replace before declaring done. No placeholders in deliverables.                        |
+| `test_written_after_code` | Tests written after implementation (not TDD)               | Acceptable only for obvious bug fixes. For features, write RED test first.             |
+| `convention_mismatch`     | New code uses different naming/style than surrounding code | Re-read 2-3 neighboring files. Match existing conventions exactly.                     |
 
 ## Enforce Invariants, Not Implementations
 

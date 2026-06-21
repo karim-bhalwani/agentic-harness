@@ -6,7 +6,7 @@ Paste templates for agents to present verification evidence in a standardized fo
 
 ---
 
-## Implementation Checkpoint (senior-developer, data-engineer, ai-engineer)
+## Implementation Checkpoint (senior-developer, data-engineer, data-scientist, ai-engineer)
 
 Use after completing a feature, bug fix, or pipeline implementation.
 
@@ -46,7 +46,7 @@ Use after completing a feature, bug fix, or pipeline implementation.
 
 **Regression (if bug fix)**
 
-- Red phase (reverted fix): `<test failed as expected? Y/N>`
+- Red phase (after reverting fix): `<test failed as expected? Y/N>`
 - Green phase (fix restored): `<test passed? Y/N>`
 ````
 
@@ -64,7 +64,7 @@ Use when completing a review pass.
 - Spec/plan reference: `<file or PR description>`
 - Files changed vs. files expected: `<match? Y/N>`
 - Scope creep items found: `<list or "none">`
-- NOT DONE items found: `<list or "none">`
+- Incomplete spec requirements found: `<list or "none">`
 
 **Static Analysis**
 
@@ -115,10 +115,10 @@ Use when presenting root cause analysis.
 
 **Hypotheses Tested**
 
-| # | Hypothesis | Evidence | Result |
-|---|-----------|----------|--------|
-| 1 | <description> | <what was checked> | Confirmed / Rejected |
-| 2 | <description> | <what was checked> | Confirmed / Rejected |
+| #   | Hypothesis    | Evidence           | Result               |
+| --- | ------------- | ------------------ | -------------------- |
+| 1   | <description> | <what was checked> | Confirmed / Rejected |
+| 2   | <description> | <what was checked> | Confirmed / Rejected |
 
 **Root Cause**
 
@@ -140,7 +140,7 @@ Use when presenting root cause analysis.
 
 Use when validating a design specification.
 
-````markdown
+```markdown
 ### Design Verification
 
 **Scope Mode**: `REDUCTION` | `HOLD` | `EXPANSION`
@@ -162,7 +162,7 @@ Use when validating a design specification.
 - [ ] Success criteria are testable (not vague)
 - [ ] Edge cases documented
 - [ ] Failure modes and recovery documented
-````
+```
 
 ---
 
@@ -182,7 +182,7 @@ Use in addition to the Implementation Checkpoint for pipeline work.
 
 - Null counts on key columns: `<paste output>`
 - Row count delta (source vs. target): `<numbers>`
-- Duplicate check: `<paste output>`
+- Duplicate check (unique key violation count or 0 duplicates found): `<paste output>`
 
 **Idempotency Test**
 
@@ -204,5 +204,3 @@ Use in addition to the Implementation Checkpoint for pipeline work.
 - **Actual output only.** Never fill a template with expected results. Paste what the tool actually returned.
 - **Timestamp is implicit.** If the evidence is in this message, it was gathered in this session.
 - **Failure is acceptable; fabrication is not.** If lint finds 3 errors, report 3 errors. Do not claim zero.
-
-

@@ -1,7 +1,7 @@
 ---
 name: prompt-library
 description: Curated collection of high-quality prompts for software development and analysis. Includes role-based prompts, task-specific templates, analysis frameworks, and prompt patterns. Use when needing prompt templates for code review, debugging, testing, refactoring, or generating technical documentation.
-version: 2.0.0
+version: "9.0"
 dependencies: []
 tags:
   - prompts
