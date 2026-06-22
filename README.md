@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![VS Code](https://img.shields.io/badge/VS%20Code-Copilot%20Compatible-0078d4)
 ![Agents](https://img.shields.io/badge/agents-16-blue)
-![Skills](https://img.shields.io/badge/skills-25-blue)
+![Skills](https://img.shields.io/badge/skills-26-blue)
 ![Hooks](https://img.shields.io/badge/hooks-14-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -18,7 +18,7 @@
 
 A production-ready **multi-agent development crew** for GitHub Copilot in VS Code. Instead of one general-purpose AI, you get 16 specialized agents that collaborate through a shared pipeline: discover → design → (plan) → build → review → ship.
 
-Each agent has a defined role, knows its limits, and hands work off to the next agent in the chain. Domain knowledge lives in 25 on-demand skills. Quality invariants are enforced by 13 platform-level hooks that the model cannot override.
+Each agent has a defined role, knows its limits, and hands work off to the next agent in the chain. Domain knowledge lives in 26 on-demand skills. Quality invariants are enforced by 13 platform-level hooks that the model cannot override.
 
 **The short version:** spec before code, one agent per phase, hooks enforce what instructions can't.
 
@@ -28,8 +28,8 @@ Each agent has a defined role, knows its limits, and hands work off to the next 
 
 | Component                                             | Count | What it does                                                                                                                  |
 | ----------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Agents** (`.agent.md`) & **Prompts** (`.prompt.md`) | 16+15 | Specialized personas (architect, senior-developer, guardian, etc.) + slash commands (/design, /code-review, /quick-fix, etc.) |
-| **Skills** (`SKILL.md`)                               | 25    | Domain knowledge packs loaded on demand: data-engineering, genai-security, implementer, etc.                                  |
+| **Agents** (`.agent.md`) & **Prompts** (`.prompt.md`) | 16+16 | Specialized personas (architect, senior-developer, guardian, etc.) + slash commands (/design, /code-review, /quick-fix, etc.) |
+| **Skills** (`SKILL.md`)                               | 26    | Domain knowledge packs loaded on demand: data-engineering, genai-security, implementer, etc.                                  |
 | **Instructions** (`.instructions.md`)                 | 4     | Global rules auto-applied to every session (core behavior, Python, SQL, YAML standards)                                       |
 | **Hooks** (`.ps1`)                                    | 14    | Platform-level enforcement: quality gates, secrets scan, destructive command blocking, etc.                                   |
 

@@ -241,5 +241,5 @@ Load these when implementing to calibrate style, structure, and conventions:
 
 > Note: These are optional reference examples. Some projects may not include them; if missing, treat them as templates and create equivalent project-specific references as needed.
 
-- [authentication-service.py](./references/authentication-service.py) - Sample service implementation (if present). Load when writing new service classes, repositories, or handlers to match established patterns.
+- [authentication-service.md](./references/authentication-service.md) - Sample service implementation (if present). Load when writing new service classes, repositories, or handlers to match established patterns.
 - [product_model.md](./references/product_model.md) - Reference domain model (if present) with field types, validation rules, and relationships. Load when designing or implementing data models.

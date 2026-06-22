@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**16 Agents • 25 Skills • 15 Prompts • 14 Hooks • 6-Phase Pipeline**
+**16 Agents • 26 Skills • 16 Prompts • 14 Hooks • 6-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -18,7 +18,7 @@
 
 ## Welcome to the Team
 
-The **Mega Minions** are a collection of 16 custom AI agents, 25 specialized skills, 15 parameterized prompt files, and 14 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
+The **Mega Minions** are a collection of 16 custom AI agents, 26 specialized skills, 16 parameterized prompt files, and 14 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
 
 Think of them as a squad of specialists, not a single jack-of-all-trades. The Architect draws the blueprints. The Senior Developer writes the code. The Guardian reviews it. The Release Manager ships it. Each one stays in their lane and passes the baton when it is time.
 
@@ -319,7 +319,7 @@ Skills are the **silent workers behind the scenes**. They are not agents you tal
 
 ```text
   ┌──────────────────────────────────────────────────────────────────────┐
-  │                    SKILLS TOOLKIT (25 SKILLS)                        │
+  │                    SKILLS TOOLKIT (26 SKILLS)                        │
   │                                                                      │
   │  Any Mega Minion can grab what they need:                            │
   │                                                                      │
@@ -368,7 +368,17 @@ Skills are the **silent workers behind the scenes**. They are not agents you tal
   │  │ proof gate │ │ ation gate │ │ backlog    │ │                    │ │
   │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │
   │                                                                      │
-  │  All 25 skills auto-load on demand. You never invoke them manually.  │
+  │  ┌────────────┐ ┌────────────────────────────────────────────────┐   │
+  │  │  data-     │ │  data-science                                  │   │
+  │  │  narrative │ │                                                │   │
+  │  │            │ │  EDA, statistical testing, predictive          │   │
+  │  │ Dataset →  │ │  modeling, time series forecasting,            │   │
+  │  │ evidence-  │ │  and A/B experiment design                     │   │
+  │  │ traceable  │ └────────────────────────────────────────────────┘   │
+  │  │ report.md  │                                                      │
+  │  └────────────┘                                                      │
+  │                                                                      │
+  │  All 26 skills auto-load on demand. You never invoke them manually.  │
   └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -394,6 +404,7 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
   Type /feature-plan    → Architect (using concise-planning skill) produces an atomic checklist
   Type /sql-query       → Data Analyst writes optimized T-SQL
   Type /data-science    → Data Scientist runs EDA, modeling, forecasting, or A/B experiment
+  Type /data-narrative  → Data Scientist turns a dataset into an evidence-grounded report.md
   Type /doc-garden      → Guardian audits documentation freshness
   Type /quick-fix       → Fast lane for small, obvious fixes (no pipeline)
   Type /retrospective   → Architect runs pipeline retrospective and improvement cycle
@@ -525,4 +536,4 @@ This approach has a name: **harness engineering**. Just as prompt engineering re
 
 ---
 
-_The Mega Minions, 16 agents, 25 skills, 15 prompts, 14 hooks, one team._
+_The Mega Minions, 16 agents, 26 skills, 16 prompts, 14 hooks, one team._

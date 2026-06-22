@@ -255,14 +255,10 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_size = sub.add_parser("size", help="Calculate required sample size")
-    p_size.add_argument(
-        "--baseline", type=float, help="Baseline conversion rate (proportion test)"
-    )
+    p_size.add_argument("--baseline", type=float, help="Baseline conversion rate (proportion test)")
     p_size.add_argument("--mde", type=float, help="Minimum detectable effect, absolute")
     p_size.add_argument("--mu-control", type=float, help="Control mean (means test)")
-    p_size.add_argument(
-        "--mu-treatment", type=float, help="Treatment mean (means test)"
-    )
+    p_size.add_argument("--mu-treatment", type=float, help="Treatment mean (means test)")
     p_size.add_argument("--sigma", type=float, help="Pooled std dev (means test)")
     p_size.add_argument("--alpha", type=float, default=0.05)
     p_size.add_argument("--power", type=float, default=0.80)
@@ -283,11 +279,7 @@ def main() -> int:
                 alpha=args.alpha,
                 power=args.power,
             )
-        elif (
-            args.mu_control is not None
-            and args.mu_treatment is not None
-            and args.sigma is not None
-        ):
+        elif args.mu_control is not None and args.mu_treatment is not None and args.sigma is not None:
             result = calculate_sample_size_means(
                 mu_control=args.mu_control,
                 mu_treatment=args.mu_treatment,

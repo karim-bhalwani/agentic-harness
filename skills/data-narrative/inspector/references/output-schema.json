@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InspectorManifest",
+  "description": "Provenance manifest produced by the Inspector role. Links every claim in report.md back to its upstream evidence (code line or source URL). Written to narrative-output/inspector.json.",
+  "type": "object",
+  "required": ["meta", "claims"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["dataset", "report_file", "generated_at", "roles"],
+      "properties": {
+        "dataset":     { "type": "string", "description": "Path or name of the source dataset" },
+        "report_file": { "type": "string", "description": "Relative path to report.md" },
+        "generated_at":{ "type": "string", "format": "date-time" },
+        "roles": {
+          "type": "object",
+          "description": "Artifact file paths produced by each upstream role",
+          "properties": {
+            "detective": { "type": "string", "description": "narrative-output/detective.json" },
+            "analyst":   { "type": "string", "description": "narrative-output/analyst.json" },
+            "editor":    { "type": "string", "description": "narrative-output/editor.md" }
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "description": "One entry per verifiable claim or key sentence in report.md.",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "text", "evidence_type", "evidence"],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "description": "Unique slug — e.g. claim-001, claim-002",
+            "pattern": "^claim-[0-9]{3,}$"
+          },
+          "text": {
+            "type": "string",
+            "description": "Exact sentence or phrase from report.md that is being grounded"
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": ["code", "reference", "both"],
+            "description": "code = produced by Analyst script; reference = from Detective source URL; both = backed by both"
+          },
+          "evidence": {
+            "type": "object",
+            "description": "At least one of code or reference must be present, matching evidence_type",
+            "properties": {
+              "code": {
+                "type": "object",
+                "description": "Pointer to the Analyst script line that produced this number or finding",
+                "required": ["script", "line_start"],
+                "properties": {
+                  "script":          { "type": "string",  "description": "Relative path to the Python script inside narrative-output/analyst/" },
+                  "line_start":      { "type": "integer", "description": "1-based line where the result is computed" },
+                  "line_end":        { "type": "integer", "description": "1-based last line of the relevant block (inclusive)" },
+                  "result_variable": { "type": "string",  "description": "Variable name that holds the reported value" }
+                }
+              },
+              "reference": {
+                "type": "object",
+                "description": "Pointer to a Detective-sourced external reference",
+                "required": ["url"],
+                "properties": {
+                  "url":     { "type": "string",  "description": "Source URL fetched by the Detective" },
+                  "excerpt": { "type": "string",  "description": "Relevant passage from the source that supports the claim" }
+                }
+              }
+            }
+          },
+          "verified": {
+            "type": ["boolean", "null"],
+            "description": "null = not yet verified; true/false set by verify_claims.py",
+            "default": null
+          },
+          "verify_note": {
+            "type": "string",
+            "description": "Populated by verify_claims.py — reason for pass or failure"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": ["object", "null"],
+      "description": "Verification summary. Populated by verify_claims.py after a --verify run.",
+      "properties": {
+        "total_claims":       { "type": "integer" },
+        "verified":           { "type": "integer" },
+        "failed":             { "type": "integer" },
+        "unverified":         { "type": "integer" },
+        "verifiability_rate": { "type": "number",  "description": "verified / total_claims, between 0.0 and 1.0" },
+        "verified_at":        { "type": "string",  "format": "date-time" }
+      }
+    }
+  }
+}

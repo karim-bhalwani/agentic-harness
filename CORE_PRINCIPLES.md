@@ -234,7 +234,7 @@ This is the architectural answer to the coordination problem. Human teams pay a 
 
 Each agent's system prompt is tightly focused on one domain. The Data Engineer prompt contains PySpark patterns, Delta Lake writes, and dbt models. It does not contain RAG pipelines or SQL optimization or deployment patterns. This tight scoping reduces context pollution; the model is not distracted by domain knowledge it does not need for the current task.
 
-Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer. The agents are routing and workflow scaffolding. The 25 skills handle everything from black-box design patterns to GenAI security auditing to structured reasoning frameworks. Each one is loaded only when the task domain matches, saving token budget for actual reasoning.
+Domain expertise lives in **skills** (loaded on demand), not in agent count. The skills are the real knowledge layer. The agents are routing and workflow scaffolding. The 26 skills handle everything from black-box design patterns to GenAI security auditing to structured reasoning frameworks. Each one is loaded only when the task domain matches, saving token budget for actual reasoning.
 
 The agents follow identical workflow patterns (state machine, retry, escalation) but with different domain _content_. Adding a new domain (say, mobile engineering) means creating a new agent prompt with domain-specific content and a matching skill, not redesigning the workflow. The template is proven; only the content changes.
 

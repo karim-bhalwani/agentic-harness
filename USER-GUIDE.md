@@ -12,8 +12,8 @@
 Your architect has handed you a standardised AI development system built into GitHub Copilot. It contains:
 
 - **16 custom AI agents**, specialist assistants for each phase of development
-- **25 skills**, knowledge packs agents load automatically when needed
-- **15 prompt shortcuts**, slash commands that wire structured workflows to the right agent
+- **26 skills**, knowledge packs agents load automatically when needed
+- **16 prompt shortcuts**, slash commands that wire structured workflows to the right agent
 - **14 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, destructive command blocking, prompt-injection detection, post-subagent artifact verification, retrospective reminders, subagent budget caps, and artifact manifest logging
 - **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
@@ -360,6 +360,7 @@ Writing code from a spec         senior-developer
 Building a data pipeline         data-engineer
 Building an AI / RAG system      ai-engineer
 Writing SQL from a question      @data-analyst  (or /sql-query)
+Dataset → evidence-grounded report /data-narrative
 Reviewing code before merge      guardian       (or /code-review)
 Audit docs freshness             guardian       (or /doc-garden)
 Setting up CI/CD / deployment    release-manager

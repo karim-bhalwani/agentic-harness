@@ -215,7 +215,7 @@ This pattern enables reuse: the same agent (e.g., `senior-developer`) can be inv
 
 ### Context-as-Architecture
 
-Context engineering is not about "giving the model more information." It is about constructing the right information, in the right shape, at the right time, and discarding everything else. In a system with 16 agents, 25 skills, and a token budget that is both expensive and finite, context management is an architectural concern, not a convenience feature.
+Context engineering is not about "giving the model more information." It is about constructing the right information, in the right shape, at the right time, and discarding everything else. In a system with 16 agents, 26 skills, and a token budget that is both expensive and finite, context management is an architectural concern, not a convenience feature.
 
 The system implements context management through three mechanisms: **tiered loading**, **session state**, and **subagent isolation**.
 
@@ -470,7 +470,7 @@ Skills with `disable-model-invocation: true` (the thinker, verification-before-c
 - **Background skills** (thinker, verification-before-completion, context-engineer) inject quality scaffolding silently. They load automatically when relevant conditions are met but are invisible to the user.
 - **Gating skills** (security-boundaries, task-routing, holdout-validation) load only when specific triggers occur (untrusted content, delegation decision, spec design/review).
 
-The load-before-use pattern prevents context bloat. If all 25 skills were pre-loaded, the agent's context window would be consumed by domain knowledge before any task-specific reasoning could begin.
+The load-before-use pattern prevents context bloat. If all 26 skills were pre-loaded, the agent's context window would be consumed by domain knowledge before any task-specific reasoning could begin.
 
 ### Skill Composition
 

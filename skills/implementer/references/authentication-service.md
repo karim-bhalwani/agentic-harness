@@ -1,3 +1,17 @@
+# Example: Authentication Service Implementation
+
+## Overview
+
+Reference implementation of an Authentication Service from an Architect spec, following Clean Architecture, TDD principles, and Python 3.11+ standards. Use as a pattern when writing new service classes, repositories, or API handlers.
+
+**Stack:** FastAPI, Pydantic v2, bcrypt, PyJWT  
+**Patterns:** Clean Architecture layers (Domain, Persistence, Business Logic, Presentation), DTO separation, custom exception hierarchy, dependency injection
+
+---
+
+## Implementation
+
+```python
 """
 Authentication Service Implementation
 
@@ -10,11 +24,12 @@ Testing: pytest with 85%+ coverage
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from enum import Enum
-import jwt  # ty:ignore[unresolved-import]
-import bcrypt  # type: ignore[import-not-found]
-from fastapi import FastAPI, HTTPException, Depends, status  # ty:ignore[unresolved-import]
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials  # ty:ignore[unresolved-import]
-from pydantic import BaseModel, EmailStr, Field, validator  # ty:ignore[unresolved-import]
+import jwt
+import bcrypt
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, EmailStr, Field, validator
+
 
 # ============================================================================
 # DOMAIN MODELS
@@ -229,11 +244,9 @@ class AuthenticationService:
 
     def register(self, request: RegisterRequest) -> UserResponse:
         """Register new user"""
-        # Validate email not already in use
         if self.repository.find_by_email(request.email):
             raise UserAlreadyExistsError(f"Email {request.email} already registered")
 
-        # Create user with hashed password
         user = User(
             id=self._generate_user_id(),
             email=request.email,
@@ -244,27 +257,21 @@ class AuthenticationService:
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
-
-        # Persist
         created_user = self.repository.create(user)
         return UserResponse(**created_user.dict())
 
     def login(self, request: LoginRequest) -> TokenResponse:
         """Authenticate user and return token"""
-        # Find user
         user = self.repository.find_by_email(request.email)
         if not user:
             raise InvalidCredentialsError("Invalid email or password")
 
-        # Verify password
         if not self.password_hasher.verify_password(request.password, user.password_hash):
             raise InvalidCredentialsError("Invalid email or password")
 
-        # Check if active
         if not user.is_active:
             raise InvalidCredentialsError("User account is inactive")
 
-        # Generate token
         token = self.jwt_handler.generate_token(user.id, user.roles)
         return TokenResponse(
             access_token=token,
@@ -287,9 +294,8 @@ class AuthenticationService:
 
     @staticmethod
     def _generate_user_id() -> str:
-        """Generate unique user ID (UUID in production)"""
+        """Generate unique user ID"""
         import uuid
-
         return str(uuid.uuid4())
 
 
@@ -299,7 +305,6 @@ class AuthenticationService:
 
 app = FastAPI(title="Auth API", version="1.0.0")
 
-# Initialize dependencies
 _user_repository = UserRepository()
 _jwt_handler = JWTHandler(secret_key="your-secret-key-here")
 auth_service = AuthenticationService(_user_repository, _jwt_handler)
@@ -333,13 +338,4 @@ async def get_current_user(
         return auth_service.get_current_user(credentials.credentials)
     except InvalidTokenError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-
-
-# ============================================================================
-# TESTING
-# ============================================================================
-
-if __name__ == "__main__":
-    import pytest
-
-    pytest.main([__file__, "-v", "--cov=."])
+```
