@@ -21,17 +21,16 @@
 [CmdletBinding()]
 param()
 
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
+
 # --- Circuit breaker ---
-if ($env:SKIP_SUBAGENT_CONTEXT -eq 'true') {
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_SUBAGENT_CONTEXT') {
     exit 0
 }
 
 # --- Read stdin ---
-$rawInput = [Console]::In.ReadToEnd()
-$inputData = $null
-if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-    try { $inputData = $rawInput | ConvertFrom-Json } catch { }
-}
+$inputData = Read-MMHookInput
 
 $agentType = if ($inputData -and $inputData.agent_type) { $inputData.agent_type } else { 'unknown' }
 
@@ -39,12 +38,11 @@ $agentType = if ($inputData -and $inputData.agent_type) { $inputData.agent_type 
 $branch = & git rev-parse --abbrev-ref HEAD 2>$null
 if ($LASTEXITCODE -ne 0) { $branch = 'unknown' }
 
-$pythonVer = python --version 2>&1
+$pythonCmd = Get-MMPythonCommand
+$pythonVer = if ($pythonCmd) { & $pythonCmd --version 2>&1 } else { 'not found' }
 if ($LASTEXITCODE -ne 0) { $pythonVer = 'not found' }
 
-$projectRoot = & git rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0) { $projectRoot = (Get-Location).Path }
-$projectRoot = $projectRoot -replace '/', '\'
+$projectRoot = Get-MMRepoRoot
 
 # --- Project Bible ---
 $biblePath = Join-Path $projectRoot '.copilot\context\PROJECT_CONTEXT.md'

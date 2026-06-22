@@ -105,7 +105,7 @@ Collapsing these into fewer layers creates files that change for multiple reason
 Work flows through a strict linear pipeline. Each phase has exactly one sender and one receiver.
 
 ```text
-                         THE MEGA MINIONS PIPELINE (v8.0)
+                         THE MEGA MINIONS PIPELINE (v9.0)
   ════════════════════════════════════════════════════════════
 
   ┌─────────────────────── DISCOVERY ───────────────────────┐
@@ -390,7 +390,7 @@ Subagents are the mechanism for keeping context windows clean during complex ope
 
 Instruction-level guardrails shape agent behavior through textual guidance. A complementary layer operates at the platform level, outside the model entirely.
 
-The `hooks/` directory contains 12 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
+The `hooks/` directory contains 14 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
 
 | Hook | Event | Contract Enforced |
 |---|---|---|

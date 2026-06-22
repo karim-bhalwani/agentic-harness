@@ -20,8 +20,11 @@
 [CmdletBinding()]
 param()
 
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
+
 # --- Circuit breaker ---
-if ($env:SKIP_SESSION_CONTEXT -eq 'true') {
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_SESSION_CONTEXT') {
     exit 0
 }
 
@@ -32,13 +35,11 @@ if ($LASTEXITCODE -ne 0) { $branch = 'unknown' }
 $lastCommit = & git log -1 --oneline 2>$null
 if ($LASTEXITCODE -ne 0) { $lastCommit = 'no commits' }
 
-$pythonVer = python --version 2>&1
+$pythonCmd = Get-MMPythonCommand
+$pythonVer = if ($pythonCmd) { & $pythonCmd --version 2>&1 } else { 'not found' }
 if ($LASTEXITCODE -ne 0) { $pythonVer = 'not found' }
 
-$projectRoot = & git rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0) { $projectRoot = (Get-Location).Path }
-# Normalise to Windows path separators
-$projectRoot = $projectRoot -replace '/', '\'
+$projectRoot = Get-MMRepoRoot
 
 # --- Project Bible ---
 $biblePath = Join-Path $projectRoot '.copilot\context\PROJECT_CONTEXT.md'
@@ -159,7 +160,7 @@ $ctx = @"
 - Pipeline phase: $pipelinePhase
 - Artifacts:     $artifactList
 - Active story:  $storyStatus
-- Hook harness:  v1.5 (13 hooks: quality-gate, scan-secrets, retrospective-check, block-holdout, block-destructive, lint-on-write, auto-format, artifact-manifest, session-context, subagent-context, pre-compact-save, scan-user-prompt, subagent-verify)
+- Hook harness:  v9.0 (14 hooks: quality-gate, scan-secrets, retrospective-check, block-holdout, block-destructive, lint-on-write, auto-format, artifact-manifest, session-context, subagent-context, pre-compact-save, scan-user-prompt, subagent-verify, cap-subagent-budget)
 "@
 
 if ($storyWarnings.Count -gt 0) {

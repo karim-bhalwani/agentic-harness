@@ -17,77 +17,17 @@
 [CmdletBinding()]
 param()
 
-function Get-GovernanceLevel {
-    $level = if ($env:GOVERNANCE_LEVEL) { $env:GOVERNANCE_LEVEL.ToLowerInvariant() } else { 'standard' }
-    if ($level -notin @('open', 'standard', 'strict', 'locked')) { return 'standard' }
-    return $level
-}
-
-function Get-HookLogPath {
-    $logDir = if ($env:HOOK_LOG_DIR) {
-        $env:HOOK_LOG_DIR
-    }
-    else {
-        Join-Path (Get-Location).Path '.copilot\state\hook-logs'
-    }
-
-    try {
-        $null = New-Item -ItemType Directory -Path $logDir -Force -ErrorAction Stop
-        return Join-Path $logDir 'block-destructive.jsonl'
-    }
-    catch {
-        return $null
-    }
-}
-
-function Write-HookLog {
-    param(
-        [string]$Event,
-        [string]$ToolName,
-        [string]$GovernanceLevel,
-        [string]$Decision,
-        [string]$Reason,
-        [string]$Pattern
-    )
-
-    $path = Get-HookLogPath
-    if (-not $path) { return }
-
-    $entry = [ordered]@{
-        timestamp  = (Get-Date).ToUniversalTime().ToString('o')
-        hook       = 'block-destructive'
-        event      = $Event
-        tool       = $ToolName
-        governance = $GovernanceLevel
-        decision   = $Decision
-        reason     = $Reason
-        pattern    = $Pattern
-    }
-
-    try {
-        Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
-    }
-    catch {
-        # Logging failure must never fail the hook decision path.
-    }
-}
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
 
 # --- Circuit breaker ---
-if ($env:SKIP_DESTRUCTIVE_GUARD -eq 'true') { exit 0 }
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_DESTRUCTIVE_GUARD') { exit 0 }
 
-$governanceLevel = Get-GovernanceLevel
+$governanceLevel = Get-MMGovernanceLevel
 
 # --- Read stdin ---
-$rawInput = [Console]::In.ReadToEnd()
-if ([string]::IsNullOrWhiteSpace($rawInput)) { exit 0 }
-
-$inputData = $null
-try {
-    $inputData = $rawInput | ConvertFrom-Json
-}
-catch {
-    exit 0
-}
+$inputData = Read-MMHookInput
+if (-not $inputData) { exit 0 }
 
 # --- Only intercept terminal tool calls ---
 if ($inputData.tool_name -ne 'run_in_terminal') { exit 0 }
@@ -178,7 +118,8 @@ if (-not $allMatched -and $command -imatch 'DELETE\s+FROM\s+\w' -and $command -i
 
 if ($allMatched) {
     if ($governanceLevel -eq 'open') {
-        Write-HookLog -Event 'threat_detected' -ToolName 'run_in_terminal' -GovernanceLevel $governanceLevel -Decision 'allow' -Reason 'open governance level (warn-only)' -Pattern $matchedPattern
+        Write-MMHookLog -HookName 'block-destructive' -Event 'threat_detected' -Decision 'allow' `
+            -Extra @{ tool = 'run_in_terminal'; reason = 'open governance level (warn-only)'; pattern = $matchedPattern }
         Write-Host "WARNING (block-destructive): matched '$matchedPattern' but allowed because GOVERNANCE_LEVEL=open"
         exit 0
     }
@@ -186,7 +127,8 @@ if ($allMatched) {
     $reason = "Blocked: '$matchedPattern' requires manual execution. Run this command yourself if intentional. " +
     "Set TOOL_GUARD_ALLOWLIST=<substring> to allow through, or SKIP_DESTRUCTIVE_GUARD=true to disable this guard."
 
-    Write-HookLog -Event 'threat_detected' -ToolName 'run_in_terminal' -GovernanceLevel $governanceLevel -Decision 'deny' -Reason $reason -Pattern $matchedPattern
+    Write-MMHookLog -HookName 'block-destructive' -Event 'threat_detected' -Decision 'deny' `
+        -Extra @{ tool = 'run_in_terminal'; reason = $reason; pattern = $matchedPattern }
 
     $output = [ordered]@{
         hookSpecificOutput = [ordered]@{
@@ -200,6 +142,7 @@ if ($allMatched) {
     exit 0   # exit 0 so VS Code parses the JSON decision
 }
 
-Write-HookLog -Event 'scan_complete' -ToolName 'run_in_terminal' -GovernanceLevel $governanceLevel -Decision 'allow' -Reason 'no dangerous patterns matched' -Pattern ''
+Write-MMHookLog -HookName 'block-destructive' -Event 'scan_complete' -Decision 'allow' `
+    -Extra @{ tool = 'run_in_terminal'; reason = 'no dangerous patterns matched'; pattern = '' }
 
 exit 0

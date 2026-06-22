@@ -1,6 +1,6 @@
 # Team Adoption Guide
 
-> Version: 8.0 | Updated: 2026-05-04
+> Version: 9.0 | Updated: 01-July-2026
 
 For 3–5 person teams working parallel stories. Adds wave coordination, branch/PR conventions, concurrency safety, and CI enforcement on top of the solo flow.
 

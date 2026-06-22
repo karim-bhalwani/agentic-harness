@@ -1,6 +1,6 @@
 # Solo Adoption Guide
 
-> Version: 8.0 | Updated: 2026-05-04
+> Version: 9.0 | Updated: 01-July-2026
 
 For solo developers using the Mega Minions pipeline. Skips team coordination overhead (file locks, wave parallelism, PR-title CI) while keeping all quality gates.
 

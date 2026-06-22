@@ -25,23 +25,15 @@
 [CmdletBinding()]
 param()
 
-# --- Circuit breaker ---
-if ($env:SKIP_LINT_ON_WRITE -eq 'true') { exit 0 }
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
 
-# --- Only acts if ruff is available ---
-if (-not (Get-Command ruff -ErrorAction SilentlyContinue)) { exit 0 }
+# --- Circuit breaker ---
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_LINT_ON_WRITE') { exit 0 }
 
 # --- Read stdin ---
-$rawInput = [Console]::In.ReadToEnd()
-if ([string]::IsNullOrWhiteSpace($rawInput)) { exit 0 }
-
-$inputData = $null
-try {
-    $inputData = $rawInput | ConvertFrom-Json
-}
-catch {
-    exit 0
-}
+$inputData = Read-MMHookInput
+if (-not $inputData) { exit 0 }
 
 $toolName = $inputData.tool_name
 
@@ -52,8 +44,28 @@ if ($toolName -notin @('create_file', 'replace_string_in_file')) { exit 0 }
 $filePath = $inputData.tool_input.filePath
 if (-not $filePath) { exit 0 }
 
-# Path traversal guard
-if ($filePath -match '\.\.') { exit 0 }
+# Path traversal guard - DENY (not allow) on traversal attempts.
+# This MUST run before the ruff availability check because it is a security boundary.
+# Previously this exited 0 (allowing the write), which silently bypassed
+# linting on any path containing '..'. That is a security bug: an agent
+# (or a prompt-injected agent) could write Python files outside the repo
+# without any lint gate. Now we deny with a clear reason so the agent
+# must use a clean absolute or repo-relative path.
+if ($filePath -match '\.\.') {
+    $traversalReason = "BLOCKED (lint-on-write): filePath '$filePath' contains a '..' traversal segment. Path traversal is not permitted. Use a clean absolute or repo-relative path with no parent-directory references."
+    $denyPayload = [ordered]@{
+        hookSpecificOutput = [ordered]@{
+            hookEventName            = 'PreToolUse'
+            permissionDecision       = 'deny'
+            permissionDecisionReason = $traversalReason
+        }
+    } | ConvertTo-Json -Depth 5 -Compress:$false
+    Write-Output $denyPayload
+    exit 0
+}
+
+# --- Only acts if ruff is available (optional linting after security checks) ---
+if (-not (Get-Command ruff -ErrorAction SilentlyContinue)) { exit 0 }
 
 # --- Only lint Python files ---
 if ($filePath -notmatch '\.py$') { exit 0 }
@@ -113,6 +125,8 @@ try {
 
     if ($ruffExitCode -eq 0) {
         # Clean — allow the write
+        Write-MMHookLog -HookName 'lint-on-write' -Event 'lint_passed' -Decision 'allow' `
+            -Extra @{ file = $filePath; tool = $toolName }
         exit 0
     }
 
@@ -123,6 +137,8 @@ try {
     $reason = "Lint errors in $filePath - fix before writing:`n$cleanOutput"
 
     if ($mode -eq 'block') {
+        Write-MMHookLog -HookName 'lint-on-write' -Event 'lint_failed' -Decision 'deny' `
+            -Extra @{ file = $filePath; tool = $toolName; issue_count = @($ruffOutput).Count }
         $output = [ordered]@{
             hookSpecificOutput = [ordered]@{
                 hookEventName            = 'PreToolUse'
@@ -137,6 +153,8 @@ try {
     }
     else {
         # Warn mode — log but allow
+        Write-MMHookLog -HookName 'lint-on-write' -Event 'lint_failed' -Decision 'warn' `
+            -Extra @{ file = $filePath; tool = $toolName; issue_count = @($ruffOutput).Count; mode = 'warn' }
         Write-Host "lint-on-write WARNING: $reason"
         exit 0
     }

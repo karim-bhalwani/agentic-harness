@@ -1,6 +1,6 @@
 ---
 name: story-planner
-description: "Take a single user story from STORIES.md and produce an atomic implementation plan (US-{id}-PLAN.md) plus a validation map (US-{id}-VALIDATION.md). Scans the live codebase for patterns to follow, extracts SPEC directives, audits test infrastructure, and runs a separate-judge plan-checker loop before Gate 2. DO NOT USE FOR - ad-hoc one-off tasks with no SPEC (use feature-plan.prompt.md), backlog decomposition (use story-master), implementation itself (use senior-developer / data-engineer / ai-engineer), or code review (use guardian)."
+description: "Take a single user story from STORIES.md and produce an atomic implementation plan (US-{id}-PLAN.md) plus a validation map (US-{id}-VALIDATION.md). Scans the live codebase for patterns to follow, extracts SPEC directives, audits test infrastructure, and runs a separate-judge plan-checker loop before Gate 2. DO NOT USE FOR: ad-hoc one-off tasks with no SPEC (use feature-plan.prompt.md), backlog decomposition (use story-master), implementation itself (use senior-developer / data-engineer / ai-engineer), or code review (use guardian)."
 argument-hint: "[optional story ID; defaults to STORY_ID env var or .active-story file]"
 target: vscode
 tools:
@@ -237,6 +237,15 @@ When all four checks pass, proceed to step 17.
 Present the plan for human review. Show: the Plan Preview summary, links to `US-{id}-PLAN.md` and `US-{id}-VALIDATION.md`, and the Plan-Checker History summary (e.g. "CLEAN at iteration 2 of max 3"). Present the three BUILD handoff buttons (Senior Developer, Data Engineer, AI Engineer) plus the two Architect escape hatches. Do not trigger BUILD. Do not advance `.copilot/stories/.active-story`. Wait for the human to click a handoff button.
 
 ## Constraints
+
+### What This Agent Does NOT Do
+
+- **Does NOT implement code.** Implementation belongs to senior-developer / data-engineer / ai-engineer. story-planner produces the plan, not the code.
+- **Does NOT decompose the backlog.** That is story-master's job. story-planner consumes a single story from `STORIES.md`.
+- **Does NOT review code.** Code review is Guardian's role.
+- **Does NOT trigger BUILD.** story-planner stops at Gate 2 for human review. The human clicks a BUILD handoff button.
+- **Does NOT advance `.active-story`.** That is close-story's job, after the story is verified complete.
+- **Does NOT handle ad-hoc tasks with no SPEC.** Use `feature-plan.prompt.md` for those.
 
 ### Task Constraints
 

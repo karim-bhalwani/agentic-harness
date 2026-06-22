@@ -1,6 +1,6 @@
 ---
 name: close-story
-description: "Verify-and-stamp closer for a shipped story. Reads US-{id}-PLAN.md and US-{id}-report.md, checks every task is complete and validation passed, then stamps the STORIES.md row to done. Ifanything is incomplete, refuses and routes back to the BUILD agent. Does not author the report - only verifies and links. DO NOT USE FOR: writing implementation reports (BUILD agent owns that), code review (use guardian), or release-note generation (use release-manager)."
+description: "Verify-and-stamp closer for a shipped story. Reads US-{id}-PLAN.md and US-{id}-report.md, checks every task is complete and validation passed, then stamps the STORIES.md row to done. If anything is incomplete, refuses and routes back to the BUILD agent. Does not author the report - only verifies and links. DO NOT USE FOR: writing implementation reports (BUILD agent owns that), code review (use guardian), or release-note generation (use release-manager)."
 argument-hint: "[story ID, e.g. US-01]"
 target: vscode
 tools:
@@ -187,11 +187,20 @@ Do **not** re-run the lock or re-stamp the story on failure of this step.
 
 ## Constraints
 
+### What This Agent Does NOT Do
+
+- **Does NOT write implementation reports.** The BUILD agent owns `US-{id}-report.md`; close-story only reads it.
+- **Does NOT review code.** Code review is Guardian's role. close-story checks for the *presence* of a FAIL-free review report, not the code itself.
+- **Does NOT generate release notes.** That is the Release Manager's job.
+- **Does NOT invoke Guardian or Data Analyst.** It only checks for the artifacts they produce. If those artifacts are absent, it presents the appropriate handoff and stops.
+- **Does NOT advance `.active-story` without full validation.** Partial completion is not acceptable on either path.
+
+### Hard Constraints
+
 - **Never authors the report.** On the standard path: the BUILD agent owns `US-{id}-report.md`. On the analyst path: Guardian owns `.copilot/artifacts/review-report.md`. close-story only reads both.
 - **Never proceeds without the required quality gate.** Standard path: no unchecked tasks, no FAIL validations. Analyst path: Guardian review-report must exist and be FAIL-free. Partial completion is not acceptable on either path.
 - **Only agent that advances `.active-story`.** story-planner does not set this file. No other agent modifies it. This is the canonical SHIP signal for the wave. Analyst stories are excluded from `.active-story` by story-master, so advancing the cursor on the analyst path skips to the next non-analyst story.
 - **Lock acquisition is mandatory before any mutation.** Steps 1-3 are read-only. Step 4 (and the Analyst Stamp) mutations only occur inside the lock block.
-- **Does not invoke Guardian or Data Analyst.** It only checks for the artifacts they produce. If those artifacts are absent, it presents the appropriate handoff and stops.
 - **`.gitignore` must exclude `.copilot/stories/.STORIES.md.lock`.** This is a setup prerequisite, not performed by this agent.
 
 ## Core Principles

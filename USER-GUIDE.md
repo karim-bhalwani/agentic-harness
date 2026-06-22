@@ -13,8 +13,8 @@ Your architect has handed you a standardised AI development system built into Gi
 
 - **16 custom AI agents**, specialist assistants for each phase of development
 - **25 skills**, knowledge packs agents load automatically when needed
-- **13 prompt shortcuts**, slash commands that wire structured workflows to the right agent
-- **13 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, destructive command blocking, prompt-injection detection, post-subagent artifact verification, retrospective reminders, and artifact manifest logging
+- **15 prompt shortcuts**, slash commands that wire structured workflows to the right agent
+- **14 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, destructive command blocking, prompt-injection detection, post-subagent artifact verification, retrospective reminders, subagent budget caps, and artifact manifest logging
 - **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
 This is your team's **standard**. Everyone uses the same agents, the same patterns, and the same quality bar. That is the point.

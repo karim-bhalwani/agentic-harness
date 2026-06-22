@@ -33,6 +33,10 @@ handoffs:
     agent: ai-engineer
     prompt: "Root cause identified in the AI/LLM system. The full investigation report is saved at `.copilot/artifacts/investigation-report.md` - read that file first if opening a new session (the report is also above if in the same session). Implement the fix per the findings - pay special attention to any prompt injection, retrieval, or model configuration issues identified."
     send: false
+  - label: Hand off to Data Scientist (data science / ML root cause)
+    agent: data-scientist
+    prompt: "Root cause identified in the data science or ML code (scikit-learn pipeline, forecasting model, experiment logic, or feature engineering). The full investigation report is saved at `.copilot/artifacts/investigation-report.md` - read that file first if opening a new session (the report is also above if in the same session). Implement the fix per the findings - pay special attention to any leakage, data-split, or statistical validity issues identified."
+    send: false
   - label: Hand off to Guardian (post-fix review)
     agent: guardian
     prompt: "A fix has been implemented for the root cause identified in `.copilot/artifacts/investigation-report.md`. Read that report first to understand what changed and why, then review the changed files for correctness, security, and regressions. Write your findings to `.copilot/artifacts/review-report.md`. If the review passes, the pipeline can proceed to SHIP (close-story)."

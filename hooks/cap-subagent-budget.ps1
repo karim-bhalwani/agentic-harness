@@ -52,32 +52,6 @@ if (-not (Test-Path $stateDir)) {
 }
 $counterPath = Join-Path $stateDir 'subagent-budget.json'
 
-# --- Atomic read-modify-write of the counter file ---
-$counters = [ordered]@{
-    session_start = (Get-Date).ToUniversalTime().ToString('o')
-    total         = 0
-    by_agent      = @{}
-}
-if (Test-Path $counterPath) {
-    try {
-        $raw = Get-Content -Path $counterPath -Raw -ErrorAction Stop
-        $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
-        if ($parsed.session_start) { $counters.session_start = $parsed.session_start }
-        if ($parsed.total) { $counters.total = [int]$parsed.total }
-        if ($parsed.by_agent) {
-            $counters.by_agent = @{}
-            foreach ($p in $parsed.by_agent.PSObject.Properties) {
-                $counters.by_agent[$p.Name] = [int]$p.Value
-            }
-        }
-    }
-    catch {
-        # Corrupt counter file - reset rather than fail the build.
-        $counters.total = 0
-        $counters.by_agent = @{}
-    }
-}
-
 # --- Resolve caps ---
 $totalCap = if ($env:SUBAGENT_BUDGET_TOTAL) { [int]$env:SUBAGENT_BUDGET_TOTAL } else { 30 }
 $researcherCap = if ($env:SUBAGENT_BUDGET_RESEARCHER) { [int]$env:SUBAGENT_BUDGET_RESEARCHER } else { 10 }
@@ -94,50 +68,131 @@ else {
     $agentCap = $totalCap  # individual cap defaults to total cap
 }
 
-$currentForAgent = if ($counters.by_agent.ContainsKey($subAgentName)) { [int]$counters.by_agent[$subAgentName] } else { 0 }
-$projectedTotal = $counters.total + 1
-$projectedAgent = $currentForAgent + 1
+# --- Atomic read-modify-write of the counter file ---
+# Uses an exclusive FileStream lock (Invoke-MMLockedFileOp) so concurrent
+# PreToolUse invocations cannot race past each other and both increment
+# from the same baseline. The scriptblock receives the current raw JSON
+# (or $null) and returns a JSON STRING to persist. That JSON encodes both
+# the counters to write AND the decision metadata, so the caller can parse
+# the decision out of the returned string. (Invoke-MMLockedFileOp writes
+# exactly the scriptblock's return value to disk.)
+$writtenJson = Invoke-MMLockedFileOp -Path $counterPath -ScriptBlock {
+    param($raw)
 
-$overTotal = $projectedTotal -gt $totalCap
-$overAgent = $projectedAgent -gt $agentCap
-
-if (-not $overTotal -and -not $overAgent) {
-    # Commit the increment and allow.
-    $counters.total = $projectedTotal
-    $counters.by_agent[$subAgentName] = $projectedAgent
-    try {
-        ($counters | ConvertTo-Json -Depth 4) | Set-Content -Path $counterPath -Encoding UTF8 -ErrorAction Stop
+    $counters = [ordered]@{
+        session_start = (Get-Date).ToUniversalTime().ToString('o')
+        total         = 0
+        by_agent      = @{ }
     }
-    catch { }
-    Write-MMHookLog -HookName 'cap-subagent-budget' -Event 'launch_allowed' -Decision 'allow' `
-        -Extra @{ agent = $subAgentName; agent_count = $projectedAgent; total_count = $projectedTotal; agent_cap = $agentCap; total_cap = $totalCap }
+    if ($raw) {
+        try {
+            $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
+            # The persisted file is a decision envelope whose .counters holds
+            # the actual counter state. Fall back to the legacy flat shape
+            # (bare counters) for files written by older hook versions.
+            $src = if ($parsed.counters) { $parsed.counters } else { $parsed }
+            if ($src.session_start) { $counters.session_start = $src.session_start }
+            if ($src.total) { $counters.total = [int]$src.total }
+            if ($src.by_agent) {
+                $counters.by_agent = @{ }
+                foreach ($p in $src.by_agent.PSObject.Properties) {
+                    $counters.by_agent[$p.Name] = [int]$p.Value
+                }
+            }
+        }
+        catch {
+            # Corrupt counter file - reset rather than fail the build.
+            $counters.total = 0
+            $counters.by_agent = @{ }
+        }
+    }
+
+    $currentForAgent = if ($counters.by_agent.ContainsKey($subAgentName)) { [int]$counters.by_agent[$subAgentName] } else { 0 }
+    $projectedTotal = $counters.total + 1
+    $projectedAgent = $currentForAgent + 1
+
+    $overTotal = $projectedTotal -gt $totalCap
+    $overAgent = $projectedAgent -gt $agentCap
+
+    if (-not $overTotal -and -not $overAgent) {
+        # Commit the increment and allow.
+        $counters.total = $projectedTotal
+        $counters.by_agent[$subAgentName] = $projectedAgent
+        $envelope = [ordered]@{
+            counters      = $counters
+            decision      = 'allow'
+            currentTotal  = $counters.total
+            currentAgent  = $projectedAgent
+            agentCap      = $agentCap
+            totalCap      = $totalCap
+            overTotal     = $false
+            overAgent     = $false
+        }
+        return ($envelope | ConvertTo-Json -Depth 5)
+    }
+    # Over budget - do NOT commit the increment (deny path). Persist the
+    # unchanged counters so the file stays consistent for the next caller.
+    $envelope = [ordered]@{
+        counters      = $counters
+        decision      = 'deny'
+        currentTotal  = $counters.total
+        currentAgent  = $currentForAgent
+        agentCap      = $agentCap
+        totalCap      = $totalCap
+        overTotal     = $overTotal
+        overAgent     = $overAgent
+    }
+    return ($envelope | ConvertTo-Json -Depth 5)
+}
+
+# Fallback: if the locked op failed entirely (e.g. lock contention beyond
+# the FileStream timeout), fail open with a warning rather than block the
+# agent. This matches the harness "never crash the agent" contract.
+if (-not $writtenJson) {
+    Write-MMHookLog -HookName 'cap-subagent-budget' -Event 'lock_failure' -Decision 'warn' `
+        -Extra @{ agent = $subAgentName; note = 'Invoke-MMLockedFileOp returned null; failing open' }
+    Write-Host "WARNING (cap-subagent-budget): could not acquire budget counter lock; allowing launch (fail-open)."
     exit 0
 }
 
-$reason = if ($overAgent -and $overTotal) {
-    "BLOCKED (cap-subagent-budget): subagent '$subAgentName' would exceed both the per-agent cap ($agentCap) AND the per-session total cap ($totalCap)."
+# Parse the decision envelope out of the persisted JSON.
+try {
+    $decision = $writtenJson | ConvertFrom-Json -ErrorAction Stop
 }
-elseif ($overAgent) {
-    "BLOCKED (cap-subagent-budget): subagent '$subAgentName' would exceed its per-agent cap ($agentCap). Raise via env var $perAgentEnvName=<higher> if intentional."
+catch {
+    Write-MMHookLog -HookName 'cap-subagent-budget' -Event 'envelope_parse_failure' -Decision 'warn' `
+        -Extra @{ agent = $subAgentName; note = 'could not parse decision envelope; failing open' }
+    Write-Host "WARNING (cap-subagent-budget): could not parse budget decision envelope; allowing launch (fail-open)."
+    exit 0
+}
+
+if ($decision.decision -eq 'allow') {
+    Write-MMHookLog -HookName 'cap-subagent-budget' -Event 'launch_allowed' -Decision 'allow' `
+        -Extra @{ agent = $subAgentName; agent_count = $decision.currentAgent; total_count = $decision.currentTotal; agent_cap = $decision.agentCap; total_cap = $decision.totalCap }
+    exit 0
+}
+
+# --- Deny path ---
+$reason = if ($decision.overAgent -and $decision.overTotal) {
+    "BLOCKED (cap-subagent-budget): subagent '$subAgentName' would exceed both the per-agent cap ($($decision.agentCap)) AND the per-session total cap ($($decision.totalCap))."
+}
+elseif ($decision.overAgent) {
+    "BLOCKED (cap-subagent-budget): subagent '$subAgentName' would exceed its per-agent cap ($($decision.agentCap)). Raise via env var $perAgentEnvName=<higher> if intentional."
 }
 else {
-    "BLOCKED (cap-subagent-budget): per-session subagent total would exceed the cap ($totalCap). Raise via SUBAGENT_BUDGET_TOTAL=<higher> if intentional, or reduce delegation fan-out."
+    "BLOCKED (cap-subagent-budget): per-session subagent total would exceed the cap ($($decision.totalCap)). Raise via SUBAGENT_BUDGET_TOTAL=<higher> if intentional, or reduce delegation fan-out."
 }
-$reason += " Current: $($counters.total) total, $currentForAgent for '$subAgentName'. Skip with SKIP_SUBAGENT_BUDGET=true."
+$reason += " Current: $($decision.currentTotal) total, $($decision.currentAgent) for '$subAgentName'. Skip with SKIP_SUBAGENT_BUDGET=true."
 
 if ($governanceLevel -eq 'open') {
     Write-MMHookLog -HookName 'cap-subagent-budget' -Event 'launch_over_budget' -Decision 'warn' `
-        -Extra @{ agent = $subAgentName; agent_count = $projectedAgent; total_count = $projectedTotal; agent_cap = $agentCap; total_cap = $totalCap; note = 'governance=open' }
+        -Extra @{ agent = $subAgentName; agent_count = ($decision.currentAgent + 1); total_count = ($decision.currentTotal + 1); agent_cap = $decision.agentCap; total_cap = $decision.totalCap; note = 'governance=open' }
     Write-Host "WARNING (cap-subagent-budget): $reason"
-    # Still commit the increment so telemetry is accurate.
-    $counters.total = $projectedTotal
-    $counters.by_agent[$subAgentName] = $projectedAgent
-    try { ($counters | ConvertTo-Json -Depth 4) | Set-Content -Path $counterPath -Encoding UTF8 -ErrorAction Stop } catch { }
     exit 0
 }
 
 Write-MMHookLog -HookName 'cap-subagent-budget' -Event 'launch_over_budget' -Decision 'deny' `
-    -Extra @{ agent = $subAgentName; agent_count = $projectedAgent; total_count = $projectedTotal; agent_cap = $agentCap; total_cap = $totalCap }
+    -Extra @{ agent = $subAgentName; agent_count = ($decision.currentAgent + 1); total_count = ($decision.currentTotal + 1); agent_cap = $decision.agentCap; total_cap = $decision.totalCap }
 
 Write-MMHookDecision -Decision 'deny' -Reason $reason
 exit 0

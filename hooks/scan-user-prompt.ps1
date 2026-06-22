@@ -20,83 +20,19 @@
 [CmdletBinding()]
 param()
 
-function Get-GovernanceLevel {
-    $level = if ($env:GOVERNANCE_LEVEL) { $env:GOVERNANCE_LEVEL.ToLowerInvariant() } else { 'standard' }
-    if ($level -notin @('open', 'standard', 'strict', 'locked')) { return 'standard' }
-    return $level
-}
-
-function Resolve-PromptScanMode {
-    param([string]$GovernanceLevel)
-
-    if ($env:PROMPT_SCAN_MODE) { return $env:PROMPT_SCAN_MODE }
-
-    switch ($GovernanceLevel) {
-        'strict' { return 'block' }
-        'locked' { return 'block' }
-        default { return 'warn' }
-    }
-}
-
-function Get-HookLogPath {
-    $logDir = if ($env:HOOK_LOG_DIR) {
-        $env:HOOK_LOG_DIR
-    }
-    else {
-        Join-Path (Get-Location).Path '.copilot\state\hook-logs'
-    }
-
-    try {
-        $null = New-Item -ItemType Directory -Path $logDir -Force -ErrorAction Stop
-        return Join-Path $logDir 'scan-user-prompt.jsonl'
-    }
-    catch {
-        return $null
-    }
-}
-
-function Write-HookLog {
-    param(
-        [string]$Event,
-        [string]$Mode,
-        [string]$GovernanceLevel,
-        [string]$Decision,
-        [int]$FindingCount
-    )
-
-    $path = Get-HookLogPath
-    if (-not $path) { return }
-
-    $entry = [ordered]@{
-        timestamp     = (Get-Date).ToUniversalTime().ToString('o')
-        hook          = 'scan-user-prompt'
-        event         = $Event
-        mode          = $Mode
-        governance    = $GovernanceLevel
-        decision      = $Decision
-        finding_count = $FindingCount
-    }
-
-    try {
-        Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
-    }
-    catch {
-        # Logging failure must never block/alter hook behavior.
-    }
-}
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
 
 # --- Circuit breaker ---
-if ($env:SKIP_SCAN_USER_PROMPT -eq 'true') { exit 0 }
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_SCAN_USER_PROMPT') { exit 0 }
 
-$governanceLevel = Get-GovernanceLevel
-$mode = Resolve-PromptScanMode -GovernanceLevel $governanceLevel
+$governanceLevel = Get-MMGovernanceLevel
+$mode = Resolve-MMMode -OverrideEnvVar 'PROMPT_SCAN_MODE' -GovernanceLevel $governanceLevel `
+    -StrictDefault 'block' -StandardDefault 'warn' -OpenDefault 'warn'
 
 # --- Read stdin ---
-$rawInput = [Console]::In.ReadToEnd()
-if ([string]::IsNullOrWhiteSpace($rawInput)) { exit 0 }
-
-$inputData = $null
-try { $inputData = $rawInput | ConvertFrom-Json } catch { exit 0 }
+$inputData = Read-MMHookInput
+if (-not $inputData) { exit 0 }
 
 $prompt = $inputData.prompt
 if ([string]::IsNullOrWhiteSpace($prompt)) { exit 0 }
@@ -155,12 +91,14 @@ foreach ($s in $secretPatterns) {
 }
 
 if ($findings.Count -eq 0) {
-    Write-HookLog -Event 'scan_complete' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FindingCount 0
+    Write-MMHookLog -HookName 'scan-user-prompt' -Event 'scan_complete' -Decision 'allow' `
+        -Extra @{ mode = $mode; finding_count = 0 }
     exit 0
 }
 
 $decision = if ($mode -eq 'block') { 'deny' } else { 'allow' }
-Write-HookLog -Event 'findings_detected' -Mode $mode -GovernanceLevel $governanceLevel -Decision $decision -FindingCount $findings.Count
+Write-MMHookLog -HookName 'scan-user-prompt' -Event 'findings_detected' -Decision $decision `
+    -Extra @{ mode = $mode; finding_count = $findings.Count }
 
 # --- Report ---
 if ($mode -eq 'block') {

@@ -108,27 +108,21 @@ class EvalReport:
             lines.append("| Severity | Category | Issue | Remediation |")
             lines.append("| -------- | -------- | ----- | ----------- |")
             for f in self.findings:
-                lines.append(
-                    f"| {f.severity.value} | {f.category} | {f.message} | {f.remediation} |"
-                )
+                lines.append(f"| {f.severity.value} | {f.category} | {f.message} | {f.remediation} |")
         lines.append("")
 
         verdict = "BLOCKED" if self.has_critical else "PASSED"
         lines.append(f"## Verdict: {verdict}")
         lines.append("")
         if self.has_critical:
-            lines.append(
-                "Critical findings present. Address before promoting to production."
-            )
+            lines.append("Critical findings present. Address before promoting to production.")
         else:
             lines.append("Ready for review and handoff to ai-engineer or ops.")
 
         return "\n".join(lines)
 
 
-def _check_overfit(
-    cv_mean: float, test_score: float, threshold: float = 0.05
-) -> Finding | None:
+def _check_overfit(cv_mean: float, test_score: float, threshold: float = 0.05) -> Finding | None:
     gap = abs(cv_mean - test_score)
     if gap > threshold:
         return Finding(
@@ -157,18 +151,13 @@ def _check_cv_stability(cv_std: float, threshold: float = 0.05) -> Finding | Non
     return None
 
 
-def _check_baseline(
-    score: float, baseline: float, metric_name: str, min_lift: float = 0.05
-) -> Finding | None:
+def _check_baseline(score: float, baseline: float, metric_name: str, min_lift: float = 0.05) -> Finding | None:
     lift = score - baseline
     if lift < min_lift:
         return Finding(
             severity=Severity.CRITICAL,
             category="baseline",
-            message=(
-                f"{metric_name}={score:.3f} barely beats dummy baseline ({baseline:.3f}); "
-                f"lift = {lift:.3f}."
-            ),
+            message=(f"{metric_name}={score:.3f} barely beats dummy baseline ({baseline:.3f}); lift = {lift:.3f}."),
             remediation=(
                 "Model may not be learning useful structure. Re-examine features, "
                 "target definition, and EDA. A model that does not beat the baseline "
@@ -198,7 +187,7 @@ def generate_report(
         baseline_score: dummy baseline score for comparison
     """
     try:
-        import numpy as np
+        import numpy as np  # ty:ignore[unresolved-import]
     except ImportError:
         raise RuntimeError("numpy is required to generate the report")
 
@@ -215,7 +204,7 @@ def generate_report(
         }
 
     if task == "classification":
-        from sklearn.metrics import (
+        from sklearn.metrics import (  # ty:ignore[unresolved-import]
             accuracy_score,
             f1_score,
             log_loss,
@@ -226,23 +215,15 @@ def generate_report(
 
         y_pred = model.predict(X_test)
         report.metrics["accuracy"] = float(accuracy_score(y_test, y_pred))
-        report.metrics["precision"] = float(
-            precision_score(y_test, y_pred, average="weighted", zero_division=0)
-        )
-        report.metrics["recall"] = float(
-            recall_score(y_test, y_pred, average="weighted", zero_division=0)
-        )
-        report.metrics["f1_weighted"] = float(
-            f1_score(y_test, y_pred, average="weighted", zero_division=0)
-        )
+        report.metrics["precision"] = float(precision_score(y_test, y_pred, average="weighted", zero_division=0))
+        report.metrics["recall"] = float(recall_score(y_test, y_pred, average="weighted", zero_division=0))
+        report.metrics["f1_weighted"] = float(f1_score(y_test, y_pred, average="weighted", zero_division=0))
 
         if hasattr(model, "predict_proba"):
             try:
                 y_proba = model.predict_proba(X_test)
                 if y_proba.shape[1] == 2:
-                    report.metrics["roc_auc"] = float(
-                        roc_auc_score(y_test, y_proba[:, 1])
-                    )
+                    report.metrics["roc_auc"] = float(roc_auc_score(y_test, y_proba[:, 1]))
                     report.metrics["log_loss"] = float(log_loss(y_test, y_proba))
             except (ValueError, AttributeError):
                 pass
@@ -254,7 +235,7 @@ def generate_report(
                 report.findings.append(f)
 
     elif task == "regression":
-        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score  # ty:ignore[unresolved-import]
 
         y_pred = model.predict(X_test)
         report.metrics["mae"] = float(mean_absolute_error(y_test, y_pred))
@@ -266,15 +247,11 @@ def generate_report(
             if f:
                 report.findings.append(f)
     else:
-        raise ValueError(
-            f"Unsupported task: {task}. Use 'classification' or 'regression'."
-        )
+        raise ValueError(f"Unsupported task: {task}. Use 'classification' or 'regression'.")
 
     if report.cv_summary:
         primary_test_metric = (
-            report.metrics.get("roc_auc")
-            or report.metrics.get("f1_weighted")
-            or report.metrics.get("r2")
+            report.metrics.get("roc_auc") or report.metrics.get("f1_weighted") or report.metrics.get("r2")
         )
         if primary_test_metric is not None:
             f = _check_overfit(report.cv_summary["cv_mean"], primary_test_metric)
@@ -289,9 +266,7 @@ def generate_report(
     feature_names = _get_feature_names(model, X_test)
     if hasattr(final_estimator, "feature_importances_") and feature_names is not None:
         importances = final_estimator.feature_importances_
-        pairs = sorted(
-            zip(feature_names, importances), key=lambda x: x[1], reverse=True
-        )
+        pairs = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)
         report.feature_importance = [(str(n), float(v)) for n, v in pairs]
 
     report.has_critical = any(f.severity == Severity.CRITICAL for f in report.findings)
@@ -317,29 +292,17 @@ def _get_feature_names(model: Any, X: Any) -> list[str] | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Model evaluation report generator")
-    parser.add_argument(
-        "--model", type=Path, required=True, help="Path to pickled model"
-    )
-    parser.add_argument(
-        "--x-test", type=Path, required=True, help="Path to X_test parquet/csv"
-    )
-    parser.add_argument(
-        "--y-test", type=Path, required=True, help="Path to y_test parquet/csv"
-    )
-    parser.add_argument(
-        "--task", choices=["classification", "regression"], required=True
-    )
-    parser.add_argument(
-        "--baseline", type=float, default=None, help="Baseline metric for comparison"
-    )
-    parser.add_argument(
-        "--output", type=Path, default=None, help="Write report markdown here"
-    )
+    parser.add_argument("--model", type=Path, required=True, help="Path to pickled model")
+    parser.add_argument("--x-test", type=Path, required=True, help="Path to X_test parquet/csv")
+    parser.add_argument("--y-test", type=Path, required=True, help="Path to y_test parquet/csv")
+    parser.add_argument("--task", choices=["classification", "regression"], required=True)
+    parser.add_argument("--baseline", type=float, default=None, help="Baseline metric for comparison")
+    parser.add_argument("--output", type=Path, default=None, help="Write report markdown here")
     args = parser.parse_args()
 
     try:
-        import joblib
-        import pandas as pd
+        import joblib  # ty:ignore[unresolved-import]
+        import pandas as pd  # ty:ignore[unresolved-import]
     except ImportError as e:
         print(f"ERROR: required dependency missing: {e}", file=sys.stderr)
         return 2

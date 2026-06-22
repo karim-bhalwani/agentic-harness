@@ -3,7 +3,7 @@
 # scan-secrets.ps1
 # Stop hook: scan all files modified in this session for leaked credentials.
 #
-# Scans 13 credential patterns: AWS, GCP, Azure, GitHub PATs, private keys,
+# Scans 14 credential patterns: AWS, GCP, Azure, GitHub PATs, private keys,
 # Stripe, Slack tokens, npm tokens, JWTs, DB connection strings, generic secrets.
 # Skips obvious placeholder values (example, dummy, changeme, etc.).
 #
@@ -20,92 +20,22 @@
 [CmdletBinding()]
 param()
 
-function Get-GovernanceLevel {
-    $level = if ($env:GOVERNANCE_LEVEL) { $env:GOVERNANCE_LEVEL.ToLowerInvariant() } else { 'standard' }
-    if ($level -notin @('open', 'standard', 'strict', 'locked')) { return 'standard' }
-    return $level
-}
-
-function Resolve-ScanMode {
-    param([string]$GovernanceLevel)
-
-    if ($env:SCAN_MODE) { return $env:SCAN_MODE }
-
-    switch ($GovernanceLevel) {
-        'open' { return 'warn' }
-        default { return 'block' }
-    }
-}
-
-function Get-HookLogPath {
-    $logDir = if ($env:HOOK_LOG_DIR) {
-        $env:HOOK_LOG_DIR
-    }
-    else {
-        Join-Path (Get-Location).Path '.copilot\state\hook-logs'
-    }
-
-    try {
-        $null = New-Item -ItemType Directory -Path $logDir -Force -ErrorAction Stop
-        return Join-Path $logDir 'scan-secrets.jsonl'
-    }
-    catch {
-        return $null
-    }
-}
-
-function Write-HookLog {
-    param(
-        [string]$Event,
-        [string]$Mode,
-        [string]$GovernanceLevel,
-        [string]$Decision,
-        [int]$FilesScanned,
-        [int]$FindingCount
-    )
-
-    $path = Get-HookLogPath
-    if (-not $path) { return }
-
-    $entry = [ordered]@{
-        timestamp     = (Get-Date).ToUniversalTime().ToString('o')
-        hook          = 'scan-secrets'
-        event         = $Event
-        mode          = $Mode
-        governance    = $GovernanceLevel
-        decision      = $Decision
-        files_scanned = $FilesScanned
-        finding_count = $FindingCount
-    }
-
-    try {
-        Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
-    }
-    catch {
-        # Logging failure must never fail the hook decision path.
-    }
-}
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
 
 # --- Circuit breaker ---
-if ($env:SKIP_SECRETS_SCAN -eq 'true') {
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_SECRETS_SCAN') {
     Write-Host 'Secrets scan skipped (SKIP_SECRETS_SCAN=true)'
     exit 0
 }
 
 # --- Read stdin and check infinite loop guard ---
-$rawInput = [Console]::In.ReadToEnd()
-if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-    try {
-        $inputData = $rawInput | ConvertFrom-Json
-        if ($inputData.stop_hook_active -eq $true) { exit 0 }
-    }
-    catch {
-        # Non-fatal: continue scan even if JSON parse fails
-    }
-}
+$inputData = Read-MMHookInput
+if ($inputData -and (Test-MMStopReentry -InputData $inputData)) { exit 0 }
 
-$governanceLevel = Get-GovernanceLevel
-$mode = Resolve-ScanMode -GovernanceLevel $governanceLevel
+$governanceLevel = Get-MMGovernanceLevel
+$mode = Resolve-MMMode -OverrideEnvVar 'SCAN_MODE' -GovernanceLevel $governanceLevel `
+    -StrictDefault 'block' -StandardDefault 'block' -OpenDefault 'warn'
 
 # --- Require git ---
 $null = & git rev-parse --is-inside-work-tree 2>&1
@@ -144,16 +74,31 @@ Select-Object -Unique
 
 if ($allFiles.Count -eq 0) {
     Write-Host 'Secrets scan: no modified files to scan'
-    Write-HookLog -Event 'scan_complete' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FilesScanned 0 -FindingCount 0
+    Write-MMHookLog -HookName 'scan-secrets' -Event 'scan_complete' -Decision 'allow' `
+        -Extra @{ mode = $mode; files_scanned = 0; finding_count = 0 }
     exit 0
 }
 
 Write-Host "Secrets scan: scanning $($allFiles.Count) file(s)..."
 $findingCount = 0
+# Skip files larger than 10MB to avoid OOM / 30s timeout on huge generated
+# files (e.g. lockfiles, minified bundles). 10MB is well above any reasonable
+# source file and keeps the scan deterministic.
+$maxScanBytes = if ($env:SCAN_SECRETS_MAX_BYTES) { [int64]$env:SCAN_SECRETS_MAX_BYTES } else { 10485760 }
 
 foreach ($file in $allFiles) {
     # Path traversal guard
     if ($file -match '\.\.') { continue }
+
+    # File-size guard
+    try {
+        $fileInfo = Get-Item -LiteralPath $file -ErrorAction Stop
+        if ($fileInfo.Length -gt $maxScanBytes) {
+            Write-Host "  $file  skipped (>$($maxScanBytes / 1MB)MB)"
+            continue
+        }
+    }
+    catch { continue }
 
     $lines = Get-Content -Path $file -ErrorAction SilentlyContinue
     if (-not $lines) { continue }
@@ -191,7 +136,8 @@ if ($findingCount -gt 0) {
         $reason = "Secrets scan: $findingCount potential secret(s) detected. Resolve before finishing. " +
         "Set SCAN_MODE=warn to log without blocking, or SKIP_SECRETS_SCAN=true to bypass."
 
-        Write-HookLog -Event 'secrets_found' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'deny' -FilesScanned $allFiles.Count -FindingCount $findingCount
+        Write-MMHookLog -HookName 'scan-secrets' -Event 'secrets_found' -Decision 'deny' `
+            -Extra @{ mode = $mode; files_scanned = $allFiles.Count; finding_count = $findingCount }
 
         $output = [ordered]@{
             hookSpecificOutput = [ordered]@{
@@ -205,12 +151,14 @@ if ($findingCount -gt 0) {
         exit 0   # exit 0 so VS Code parses the JSON; decision=block prevents close
     }
     else {
-        Write-HookLog -Event 'secrets_found' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FilesScanned $allFiles.Count -FindingCount $findingCount
+        Write-MMHookLog -HookName 'scan-secrets' -Event 'secrets_found' -Decision 'allow' `
+            -Extra @{ mode = $mode; files_scanned = $allFiles.Count; finding_count = $findingCount }
         Write-Host "Secrets scan: $findingCount potential secret(s) found (warn mode). Set SCAN_MODE=block to enforce blocking."
     }
 }
 else {
-    Write-HookLog -Event 'scan_complete' -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -FilesScanned $allFiles.Count -FindingCount 0
+    Write-MMHookLog -HookName 'scan-secrets' -Event 'scan_complete' -Decision 'allow' `
+        -Extra @{ mode = $mode; files_scanned = $allFiles.Count; finding_count = 0 }
     Write-Host 'Secrets scan: no secrets detected'
 }
 

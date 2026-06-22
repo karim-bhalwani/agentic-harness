@@ -35,14 +35,13 @@
 [CmdletBinding()]
 param()
 
-if ($env:SKIP_ARTIFACT_MANIFEST -eq 'true') { exit 0 }
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
+
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_ARTIFACT_MANIFEST') { exit 0 }
 
 # --- Read stdin (PostToolUse provides tool_use data) ---
-$rawInput = [Console]::In.ReadToEnd()
-$inputData = $null
-if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-    try { $inputData = $rawInput | ConvertFrom-Json } catch { }
-}
+$inputData = Read-MMHookInput
 
 # Only act on file-write tools
 $writingTools = @('write_file', 'create_file', 'replace_string_in_file',
@@ -62,9 +61,7 @@ if ($inputData -and $inputData.tool_input) {
 if ([string]::IsNullOrWhiteSpace($filePath)) { exit 0 }
 
 # --- Resolve project root (forward-slash form for comparison) ---
-$projectRootRaw = & git rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0 -or -not $projectRootRaw) { $projectRootRaw = (Get-Location).Path }
-$projectRoot = $projectRootRaw -replace '/', '\'
+$projectRoot = Get-MMRepoRoot
 $projectRootFwd = ($projectRoot -replace '\\', '/').TrimEnd('/')
 
 # --- Normalise path: forward slashes + make repo-relative + strip drive leak ---
@@ -146,7 +143,13 @@ if ($stateDir -and -not (Test-Path $stateDir)) {
     New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
 }
 
-# Append entry (JSONL = one JSON object per line)
-Add-Content -Path $manifest -Value $entry -Encoding UTF8
+# Append entry (JSONL = one JSON object per line). Guarded so a disk error
+# never crashes the agent harness (STYLE-GUIDE rule: never fail the decision path).
+try {
+    Add-Content -Path $manifest -Value $entry -Encoding UTF8 -ErrorAction Stop
+}
+catch {
+    # Logging failure must never break the agent's write flow.
+}
 
 exit 0

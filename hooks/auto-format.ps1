@@ -21,23 +21,20 @@
 [CmdletBinding()]
 param()
 
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
+
 # --- Circuit breaker ---
-if ($env:SKIP_AUTO_FORMAT -eq 'true') { exit 0 }
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_AUTO_FORMAT') { exit 0 }
 
 # --- Resolve file path ---
 $filePath = $env:TOOL_INPUT_FILE_PATH
 
 if (-not $filePath) {
     # Fallback: parse file path from stdin JSON
-    $rawInput = [Console]::In.ReadToEnd()
-    if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-        try {
-            $inputData = $rawInput | ConvertFrom-Json
-            $filePath = $inputData.tool_input.filePath
-        }
-        catch {
-            exit 0
-        }
+    $inputData = Read-MMHookInput
+    if ($inputData -and $inputData.tool_input) {
+        $filePath = $inputData.tool_input.filePath
     }
 }
 
@@ -46,6 +43,8 @@ if (-not $filePath) { exit 0 }
 
 # Path traversal guard
 if ($filePath -match '\.\.') {
+    Write-MMHookLog -HookName 'auto-format' -Event 'path_traversal_skipped' -Decision 'skip' `
+        -Extra @{ file = $filePath }
     [Console]::Error.WriteLine("auto-format: path traversal detected in file path, skipping.")
     exit 0
 }
@@ -56,12 +55,18 @@ if (-not (Test-Path $filePath -PathType Leaf)) { exit 0 }
 if ($filePath -match '\.py$') {
     if (Get-Command ruff -ErrorAction SilentlyContinue) {
         $null = & ruff format $filePath 2>&1
+        Write-MMHookLog -HookName 'auto-format' -Event 'formatted' -Decision 'allow' `
+            -Extra @{ file = $filePath; formatter = 'ruff' }
     }
 }
 # --- JS / TS / JSON / CSS / Markdown: prettier ---
 elseif ($filePath -match '\.(js|ts|jsx|tsx|json|css|md)$') {
     if (Get-Command npx -ErrorAction SilentlyContinue) {
-        $null = & npx prettier --write $filePath 2>&1
+        # --yes prevents npx from interactively prompting to install prettier
+        # on first run (violates the non-interactive hook contract).
+        $null = & npx --yes prettier --write $filePath 2>&1
+        Write-MMHookLog -HookName 'auto-format' -Event 'formatted' -Decision 'allow' `
+            -Extra @{ file = $filePath; formatter = 'prettier' }
     }
 }
 

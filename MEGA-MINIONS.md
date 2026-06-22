@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**16 Agents • 25 Skills • 14 Prompts • 14 Hooks • 6-Phase Pipeline**
+**16 Agents • 25 Skills • 15 Prompts • 14 Hooks • 6-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -11,14 +11,14 @@
 ```
 
 **Architect:** Karim Bhalwani  
-**Version:** 9.0 | 3rd May 2026  
+**Version:** 9.0 | 01-July-2026  
 **Scope:** Data Engineering, GenAI/LLM, ML Engineering
 
 ---
 
 ## Welcome to the Team
 
-The **Mega Minions** are a collection of 16 custom AI agents, 25 specialized skills, 13 parameterized prompt files, and 13 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
+The **Mega Minions** are a collection of 16 custom AI agents, 25 specialized skills, 15 parameterized prompt files, and 14 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
 
 Think of them as a squad of specialists, not a single jack-of-all-trades. The Architect draws the blueprints. The Senior Developer writes the code. The Guardian reviews it. The Release Manager ships it. Each one stays in their lane and passes the baton when it is time.
 
@@ -43,7 +43,7 @@ Think of them as a squad of specialists, not a single jack-of-all-trades. The Ar
 Every Mega Minion knows its place. Work flows from discovery through design, an optional plan phase, implementation, review, and release, a natural 6-phase pipeline where each agent hands off to the next.
 
 ```text
-                         THE MEGA MINIONS PIPELINE (v8.0)
+                         THE MEGA MINIONS PIPELINE (v9.0)
   ════════════════════════════════════════════════════════════
 
   ┌─────────────────────── DISCOVERY ───────────────────────┐
@@ -393,6 +393,7 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
   Type /design          → Architect produces a full spec for architectural changes
   Type /feature-plan    → Architect (using concise-planning skill) produces an atomic checklist
   Type /sql-query       → Data Analyst writes optimized T-SQL
+  Type /data-science    → Data Scientist runs EDA, modeling, forecasting, or A/B experiment
   Type /doc-garden      → Guardian audits documentation freshness
   Type /quick-fix       → Fast lane for small, obvious fixes (no pipeline)
   Type /retrospective   → Architect runs pipeline retrospective and improvement cycle
@@ -479,7 +480,7 @@ Every AI model has a **context window**, a limited amount of text it can hold in
 
 ## Know Your Hooks
 
-The hook harness (`hooks/`, 12 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
+The hook harness (`hooks/`, 14 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
 
 Copy the `hooks/` directory to `~/.copilot/hooks/` to activate them. They fire automatically on VS Code agent lifecycle events.
 
@@ -514,14 +515,14 @@ The Mega Minions are not magic. They are **well-structured prompts that guide AI
 
 3. **Hallucination risk** - solved by evidence gates (verification-before-completion), read-only review (Guardian), and the researcher agent for fact-checking.
 
-4. **Quality contract reliability** - solved by the hook harness (12 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, post-subagent artifact verification, and artifact manifest logging at the platform level. Instructions ask; hooks enforce.
+4. **Quality contract reliability** - solved by the hook harness (14 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, post-subagent artifact verification, and artifact manifest logging at the platform level. Instructions ask; hooks enforce.
 
 The beauty is in the composition. No single Mega Minion is extraordinary on its own. But when they work together (discovery feeds design, design feeds implementation, implementation feeds review, review feeds release) the whole becomes significantly greater than the sum of the parts.
 
-This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 12 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
+This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 14 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
 
 **Give them context. Let them specialize. Verify their output. Ship with confidence.**
 
 ---
 
-_The Mega Minions, 16 agents, 25 skills, 14 prompts, 14 hooks, one team._
+_The Mega Minions, 16 agents, 25 skills, 15 prompts, 14 hooks, one team._

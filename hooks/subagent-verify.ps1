@@ -7,7 +7,6 @@
 # session state, story backlog, story plan), this hook runs the corresponding
 # verify_*.py to confirm the file actually landed and is not a stub. If
 # verification fails, the hook reports back via decision=block so the
-#ack via decision=block so the
 # orchestrating agent knows to retry.
 #
 # Lookups are best-effort: the hook reads the subagent's agent_type and runs
@@ -26,95 +25,31 @@
 [CmdletBinding()]
 param()
 
-function Get-GovernanceLevel {
-    $level = if ($env:GOVERNANCE_LEVEL) { $env:GOVERNANCE_LEVEL.ToLowerInvariant() } else { 'standard' }
-    if ($level -notin @('open', 'standard', 'strict', 'locked')) { return 'standard' }
-    return $level
-}
-
-function Resolve-VerifyMode {
-    param([string]$GovernanceLevel)
-
-    if ($env:SUBAGENT_VERIFY_MODE) { return $env:SUBAGENT_VERIFY_MODE }
-
-    switch ($GovernanceLevel) {
-        'strict' { return 'block' }
-        'locked' { return 'block' }
-        default { return 'warn' }
-    }
-}
-
-function Get-HookLogPath {
-    $logDir = if ($env:HOOK_LOG_DIR) {
-        $env:HOOK_LOG_DIR
-    }
-    else {
-        Join-Path (Get-Location).Path '.copilot\state\hook-logs'
-    }
-
-    try {
-        $null = New-Item -ItemType Directory -Path $logDir -Force -ErrorAction Stop
-        return Join-Path $logDir 'subagent-verify.jsonl'
-    }
-    catch {
-        return $null
-    }
-}
-
-function Write-HookLog {
-    param(
-        [string]$Event,
-        [string]$AgentType,
-        [string]$Mode,
-        [string]$GovernanceLevel,
-        [string]$Decision,
-        [int]$VerifierCount,
-        [int]$FailureCount
-    )
-
-    $path = Get-HookLogPath
-    if (-not $path) { return }
-
-    $entry = [ordered]@{
-        timestamp      = (Get-Date).ToUniversalTime().ToString('o')
-        hook           = 'subagent-verify'
-        event          = $Event
-        agent          = $AgentType
-        mode           = $Mode
-        governance     = $GovernanceLevel
-        decision       = $Decision
-        verifier_count = $VerifierCount
-        failure_count  = $FailureCount
-    }
-
-    try {
-        Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
-    }
-    catch {
-        # Logging failure must never fail the hook decision path.
-    }
-}
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
 
 # --- Circuit breaker ---
-if ($env:SKIP_SUBAGENT_VERIFY -eq 'true') { exit 0 }
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_SUBAGENT_VERIFY') { exit 0 }
 
-$governanceLevel = Get-GovernanceLevel
-$mode = Resolve-VerifyMode -GovernanceLevel $governanceLevel
+$governanceLevel = Get-MMGovernanceLevel
+$mode = Resolve-MMMode -OverrideEnvVar 'SUBAGENT_VERIFY_MODE' -GovernanceLevel $governanceLevel `
+    -StrictDefault 'block' -StandardDefault 'block' -OpenDefault 'warn'
 
 # --- Read stdin ---
-$rawInput = [Console]::In.ReadToEnd()
-$inputData = $null
-if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-    try { $inputData = $rawInput | ConvertFrom-Json } catch { exit 0 }
-}
+$inputData = Read-MMHookInput
+if (-not $inputData) { exit 0 }
 
-$agentType = if ($inputData -and $inputData.agent_type) { $inputData.agent_type } else { '' }
-$cwd = if ($inputData -and $inputData.cwd) { $inputData.cwd } else { (Get-Location).Path }
+$agentType = Get-MMAgentType -InputData $inputData
+$cwd = if ($inputData.cwd) { $inputData.cwd } else { (Get-Location).Path }
 
 # Resolve project root
 $projectRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $projectRoot) { $projectRoot = $cwd }
-$projectRoot = $projectRoot -replace '/', '\'
+if ($PSVersionTable.Platform -eq 'Unix') {
+    $projectRoot = $projectRoot.Trim()
+} else {
+    $projectRoot = ($projectRoot -replace '/', '\').Trim()
+}
 # Resolve verifier scripts from the repo first (skills/ live in the project),
 # then fall back to the user-install mirror at ~/.copilot for deployed setups.
 $skillsRoots = @($projectRoot, (Join-Path $HOME '.copilot'))
@@ -140,7 +75,7 @@ switch -Regex ($agentType) {
             $verifiers += 'skills/context-engineer/scripts/verify_bible.py'
         }
     }
-    'ai-engineer|data-engineer|senior-developer|debug-detective|release-manager|data-analyst' {
+    'ai-engineer|data-engineer|senior-developer|data-scientist|debug-detective|release-manager|data-analyst' {
         if (Test-Path (Join-Path $projectRoot '.copilot\state\SESSION_STATE.md')) {
             $verifiers += 'skills/context-engineer/scripts/verify_session_state.py'
         }
@@ -160,14 +95,25 @@ switch -Regex ($agentType) {
 }
 
 if ($verifiers.Count -eq 0) {
-    Write-HookLog -Event 'verify_skipped' -AgentType $agentType -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -VerifierCount 0 -FailureCount 0
+    Write-MMHookLog -HookName 'subagent-verify' -Event 'verify_skipped' -Decision 'allow' `
+        -Extra @{ agent = $agentType; mode = $mode; verifier_count = 0; failure_count = 0 }
     exit 0
 }
 
 # --- Run verifiers ---
+# uv is required to run the verify_*.py scripts. If it is missing, fail open
+# with a warning rather than false-positive blocking (the harness "never crash
+# the agent" contract). Document this so operators know to install uv.
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-MMHookLog -HookName 'subagent-verify' -Event 'uv_missing' -Decision 'warn' `
+        -Extra @{ agent = $agentType; mode = $mode; verifier_count = $verifiers.Count; note = 'uv not on PATH; failing open' }
+    Write-Host "WARNING (subagent-verify): 'uv' not found on PATH; skipping artifact verification. Install uv to enable verification gates."
+    exit 0
+}
+
 $failures = [System.Collections.Generic.List[string]]::new()
 foreach ($v in $verifiers) {
-    $vNative = $v -replace '/', '\'
+    $vNative = if ($PSVersionTable.Platform -eq 'Unix') { $v } else { $v -replace '/', '\' }
     $script = $null
     foreach ($root in $skillsRoots) {
         $candidate = Join-Path $root $vNative
@@ -181,7 +127,8 @@ foreach ($v in $verifiers) {
 }
 
 if ($failures.Count -eq 0) {
-    Write-HookLog -Event 'verify_complete' -AgentType $agentType -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -VerifierCount $verifiers.Count -FailureCount 0
+    Write-MMHookLog -HookName 'subagent-verify' -Event 'verify_complete' -Decision 'allow' `
+        -Extra @{ agent = $agentType; mode = $mode; verifier_count = $verifiers.Count; failure_count = 0 }
     exit 0
 }
 
@@ -189,12 +136,14 @@ $msg = "Subagent ($agentType) finished but artifact verification failed:`n - " +
 "`nRe-run the subagent or fill the missing artifact before continuing."
 
 if ($mode -eq 'warn') {
-    Write-HookLog -Event 'verify_failed' -AgentType $agentType -Mode $mode -GovernanceLevel $governanceLevel -Decision 'allow' -VerifierCount $verifiers.Count -FailureCount $failures.Count
+    Write-MMHookLog -HookName 'subagent-verify' -Event 'verify_failed' -Decision 'allow' `
+        -Extra @{ agent = $agentType; mode = $mode; verifier_count = $verifiers.Count; failure_count = $failures.Count }
     Write-Host "WARNING: $msg"
     exit 0
 }
 
-Write-HookLog -Event 'verify_failed' -AgentType $agentType -Mode $mode -GovernanceLevel $governanceLevel -Decision 'deny' -VerifierCount $verifiers.Count -FailureCount $failures.Count
+Write-MMHookLog -HookName 'subagent-verify' -Event 'verify_failed' -Decision 'deny' `
+    -Extra @{ agent = $agentType; mode = $mode; verifier_count = $verifiers.Count; failure_count = $failures.Count }
 
 $output = [ordered]@{
     hookSpecificOutput = [ordered]@{

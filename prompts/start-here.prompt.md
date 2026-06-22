@@ -1,6 +1,6 @@
 ---
-agent: senior-developer
-description: "Pipeline status check / next-action router for the Mega Minions v8.0 pipeline. Run this when you sit down to work and aren't sure what to do next. The prompt detects whether a Project Bible, SPEC.md, STORIES.md, or active story exists, and tells you exactly which agent or prompt to invoke next. The v8 equivalent of `git status` for the pipeline."
+agent: architect
+description: "Pipeline status check / next-action router for the Mega Minions pipeline. Run this when you sit down to work and aren't sure what to do next. The prompt detects whether a Project Bible, SPEC.md, STORIES.md, or active story exists, and tells you exactly which agent or prompt to invoke next. The equivalent of `git status` for the pipeline."
 argument-hint: "[no arguments needed]"
 tools:
   - read

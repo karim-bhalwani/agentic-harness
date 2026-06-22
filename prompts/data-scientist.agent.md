@@ -177,7 +177,18 @@ Load universal background skills per `core-behavior` Section 7, plus this agent-
 
 - `skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous modeling, forecasting, or experiment tasks)
 
-Create todo list (Clarify, EDA, Feature Engineering, Modeling, Evaluation, Report - with **Load background skills** as first item), load Project Bible. **Locate spec**: check context first; if absent, read `.copilot/specs/SPEC.md`. If neither exists, ask the user for the business question and data location before proceeding.
+Create todo list (Clarify, EDA, Feature Engineering, Modeling, Evaluation, Report - with **Load background skills** as first item), load Project Bible.
+
+**Context cache:** Before reading project files, query what prior agents cached this session:
+
+```bash
+uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
+uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
+```
+
+Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary so the next agent can skip the read.
+
+**Locate spec**: check context first; if absent, read `.copilot/specs/SPEC.md`. If neither exists, ask the user for the business question and data location before proceeding.
 
 ### Phase 1: Understand the Problem
 

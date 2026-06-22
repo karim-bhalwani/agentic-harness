@@ -10,11 +10,11 @@ Testing: pytest with 85%+ coverage
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from enum import Enum
-import jwt
+import jwt  # ty:ignore[unresolved-import]
 import bcrypt  # type: ignore[import-not-found]
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr, Field, validator
+from fastapi import FastAPI, HTTPException, Depends, status  # ty:ignore[unresolved-import]
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials  # ty:ignore[unresolved-import]
+from pydantic import BaseModel, EmailStr, Field, validator  # ty:ignore[unresolved-import]
 
 # ============================================================================
 # DOMAIN MODELS
@@ -98,9 +98,7 @@ class RegisterRequest(BaseModel):
         has_special = any(c in "!@#$%^&*" for c in v)
 
         if not (has_upper and has_lower and has_digit and has_special):
-            raise ValueError(
-                "Password must contain uppercase, lowercase, digit, and special character"
-            )
+            raise ValueError("Password must contain uppercase, lowercase, digit, and special character")
         return v
 
 
@@ -161,9 +159,7 @@ class PasswordHasher:
 class JWTHandler:
     """JWT token generation and validation"""
 
-    def __init__(
-        self, secret_key: str, algorithm: str = "HS256", expiry_minutes: int = 60
-    ):
+    def __init__(self, secret_key: str, algorithm: str = "HS256", expiry_minutes: int = 60):
         self.secret_key = secret_key
         self.algorithm = algorithm
         self.expiry_minutes = expiry_minutes
@@ -261,9 +257,7 @@ class AuthenticationService:
             raise InvalidCredentialsError("Invalid email or password")
 
         # Verify password
-        if not self.password_hasher.verify_password(
-            request.password, user.password_hash
-        ):
+        if not self.password_hasher.verify_password(request.password, user.password_hash):
             raise InvalidCredentialsError("Invalid email or password")
 
         # Check if active
@@ -327,9 +321,7 @@ async def login(request: LoginRequest) -> TokenResponse:
     try:
         return auth_service.login(request)
     except InvalidCredentialsError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
 
 
 @app.get("/auth/me", response_model=UserResponse)
@@ -340,9 +332,7 @@ async def get_current_user(
     try:
         return auth_service.get_current_user(credentials.credentials)
     except InvalidTokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
 
 
 # ============================================================================

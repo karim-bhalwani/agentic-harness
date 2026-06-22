@@ -217,14 +217,126 @@ function Get-MMRepoRoot {
     <#
     .SYNOPSIS Best-effort repository root resolution.
     .OUTPUTS Absolute path. Falls back to Get-Location when git is unavailable.
+    .NOTES Path normalization is platform-aware: on POSIX systems forward slashes
+           are preserved; on Windows they are converted to backslashes.
     #>
     if (Get-Command git -ErrorAction SilentlyContinue) {
         $root = & git rev-parse --show-toplevel 2>$null
         if ($LASTEXITCODE -eq 0 -and $root) {
-            return ($root -replace '/', '\').Trim()
+            $root = $root.Trim()
+            if ($PSVersionTable.Platform -eq 'Unix') {
+                return $root
+            }
+            return ($root -replace '/', '\')
         }
     }
     return (Get-Location).Path
+}
+
+# ---------- Cross-platform helpers -------------------------------------------
+
+function Get-MMPythonCommand {
+    <#
+    .SYNOPSIS Resolve a working Python command for the current platform.
+    .OUTPUTS 'python' or 'python3' or '' when neither is on PATH.
+    .NOTES On most Linux distros 'python' is absent and 'python3' is required.
+           On Windows 'python3' is usually absent. Try both, prefer 'python'.
+    #>
+    if (Get-Command python -ErrorAction SilentlyContinue) { return 'python' }
+    if (Get-Command python3 -ErrorAction SilentlyContinue) { return 'python3' }
+    return ''
+}
+
+# ---------- File locking ------------------------------------------------------
+
+function Invoke-MMLockedFileOp {
+    <#
+    .SYNOPSIS Perform an atomic read-modify-write on a file via an exclusive
+             FileStream lock. Prevents concurrent hook instances from racing
+             on shared state files (e.g. subagent-budget.json).
+    .PARAMETER Path Absolute path to the state file.
+    .PARAMETER ScriptBlock Receives the file's current raw string content
+                          (or $null if the file does not exist) and must
+                          return the new string content to write.
+    .OUTPUTS Whatever the ScriptBlock returns (after the write succeeds).
+    .NOTES Uses [System.IO.FileStream] with FileShare.None for an exclusive
+           lock. The lock is held only for the duration of the ScriptBlock.
+           Never throws - on any error returns $null.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][scriptblock]$ScriptBlock
+    )
+    $parent = Split-Path $Path -Parent
+    if (-not $parent) { return $null }
+    try {
+        $null = New-Item -ItemType Directory -Path $parent -Force -ErrorAction Stop
+    }
+    catch { return $null }
+
+    $stream = $null
+    try {
+        # Open or create the file with exclusive (FileShare.None) read/write.
+        $stream = [System.IO.FileStream]::new(
+            $Path,
+            [System.IO.FileMode]::OpenOrCreate,
+            [System.IO.FileAccess]::ReadWrite,
+            [System.IO.FileShare]::None
+        )
+        # Read current content using a StreamReader with leaveOpen=true so
+        # disposing the reader does NOT close the underlying stream. The
+        # 4-arg constructor (Stream, Encoding, detectBom, bufferSize, leaveOpen)
+        # is the portable way to keep the stream alive across read/write phases.
+        $current = $null
+        $reader = [System.IO.StreamReader]::new(
+            $stream,
+            [System.Text.Encoding]::UTF8,
+            $true,
+            1024,
+            $true
+        )
+        if ($stream.Length -gt 0) {
+            $current = $reader.ReadToEnd()
+        }
+        $reader.Dispose()
+
+        # Run the caller's operation. Capture output into a list so we can
+        # distinguish stray pipeline output from the explicit return value.
+        # The scriptblock's return value is the LAST object emitted.
+        $output = & $ScriptBlock $current
+        if ($null -eq $output) {
+            $newContent = $null
+        }
+        elseif ($output -is [System.Array]) {
+            # Use the last element as the return value; ignore stray output.
+            $newContent = $output[-1]
+        }
+        else {
+            $newContent = $output
+        }
+
+        # Write new content (truncate then write). leaveOpen=true keeps the
+        # stream alive; the finally block disposes it.
+        $stream.SetLength(0)
+        $writer = [System.IO.StreamWriter]::new(
+            $stream,
+            [System.Text.Encoding]::UTF8,
+            1024,
+            $true
+        )
+        if ($null -ne $newContent) { $writer.Write([string]$newContent) }
+        $writer.Flush()
+        $writer.Dispose()
+
+        return $newContent
+    }
+    catch {
+        return $null
+    }
+    finally {
+        if ($stream) { $stream.Dispose() }
+    }
 }
 
 # Export-ModuleMember is unnecessary for dot-sourced scripts; every function above

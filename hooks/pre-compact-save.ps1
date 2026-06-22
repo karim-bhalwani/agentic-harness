@@ -16,18 +16,17 @@
 [CmdletBinding()]
 param()
 
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
+
 # --- Circuit breaker ---
 # Set $env:SKIP_PRE_COMPACT_SAVE = 'true' to disable state checkpointing for this session.
-if ($env:SKIP_PRE_COMPACT_SAVE -eq 'true') {
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_PRE_COMPACT_SAVE') {
     exit 0
 }
 
 # --- Read stdin ---
-$rawInput = [Console]::In.ReadToEnd()
-$inputData = $null
-if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-    try { $inputData = $rawInput | ConvertFrom-Json } catch { }
-}
+$inputData = Read-MMHookInput
 
 # --- Resolve paths ---
 $cwd = if ($inputData -and $inputData.cwd) { $inputData.cwd } else { (Get-Location).Path }
@@ -40,7 +39,11 @@ $timestampISO = Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'
 # Prefer git project root; fall back to workspace cwd
 $projectRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $projectRoot) { $projectRoot = $cwd }
-$projectRoot = $projectRoot -replace '/', '\'
+if ($PSVersionTable.Platform -eq 'Unix') {
+    $projectRoot = $projectRoot.Trim()
+} else {
+    $projectRoot = ($projectRoot -replace '/', '\').Trim()
+}
 
 # --- Git context ---
 $branch = & git -C $cwd rev-parse --abbrev-ref HEAD 2>$null

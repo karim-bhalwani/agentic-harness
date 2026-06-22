@@ -16,7 +16,7 @@ For a comprehensive guide to what each hook does, lifecycle coverage, and config
 
 ## Hooks Included
 
-This package includes 13 hook scripts plus `hooks.json` configuration. See [README.md](README.md) for the complete hook inventory and what each one does.
+This package includes 14 hook scripts plus `hooks.json` configuration. See [README.md](README.md) for the complete hook inventory and what each one does.
 
 ## Installation
 
@@ -91,7 +91,7 @@ You should see the 14 hooks listed (Stop x3, PreToolUse x3, PostToolUse x2, Sess
 
 ### quality-gate.ps1 (Stop)
 
-Runs `ruff check .` and `mypy . --quiet` before the agent session can close. If either fails, the agent is blocked and told to fix the errors first.
+Runs `ruff check .` and `ty check .` before the agent session can close. If either fails, the agent is blocked and told to fix the errors first.
 
 **Env vars:**
 
@@ -309,10 +309,10 @@ Copy-Item -Path "hooks\*" -Destination "$env:USERPROFILE\.copilot\hooks\" -Force
 
 - Verify execution policy: `Get-ExecutionPolicy -Scope CurrentUser` should return `RemoteSigned` or `Unrestricted`
 
-**Quality gate blocks with no ruff/mypy installed:**
+**Quality gate blocks with no ruff/ty installed:**
 
 - This is safe to ignore - the hook skips checks for tools not installed
-- Install dev tools: `uv add --dev ruff mypy`
+- Install dev tools: `uv add --dev ruff ty`
 
 **Infinite Stop hook loop:**
 

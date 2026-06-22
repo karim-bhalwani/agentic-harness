@@ -24,20 +24,15 @@
 [CmdletBinding()]
 param()
 
+# Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
+. (Join-Path $PSScriptRoot '_lib.ps1')
+
 # --- Circuit breaker ---
-if ($env:SKIP_RETROSPECTIVE_CHECK -eq 'true') { exit 0 }
+if (Test-MMCircuitBreaker -EnvVar 'SKIP_RETROSPECTIVE_CHECK') { exit 0 }
 
 # --- Read stdin; bail on re-entrant Stop to avoid duplicate banners ---
-$rawInput = [Console]::In.ReadToEnd()
-if (-not [string]::IsNullOrWhiteSpace($rawInput)) {
-    try {
-        $inputData = $rawInput | ConvertFrom-Json
-        if ($inputData.stop_hook_active -eq $true) { exit 0 }
-    }
-    catch {
-        # Malformed JSON is non-fatal; continue.
-    }
-}
+$inputData = Read-MMHookInput
+if ($inputData -and (Test-MMStopReentry -InputData $inputData)) { exit 0 }
 
 # --- Resolve interval ---
 $interval = 5
@@ -49,7 +44,7 @@ if ($env:RETROSPECTIVE_INTERVAL) {
 }
 
 # --- Count completed cycles (story reports) ---
-$root = (Get-Location).Path
+$root = Get-MMRepoRoot
 $reportsDir = Join-Path $root '.copilot\stories\reports'
 if (-not (Test-Path $reportsDir)) { exit 0 }
 
@@ -78,6 +73,8 @@ if (-not (Test-Path $stateDir)) {
 Set-Content -Path $counterPath -Value $completed -NoNewline -ErrorAction SilentlyContinue
 
 # --- Banner ---
+Write-MMHookLog -HookName 'retrospective-check' -Event 'retrospective_due' -Decision 'warn' `
+    -Extra @{ completed = $completed; interval = $interval; last_reminded = $lastReminded }
 Write-Host ''
 Write-Host '=== Retrospective Due (retrospective-check) ==='
 Write-Host "  $completed workflow cycles completed (reminder every $interval)."

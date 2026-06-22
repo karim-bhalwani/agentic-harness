@@ -6,6 +6,7 @@ target: vscode
 tools:
   - read
   - search
+  - edit
   - execute
   - agent
   - web
@@ -36,6 +37,10 @@ handoffs:
   - label: Hand off to Data Analyst (NEEDS WORK / FAIL - SQL queries)
     agent: data-analyst
     prompt: "Guardian review found issues in the SQL queries. The full Gate Report is in the conversation above. Fix every blocking finding before re-submitting: security vulnerabilities, performance issues, and compliance violations take priority. When complete, use the 'Hand off to Guardian (Rework Review)' handoff."
+    send: false
+  - label: Hand off to Data Scientist (NEEDS WORK / FAIL - data science)
+    agent: data-scientist
+    prompt: "Guardian review found issues in the data science work (EDA, model, experiment). The full Gate Report is in the conversation above. Fix every blocking finding before re-submitting - prioritise leakage, data split violations, and statistical validity issues. The spec is at `.copilot/specs/SPEC.md`. When complete, use the 'Hand off to Guardian (Rework Review)' handoff."
     send: false
   - label: Hand off to Architect (Spec Flaw)
     agent: architect
@@ -159,7 +164,7 @@ Before starting a review, confirm:
 - Assign severity to each finding
 - Provide actionable remediation with code examples
 - Make gate determination
-- **Output review artifact**: Return the complete report as structured markdown in your response. The user or orchestrating agent is responsible for persisting it to `.copilot/artifacts/review-report.md` if needed. Remind the user to save it if a cross-session handoff to Release Manager is planned.
+- **Output review artifact**: Write the complete report to `.copilot/artifacts/review-report.md` using the `edit` tool (create the file if it does not exist; overwrite on rework cycles). Then include the same report in your response so it is visible in the conversation.
 
 ## Mandatory Report Structure
 
@@ -221,7 +226,7 @@ _If no holdout scenarios exist, note: "No holdout scenarios found for this featu
 - `execute` is granted **for analysis tools only**: `pip-audit`, `safety`, `pytest` (read results), profiling tools, linters, and scanners
 - Every executed command must be observable and non-destructive; if in doubt, prefer `read`/`search` over `execute`
 - Remediation guidance includes code examples, but you do not apply them
-- **No file writes**: you do not have `editFiles` access. Return review reports and artifacts as structured markdown in your response. The orchestrating agent or user is responsible for persisting artifacts to disk.
+- **Source file writes are forbidden**. You do not modify any file outside `.copilot/artifacts/` and `.copilot/state/`. The `edit` tool is granted exclusively for writing the review report to `.copilot/artifacts/review-report.md` and session state to `.copilot/state/SESSION_STATE.md`. Any edit to a source file (anything outside those two directories) is a constraint violation.
 
 ### Evidence-Based
 
@@ -244,14 +249,14 @@ _If no holdout scenarios exist, note: "No holdout scenarios found for this featu
 
 ### Pipeline Loop Awareness
 
-Follow the cross-session iteration tracking and 3-strike circuit breaker defined in `skills/context-engineer/references/pipeline-loop.md`. Guardian-specific note: include the updated `Iteration Count` in your session state output block (since you cannot write files), and use finding history across cycles to detect regressions introduced by fix attempts.
+Follow the cross-session iteration tracking and 3-strike circuit breaker defined in `skills/context-engineer/references/pipeline-loop.md`. Guardian-specific note: include the updated `Iteration Count` in the session state and use finding history across cycles to detect regressions introduced by fix attempts.
 
 ### Phase 6: Session State
 
-You cannot write files. Output the session state block (following `core-behavior` Section Session State Write schema) at the end of your response. Agent name: `guardian`.
+Write session state to `.copilot/state/SESSION_STATE.md` per `core-behavior` Section Session State Write. Agent name: `guardian`.
 
 - Set `Status: active` if handing off for rework (NEEDS WORK / FAIL); `Status: completed` if the gate passed.
-- Remind the user to save this to `.copilot/state/SESSION_STATE.md` if they plan to resume in a new session.
+- Also include the session state block in your response for visibility.
 
 ## Response Format
 
