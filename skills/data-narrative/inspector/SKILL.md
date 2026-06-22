@@ -5,8 +5,8 @@ user-invocable: false
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "1.0"
-  updated: "22-June-2026"
+  version: "9.0"
+  updated: "01-July-2026"
   dependencies: []
 ---
 
