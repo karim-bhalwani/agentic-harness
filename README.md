@@ -20,8 +20,6 @@ A production-ready **multi-agent development crew** for GitHub Copilot in VS Cod
 
 Each agent has a defined role, knows its limits, and hands work off to the next agent in the chain. Domain knowledge lives in 25 on-demand skills. Quality invariants are enforced by 13 platform-level hooks that the model cannot override.
 
-> **How counts are tallied:** headline numbers track files on disk, one `*.agent.md` per agent (the hidden `researcher` is included), one `skills/<name>/` directory per skill, one `*.prompt.md` per prompt, and one `*.ps1` per hook. The `audit.py` count-sync check fails the build if any badge or tagline drifts from these counts.
-
 **The short version:** spec before code, one agent per phase, hooks enforce what instructions can't.
 
 ---

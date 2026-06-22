@@ -299,8 +299,6 @@ The detective will run hypothesis-driven analysis and return a root cause with e
 
 After the Architect produces `SPEC.md` and you review it at Gate 0, you choose whether to route work directly to a BUILD agent (Build Direct path) or activate the PLAN phase. The PLAN phase is the right choice when your SPEC has `Scope: EXPANSION` or `Scope: REDUCTION` (any size), or when it has 3 or more deliverables with shared dependencies. Clicking `[ Approve: Plan Phase ]` at Gate 0 triggers the full backlog and planning workflow described below.
 
-For the canonical end-to-end trace, see `enhancement.md` section 12.
-
 ### Step-by-Step Walkthrough
 
 1. **Architect produces `SPEC.md` and stops at Gate 0.** The SPEC includes a Scope tag (`HOLD`, `EXPANSION`, or `REDUCTION`) and the Architect's routing recommendation.
@@ -592,4 +590,4 @@ Once you are comfortable with basic workflows:
 
 ---
 
-Version 8.0 | May 3, 2026 | Part of the Mega Minions system | Verified against VS Code > 1.118 docs
+Version 9.0 | July 01, 2026 | Part of the Mega Minions system | Verified against VS Code docs
