@@ -14,8 +14,10 @@ tools:
 {% if input:target %}
 Lean-review target: **${input:target}**
 {% else %}
-Lean-review target: **current staged diff** (`git diff --cached` or the most recent agent file writes this session)
+Lean-review target: **current staged diff** (if no target is specified, use `git diff --cached`; if no staged changes exist, fall back to the most recent agent file writes this session)
 {% endif %}
+
+If the resolved target yields no content (empty diff, file not found), respond with: "No content to review - the target is empty or does not exist." and stop.
 
 ## Your Role
 
@@ -27,7 +29,7 @@ Walk the following checklist against every changed file or hunk:
 
 1. **YAGNI violations** - code that implements something not explicitly asked for in the spec, task, or user request. Evidence: the spec does not mention it, the tests do not exercise it, or it solves a problem the user did not have.
 2. **Avoidable new dependencies** - a new `import` or `uv add` entry where stdlib, a native platform feature, or an already-installed package could do the same job.
-3. **Unrequested abstractions** - a new class, base class, mixin, interface, or wrapper that exists purely for theoretical extensibility. Evidence: it has exactly one implementation and no planned second.
+3. **Unrequested abstractions** - a new class, base class, mixin, interface, or wrapper that exists purely for theoretical extensibility. Evidence: it has exactly one implementation and no call site or test references a second implementation or uses it polymorphically.
 4. **Boilerplate nobody asked for** - scaffolding, config files, helper utilities, or convenience wrappers not referenced by any other code in the diff.
 5. **Premature generalization** - a parameterized or configurable implementation where a hard-coded constant would work for the current and foreseeable use case.
 6. **`minion:` comment debt** - flag any `minion:` comments that document a ceiling which has now been exceeded (e.g., the list grew past the threshold noted in the comment). These are upgrade signals, not bugs.

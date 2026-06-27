@@ -18,9 +18,11 @@ metadata:
 
 Load the following via `read_file` before using this skill:
 
-- `skills/architect/SKILL.md` - module boundary and API contract patterns; LLM app components (retriever, generator, evaluator) are black-box modules
-- `skills/data-engineering/SKILL.md` - ingestion and pipeline patterns for corpus preparation, embedding pipelines, and index refresh
-- `skills/ops/SKILL.md` - CI/CD and deployment patterns for LLMOps pipelines, model versioning, and evaluation automation
+- `~/.copilot/skills/architect/SKILL.md` - module boundary and API contract patterns; LLM app components (retriever, generator, evaluator) are black-box modules
+- `~/.copilot/skills/data-engineering/SKILL.md` - ingestion and pipeline patterns for corpus preparation, embedding pipelines, and index refresh
+- `~/.copilot/skills/ops/SKILL.md` - CI/CD and deployment patterns for LLMOps pipelines, model versioning, and evaluation automation
+
+If any dependency SKILL.md cannot be loaded, notify the user of the missing dependency and proceed only with the capabilities that do not require it, clearly stating which guidance may be incomplete.
 
 Expert in production LLM application patterns and architectures.
 
@@ -81,7 +83,7 @@ Covers:
 
 ### [Prompt Engineering](references/prompt-engineering.md)
 
-**Use when:** Creating reusable prompt systems
+**Use when:** Designing prompt templates and chains within an LLM application (not for building a standalone reusable prompt template library - use prompt-library for that)
 
 Covers:
 
@@ -108,12 +110,12 @@ Covers:
 
 ## Quick Decision Guide
 
-| Goal                            | Reference                                                    |
-| :------------------------------ | :----------------------------------------------------------- |
-| Answer questions from your docs | [RAG Pipelines](references/rag-pipelines.md)                 |
-| Build tool-using agent          | [Agent Architectures](references/agent-architectures.md)     |
-| Create reusable prompts         | [Prompt Engineering](references/prompt-engineering.md)       |
-| Monitor production system       | [LLMOps & Observability](references/llmops-observability.md) |
+| Goal                                     | Reference                                                    |
+| :--------------------------------------- | :----------------------------------------------------------- |
+| Answer questions from your docs          | [RAG Pipelines](references/rag-pipelines.md)                 |
+| Build tool-using agent                   | [Agent Architectures](references/agent-architectures.md)     |
+| Design prompt templates for your LLM app | [Prompt Engineering](references/prompt-engineering.md)       |
+| Monitor production system                | [LLMOps & Observability](references/llmops-observability.md) |
 
 ---
 
@@ -127,7 +129,7 @@ Covers:
 
 ## Constraints
 
-- Does NOT implement patterns (provides architecture guidance and templates only)
+- Does NOT write production application code or infrastructure configuration. Provides architecture diagrams, decision guidance, and starter prompt/config templates only.
 - Does NOT evaluate model quality or fine-tuning strategies
 - Does NOT manage infrastructure (consult ops skill)
 - Does NOT handle non-LLM ML patterns (classical ML, computer vision, etc.)
@@ -150,7 +152,7 @@ Covers:
 
 ## References
 
-Load these to apply the correct pattern for the task at hand:
+Load these to apply the correct pattern for the task at hand. If the task spans multiple references (e.g., an agentic RAG system requiring both agent-architectures.md and rag-pipelines.md), load all relevant references and synthesize guidance, noting where the references interact.
 
 - [rag-pipelines.md](./references/rag-pipelines.md) - RAG architecture patterns (naive, advanced, agentic). Load when designing or reviewing any retrieval-augmented generation system.
 - [agent-architectures.md](./references/agent-architectures.md) - LLM agent topology patterns (ReAct, Plan-and-Execute, multi-agent). Load when designing autonomous agent systems or tool-use workflows.

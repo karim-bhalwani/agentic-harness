@@ -10,12 +10,12 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
-Lint the project mem. Scope: **${input:scope}** (valid values: `all`, `links`, `index`, or a specific topic directory, e.g., `topics/AI/` or `topics/ML/`)
+Lint the project mem. Scope: **${input:scope}** (valid values: `all`, `links`, `index`, or a specific topic directory path, e.g., `topics/AI/`). If the directory does not exist in the project, respond with: "Directory not found. Please provide a valid topic directory path."
 
-**Validation**: If the scope value is invalid or unsupported, respond with: "Invalid scope provided. Please use one of the valid values: `all`, `links`, `index`, or a specific topic directory."
+**Pre-flight checks (run in order, stop on first failure):**
 
-**Workflow**: Load `skills/llm-mem/SKILL.md` via `read_file`. If `skills/llm-mem/SKILL.md` cannot be loaded, respond with: "Skill file not found. Ensure the file exists and is accessible." The skill is the single source of truth for the lint workflow (deterministic auto-fix checks, heuristic report-only checks, log-append rules) and for the Mem Health Report format. Follow it; do not paraphrase here.
+1. **Validate scope value** - if the value is not one of `all`, `links`, `index`, or a valid topic directory path, respond with: "Invalid scope provided. Please use one of the valid values: `all`, `links`, `index`, or a specific topic directory path."
+2. **Load `~/.copilot/skills/llm-mem/SKILL.md`** via `read_file` - if not found, respond with: "Skill file not found. Ensure the file exists and is accessible." If the file loads but does not contain a recognizable lint workflow or report format section, respond with: "Skill file appears incomplete or malformed. Cannot proceed without a valid lint workflow definition."
+3. **Confirm `llmmem/mem/index.md` exists** - if not found, respond with: "No mem found. Run `/mem-ingest` first."
 
-If `llmmem/mem/index.md` does not exist, stop and tell the user: "No mem found. Run `/mem-ingest` first."
-
-**Output**: A Mem Health Report with the count of issues auto-fixed, a table of heuristic findings with severity, and suggested next actions.
+**Workflow**: The skill file loaded in pre-flight check 2 is the single source of truth for the lint workflow (deterministic auto-fix checks, heuristic report-only checks, log-append rules) and for the Mem Health Report format. Follow it; do not paraphrase here and do not use any inline output format definition in place of the skill file's format.

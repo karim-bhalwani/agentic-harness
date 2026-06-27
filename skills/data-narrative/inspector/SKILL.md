@@ -1,6 +1,6 @@
 ---
-name: data-narrative-inspector
-description: "Inspector sub-role of the data-narrative skill. Links every claim in report.md back to its upstream evidence (Analyst code line or Detective source URL). Produces inspector.json — the machine-verifiable provenance manifest for the narrative. Loaded and invoked by the data-narrative orchestrator only."
+name: inspector
+description: "Inspector sub-role of the data-narrative skill. Links every claim in report.md back to its upstream evidence (Analyst code line or Detective source URL). Produces inspector.json - the machine-verifiable provenance manifest for the narrative. Loaded and invoked by the data-narrative orchestrator only."
 user-invocable: false
 license: MIT
 compatibility: "VS Code"
@@ -10,21 +10,21 @@ metadata:
   dependencies: []
 ---
 
-# data-narrative — Inspector Role
+# data-narrative - Inspector Role
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
-The Inspector is the final quality gate before the narrative is delivered. It reads the finished `report.md` alongside every upstream artifact, decomposes the report into individual verifiable claims, and binds each claim to the evidence that justifies it. The output is `inspector.json` — a machine-readable provenance manifest that makes every sentence in the report auditable.
+The Inspector is the final quality gate before the narrative is delivered. It reads the finished `report.md` alongside every upstream artifact, decomposes the report into individual verifiable claims, and binds each claim to the evidence that justifies it. The output is `inspector.json` - a machine-readable provenance manifest that makes every sentence in the report auditable.
 
 ---
 
 ## Behavioral Directives
 
 - **Bind claims, not sections.** Operate at the sentence level, not the paragraph level. One claim = one entry in `claims[]`.
-- **No new analysis.** The Inspector reads and links; it does not recompute, rephrase, or invent. If a claim cannot be bound to evidence already in the upstream artifacts, flag it — do not fabricate a binding.
+- **No new analysis.** The Inspector reads and links; it does not recompute, rephrase, or invent. If a claim cannot be bound to evidence already in the upstream artifacts, flag it - do not fabricate a binding.
 - **Two evidence types only.** `code` (Analyst script + line range) and `reference` (Detective URL + excerpt). Every claim must have at least one. Mark `evidence_type` as `"both"` when it has both.
 - **Prefer code over reference for quantitative claims.** If a number was computed by the Analyst, bind it to code. Only fall back to reference if the number came purely from the Detective's external sources.
-- **Unverifiable claims are flagged, not dropped.** If a claim cannot be bound, include it in `claims[]` with `evidence_type: "reference"` and `evidence.reference.url: ""` plus a `verify_note` explaining why it cannot be grounded. The human will decide whether to remove or rephrase.
+- **Unverifiable claims are flagged, not dropped.** If a claim cannot be bound, include it in `claims[]` with `evidence_type: "unverifiable"` and a `verify_note` explaining why it cannot be grounded. The human will decide whether to remove or rephrase.
 
 ---
 
@@ -35,7 +35,7 @@ The Inspector is the final quality gate before the narrative is delivered. It re
 | `narrative-output/report.md`      | Finished narrative report from the Editor/orchestrator                     |
 | `narrative-output/analyst.json`   | Findings with code file + line references from the Analyst                 |
 | `narrative-output/detective.json` | Context items with source URLs from the Detective                          |
-| `narrative-output/editor.md`      | Editorial outline — used to confirm which findings made it into the report |
+| `narrative-output/editor.md`      | Editorial outline - used to confirm which findings made it into the report |
 | `narrative-output/analyst/`       | Actual Python scripts produced by the Analyst                              |
 
 ---
@@ -58,8 +58,9 @@ Assign each a `claim_id` in the format `claim-001`, `claim-002`, etc. (zero-padd
 For each extracted claim, search `analyst.json` for the finding that produced it. When found:
 
 - Set `evidence_type: "code"` (or `"both"` if also reference-backed)
+- Before recording `evidence.code.script`, confirm the referenced script file exists in `narrative-output/analyst/`. If the file is absent, treat the claim as unverifiable and set `evidence_type: "unverifiable"` with `verify_note: "Analyst script path referenced in analyst.json does not exist: <path>."`
 - Set `evidence.code.script` to the relative path of the Python script in `narrative-output/analyst/`
-- Set `evidence.code.line_start` / `line_end` to the lines in that script where the result is computed
+- Set `line_start` to the first line of the block that begins computing the reported value (e.g., the opening of a groupby or filter chain), and `line_end` to the line containing the final assignment to `result_variable`. Do not include import statements or unrelated setup lines.
 - Set `evidence.code.result_variable` to the variable that holds the reported value
 
 ### Step 3: Bind to Detective References
@@ -76,7 +77,7 @@ Any claim that has no matching Analyst finding and no matching Detective source:
 
 - Mark `evidence_type: "reference"` and set `evidence.reference.url: ""`
 - Set `verified: null`
-- Write `verify_note: "No upstream evidence found — consider rephrasing or removing this claim."`
+- Write `verify_note: "No upstream evidence found - consider rephrasing or removing this claim."`
 
 ### Step 5: Write inspector.json
 
@@ -101,7 +102,7 @@ Required fields:
 }
 ```
 
-Leave `summary: null` — `verify_claims.py` populates this when the human runs verification.
+Leave `summary: null` - `verify_claims.py` populates this when the human runs verification.
 
 ### Step 6: Append Provenance Footer to report.md
 
@@ -118,13 +119,13 @@ To verify all claims, run:
 ```
 
 ```bash
-python skills/data-narrative/inspector/scripts/verify_claims.py \
+python ~/.copilot/skills/data-narrative/inspector/scripts/verify_claims.py \
     --inspector narrative-output/inspector.json
 ```
 
 ```markdown
 Full provenance manifest: `narrative-output/inspector.json`
-Schema: `skills/data-narrative/inspector/references/output-schema.json`
+Schema: `~/.copilot/skills/data-narrative/inspector/references/output-schema.json`
 ```
 
 ---
@@ -134,10 +135,10 @@ Schema: `skills/data-narrative/inspector/references/output-schema.json`
 | File                              | Description                                   |
 | --------------------------------- | --------------------------------------------- |
 | `narrative-output/inspector.json` | Provenance manifest (schema-compliant)        |
-| `narrative-output/report.md`      | Updated in place — Provenance footer appended |
+| `narrative-output/report.md`      | Updated in place - Provenance footer appended |
 
 ---
 
 ## Coverage Target
 
-Aim to bind ≥ 80% of quantitative claims to code evidence. If coverage falls below 60%, report which claims are unbound and why before finishing — the orchestrator may ask the Analyst to produce a missing script.
+Aim to bind ≥ 80% of quantitative claims to code evidence. If coverage falls below 60%, report which claims are unbound and why before finishing - the orchestrator may ask the Analyst to produce a missing script.

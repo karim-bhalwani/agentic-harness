@@ -15,12 +15,21 @@ metadata:
 
 > **Pipeline position**: **explore** (1 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> `implementer`. This skill produces aligned understanding, NOT a spec, NOT a plan, NOT code.
 
+## Mode Entry-Point Check
+
+At the start of each session, determine the operating mode by asking: Does the user have a concrete proposal with defined components and a proposed approach?
+
+- **Yes** → State "Entering stress-test mode" and proceed with stress-test mode rules.
+- **No** → State "Entering open exploration mode" and proceed with open exploration.
+
 ## Dependencies
 
 Load the following via `read_file` before using this skill. Skills marked ★ have `disable-model-invocation: true` and cannot self-invoke - they **must** be loaded explicitly.
 
-- `skills/thinker/SKILL.md` ★ - structured reasoning scaffold
-- `skills/concise-planning/SKILL.md` - atomic checklist output format
+- `~/.copilot/skills/thinker/SKILL.md` ★ - structured reasoning scaffold
+- `~/.copilot/skills/concise-planning/SKILL.md` - atomic checklist output format
+
+If a required skill file cannot be loaded, notify the user immediately with the exact missing path and halt. Do not proceed without the thinker skill loaded, as it is required for structured reasoning.
 
 ---
 
@@ -47,8 +56,8 @@ Load the following via `read_file` before using this skill. Skills marked ★ ha
 
 - Focus on design and architecture only
 - Validate design incrementally with stakeholder
-- Explore 2-3 alternatives before settling
-- Pass approved designs to `architect` or `implementer`
+- Explore exactly three alternatives with trade-offs before settling
+- Pass approved designs to `architect`
 
 ---
 
@@ -91,7 +100,7 @@ When the user has a specific plan or design to stress-test (not a fuzzy idea but
 
 ### Presenting the design
 
-- Once you believe you understand what you're building, present the design
+- When all questions from the decision tree are resolved and the user has confirmed the scope, present the design in sections
 - Break it into sections of 200-300 words
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
@@ -110,6 +119,8 @@ Before presenting the finished design for user approval, run this 4-check self-r
 
 Only after passing all four checks: present the design to the user and wait for approval.
 
+If the user rejects the design, ask one clarifying question to identify the specific point of disagreement, revise only the affected section, re-run the Spec Self-Review for that section, and re-present. Do not restart the full design from scratch unless the user explicitly requests it.
+
 ### Documentation
 
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
@@ -120,14 +131,14 @@ Only after passing all four checks: present the design to the user and wait for 
 
 - Ask: "Ready to set up for implementation?"
 - Create an isolated workspace (e.g., git worktree) for implementation
-- Create a detailed implementation plan using the concise-planning skill
+- Hand off to the `architect` skill to produce a formal specification, then to `concise-planning` for the implementation checklist
 
 ## Key Principles
 
 - **One question at a time, with your recommendation** - State your assumption or preferred answer first; the user confirms or redirects
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
+- **Explore alternatives** - Always propose exactly three approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
 
@@ -136,7 +147,7 @@ Only after passing all four checks: present the design to the user and wait for 
 - **Primary Output**: Design document (markdown) with architecture, components, data flow, and error handling
 - **Secondary Output**: Validated design sections with stakeholder approval
 - **Success Criteria**: Stakeholders agree design is buildable and complete
-- **Quality Gate**: Design ready for handoff to `implementer`
+- **Quality Gate**: Design ready for handoff to `architect`
 
 ## Definition of Done
 
@@ -144,7 +155,7 @@ Only after passing all four checks: present the design to the user and wait for 
 - [ ] All design sections validated incrementally with stakeholder
 - [ ] 2-3 approaches explored with trade-off analysis before final selection
 - [ ] Acceptance criteria are specific and measurable
-- [ ] Design is ready for handoff to `architect` or `implementer`
+- [ ] Design is ready for handoff to `architect`
 
 ## Constraints
 

@@ -18,13 +18,13 @@ Unified reference for data pipeline design, implementation, and optimization. Co
 
 ## Behavioral Directives
 
-- **One clear approach**: recommend a single implementation path. Present alternatives only when they meet performance benchmarks within 10% of the primary recommendation and have distinct tradeoffs (e.g., latency vs. cost, complexity vs. maintainability). Do NOT list anti-patterns as options.
+- **One clear approach**: recommend a single implementation path. Present alternatives only when you can cite a concrete, measurable tradeoff (e.g., 2x higher latency but 50% lower cost) supported by the user's stated requirements. Do not present alternatives based on general performance assumptions. Do NOT list anti-patterns as options.
 - **Discovery before implementation**: before writing pipeline code, verify: source schema shape, target write mode, partition strategy, and idempotency guarantees.
 - **Fail fast, explain clearly**: error messages from validators and quality checks must double as remediation instructions for the next agent or human.
 
 ## Pipeline Routing Guide
 
-Answer these four questions in order to determine the correct pattern:
+Answer these four questions in order to determine the correct pattern. If the pipeline spans multiple transformation scopes (e.g., both Silver and Gold), address each layer separately in order. If the request is ambiguous about scope, ask one clarifying question before proceeding.
 
 ### 1. What is your data source type?
 
@@ -52,6 +52,8 @@ Answer these four questions in order to determine the correct pattern:
 - **Monitoring & alerting** → Add row count / null rate / freshness checks on Gold layer
 
 ### Streaming Patterns
+
+> **Architecture approval required**: these patterns are reference material only. Do NOT implement real-time streaming without explicit architecture approval. If the user requests streaming help, confirm approval exists before providing implementation guidance.
 
 - **File ingestion** (cloud storage) → Use Auto Loader or Spark Structured Streaming
 - **CDC or change feed** → Use MERGE with sequence column for deterministic ordering
@@ -164,7 +166,7 @@ Core rules: idempotent tasks (re-runnable without side effects), `execution_date
 
 - Does NOT manage cloud infrastructure (use ops skill for IaC)
 - Does NOT build ML model training pipelines (use ai-engineer agent)
-- Does NOT handle real-time streaming without explicit architecture approval
+- Does NOT implement real-time streaming without explicit architecture approval (see Streaming Patterns section for reference patterns that require this approval)
 - Does NOT skip schema validation even for exploratory pipelines
 
 ## Common Traps
@@ -194,7 +196,7 @@ Core rules: idempotent tasks (re-runnable without side effects), `execution_date
 
 ## References
 
-Load these on demand for deep-dive guidance. Read the relevant reference before writing code for that domain.
+Load these on demand for deep-dive guidance. Read the relevant reference before writing code for that domain. If a reference file cannot be loaded, state which file is missing and provide guidance based only on the patterns documented in this skill file. Do not fabricate content from unavailable references.
 
 ### Reference Guides
 

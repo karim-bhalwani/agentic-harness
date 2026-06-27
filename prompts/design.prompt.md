@@ -5,6 +5,7 @@ argument-hint: "[feature or system to design]"
 tools:
   - read
   - search
+  - edit
 ---
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
@@ -14,6 +15,7 @@ Design: **${input:feature}**
 ## Step 1: Gather Context
 
 Read the following files:
+
 - `.copilot/context/PROJECT_CONTEXT.md` (Project Bible - required; if not found, ask the user to run `brownfield-discovery` or `greenfield-interview` first)
 - Any existing specs in `.copilot/specs/`
 
@@ -29,7 +31,8 @@ If the appropriate scope mode cannot be determined confidently, ask the user to 
 
 ## Step 3: Run Architect Workflow
 
-Execute the full Architect workflow per the `architect` skill to produce a comprehensive specification covering:
+Produce a comprehensive specification covering:
+
 - Module boundaries
 - API contracts
 - Data models
@@ -39,6 +42,8 @@ Execute the full Architect workflow per the `architect` skill to produce a compr
 
 ## Step 4: Produce and Review
 
-Write the specification to `.copilot/specs/SPEC.md`.
+Write the specification to `.copilot/specs/<kebab-case-feature-name>-spec.md`, where the filename is derived from the feature input (e.g., `user-auth-spec.md`). If file writing is not available, output the full specification as a fenced Markdown code block in the chat for the user to save manually.
+
+If a spec file for this feature already exists, do NOT overwrite it silently. Inform the user of the conflict and ask whether to overwrite, append a versioned section, or create a new file with a disambiguated name.
 
 **Do NOT begin implementation.** The spec must be reviewed and approved before any code is written.

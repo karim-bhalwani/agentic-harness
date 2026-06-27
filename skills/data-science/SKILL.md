@@ -20,10 +20,10 @@ Unified reference for exploratory data analysis, statistical inference, predicti
 
 - **Problem before model**: never train a model before the business question, success metric, and data quality are confirmed. A 99% accurate model on the wrong question is worthless.
 - **EDA before modeling**: always profile distributions, missingness, and outliers before feature engineering. Skipping EDA leaks bugs into every downstream step.
-- **Validation over fit**: report cross-validated metrics, never just train-set scores. Hold out a test set untouched until the final evaluation.
-- **One clear approach**: recommend a single algorithm path with rationale. Present an alternative only when both conditions are true: (a) the primary evaluation metric (e.g., AUC-ROC for classification, RMSE for regression - use whatever metric was agreed for the task) differs by less than 5 percentage points in absolute terms, and (b) one model is natively interpretable (linear/logistic/decision tree) while the other is not (ensemble/neural net).
+- **Validation over fit**: report cross-validated metrics, never just train-set scores. Use CV mean score as the iteration signal; hold out a test set untouched until the final evaluation (evaluated exactly once, after the keep/discard loop is complete).
+- **One clear approach**: recommend a single algorithm path with rationale. Present an alternative to the user only when both conditions are true: (a) the primary evaluation metric (e.g., AUC-ROC for classification, RMSE for regression - use whatever metric was agreed for the task) differs by less than 5 percentage points in absolute terms (this governs whether to surface an alternative model to the user; it is separate from the 0.002 tie tolerance used for iteration keep/discard decisions in the Fixed Evaluation Harness), and (b) one model is natively interpretable (linear/logistic/decision tree) while the other is not (ensemble/neural net).
 - **One change per iteration**: when iterating to improve a model, change exactly ONE category at a time (features OR algorithm OR hyperparameters OR preprocessing). Multi-variable changes destroy the learning signal: you cannot tell which change moved the score.
-- **Simplicity tie-breaker**: when two model candidates produce equal scores within tolerance, the simpler one wins. A 0.001 improvement that adds 50 lines of preprocessing is not worth it. A 0.001 drop from removing 50 lines of preprocessing is a clear win.
+- **Simplicity tie-breaker**: when two model candidates produce equal scores within tolerance, the simpler one wins. See the Simplicity tie-breaker rules in the Fixed Evaluation Harness section for exact thresholds and examples.
 - **Notebook for exploration, script for production**: use Jupyter cells for EDA and model experimentation; convert to clean `.py` modules for reproducible artifacts.
 
 ## Workflow Routing Guide
@@ -91,6 +91,8 @@ The non-negotiable profiling sequence before any modeling:
 5. **Correlations**: pairwise correlations for numerics; flag |r| > 0.9 for multicollinearity
 6. **Target leakage check**: any feature suspiciously correlated with target (|r| > 0.95) is likely leaked
 7. **Class balance** (classification only): document target distribution; flag minority class < 10%
+
+> If the dataset has already been split or partially processed, explicitly audit what transformations have been applied, whether split happened before or after those transformations, and whether EDA was performed on the full dataset or only the training fold. Document findings before proceeding.
 
 > Full EDA checklist with code patterns and visualization recipes: [references/eda-reference.md](./references/eda-reference.md)
 
@@ -198,12 +200,14 @@ If the test set or metric changes, all prior scores become incomparable. Treat t
 
 After every iteration:
 
-| Outcome                                                    | Decision                      |
-| ---------------------------------------------------------- | ----------------------------- |
-| Test score improves beyond tie tolerance (default 0.002)   | **Keep**                      |
-| Test score equal within tolerance AND candidate is simpler | **Keep** (simplification win) |
-| Test score equal within tolerance, no simplification       | **Discard**                   |
-| Test score degrades beyond tie tolerance                   | **Discard**                   |
+| Outcome                                                       | Decision                      |
+| ------------------------------------------------------------- | ----------------------------- |
+| CV mean score improves beyond tie tolerance (default 0.002)   | **Keep**                      |
+| CV mean score equal within tolerance AND candidate is simpler | **Keep** (simplification win) |
+| CV mean score equal within tolerance, no simplification       | **Discard**                   |
+| CV mean score degrades beyond tie tolerance                   | **Discard**                   |
+
+> The held-out test set is evaluated exactly once after the keep/discard loop is complete, consistent with the Validation over fit directive.
 
 "Simpler" means: fewer features, fewer preprocessing steps, smaller hyperparameter footprint, or removing custom code. A 0.001 drop from deleting 50 lines of preprocessing is a clear keep. A 0.001 gain from adding 50 lines is a clear discard.
 
@@ -273,7 +277,7 @@ When a model underperforms, classify the failure before changing anything. The 6
 - Building classification or regression models
 - Forecasting time series (sales, demand, KPIs)
 - Designing or analyzing A/B experiments
-- Reviewing a colleague's analysis or model
+- Reviewing a colleague's statistical methodology, model choices, or experiment design for correctness (not code style - use guardian for code review)
 
 ## Constraints
 

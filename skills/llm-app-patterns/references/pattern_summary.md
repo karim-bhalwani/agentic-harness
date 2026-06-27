@@ -9,5 +9,3 @@ Components:
 - Prompt template with context window
 
 When to use: answering factual questions from private docs.
-
-

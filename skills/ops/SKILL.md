@@ -32,7 +32,7 @@ Unified reference for operational automation. For copy-ready templates (GitHub A
 1. **Trigger**: behavioral rule caused rework 2+ times
 2. **Action**: write a mechanical check (pre-commit hook, lint rule, or CI job)
 3. **Record**: log in `.copilot/context/DECISIONS.md` as an ADR
-4. **Remove redundancy**: mechanical enforcement becomes primary; prompt instruction becomes documentation
+4. **Remove redundancy**: move the original prompt instruction verbatim into `.copilot/context/DECISIONS.md` under the relevant ADR entry, then delete it from the prompt.
 
 ### Enforcement Layers
 
@@ -112,7 +112,7 @@ For full templates and examples of all patterns above, load [cicd-patterns-deep-
 
 ## References
 
-Load on demand for specific sub-tasks:
+Load on demand for specific sub-tasks. If a referenced file is not available, generate a minimal inline template based on the Quick Reference patterns above and note that the full template should be added to the references directory.
 
 - [cicd-patterns-deep-dive.md](./references/cicd-patterns-deep-dive.md) - Full GitHub Actions templates (CI, reusable workflows, matrix, caching, PR automation), Docker patterns, deployment configs (Databricks, Azure), release management (semver, changelog, checklist), IaC (Terraform). **Load when building or modifying pipelines.**
 - [mechanical-enforcement.md](./references/mechanical-enforcement.md) - Pre-commit hooks, ruff rules, GitHub Actions enforcement workflows.

@@ -26,19 +26,23 @@ You are routing the developer to the next pipeline step. Do not write code or sp
    - This means Gate 0 has not been answered yet. Show the four Gate 0 buttons and the recommendation guidance from the spec's `Scope:` tag and deliverable count:
      - `Scope: HOLD` and the SPEC has at most 2 self-contained deliverables: recommend Build Direct (the appropriate specialist: Senior Dev for general features, Data Engineer for pipelines, AI Engineer for LLM/RAG).
      - `Scope: HOLD` with 3+ deliverables, or `Scope: EXPANSION` / `REDUCTION`: recommend `Approve: Plan Phase` (routes to `@story-master`).
-     - feature-plan.prompt.md was the entry point (no SPEC at all): use `@senior-developer` directly.
    - STOP.
 
-4. STORIES.md exists. Check `.copilot/stories/.active-story` (or the `STORY_ID` env var if set in the current shell):
-   - No active story (file missing and env unset): tell the developer to pick a story from STORIES.md and either set `STORY_ID=US-XX` or write the ID into `.active-story`.
-   - If `.active-story` is malformed or contains invalid data (e.g., empty, invalid ID format, or nonexistent story): notify the developer with an error message and suggest correcting the file to a valid story ID from STORIES.md.
-   - Active story is set. Check `.copilot/stories/$storyId-PLAN.md`:
-     - Plan missing: recommend `@story-planner` (no argument; it reads `.active-story` or `STORY_ID`). Mention that this is Gate 2 prep.
-     - Plan exists. Check the plan's task checkboxes and the report at `.copilot/stories/reports/$storyId-report.md`:
-       - Tasks unchecked: recommend the BUILD agent listed in the plan's `**Builder:**` field (default: Senior Developer). Tell the developer to set the story's `Status` to `in-progress` in STORIES.md if not already.
-       - Tasks all checked, no report: recommend the same BUILD agent to write the report (US-{id}-report.md per `enhancement.md` section 3.3 schema).
-       - Tasks all checked, report exists, validation PASS: recommend `@guardian` for review (or directly `@release-manager` if Guardian already ran), which then triggers `@close-story`.
-   - STOP.
+4. STORIES.md exists. Work through the following sub-steps in order; STOP at the first condition that matches.
+
+   4a. Check `.copilot/stories/.active-story` (or the `STORY_ID` env var). If no active story (file missing and env unset): tell the developer to pick a story from STORIES.md and either set `STORY_ID=US-XX` or write the ID into `.active-story`. STOP.
+
+   4b. If `.active-story` is malformed or contains invalid data (e.g., empty, invalid ID format, or nonexistent story): notify the developer with an error message and suggest correcting the file to a valid story ID from STORIES.md. STOP.
+
+   4c. Active story is set. Check `.copilot/stories/$storyId-PLAN.md`. If the plan is missing: recommend `@story-planner` (no argument; it reads `.active-story` or `STORY_ID`). Mention that this is Gate 2 prep. STOP.
+
+   4d. Plan exists. Check the plan's task checkboxes. If any tasks are unchecked: recommend the BUILD agent listed in the plan's `**Builder:**` field (default: Senior Developer). Tell the developer to set the story's `Status` to `in-progress` in STORIES.md if not already. STOP.
+
+   4e. All tasks are checked. Check `.copilot/stories/reports/$storyId-report.md`. If the report is missing: recommend the same BUILD agent to write the report (US-{id}-report.md per the schema defined in `.copilot/guides/enhancement.md`, section 3.3). STOP.
+
+   4f. Report exists. Check the report's validation result. If validation FAIL: tell the developer which tasks or checks failed (per the report) and recommend re-running the BUILD agent to address the failures before proceeding. STOP.
+
+   4g. Report exists and validation PASS. Check whether `.copilot/stories/reports/$storyId-guardian-review.md` exists. If it does not exist: recommend `@guardian` for review, which then triggers `@close-story`. If it does exist: recommend `@release-manager` directly, which then triggers `@close-story`. STOP.
 
 ## Output format
 

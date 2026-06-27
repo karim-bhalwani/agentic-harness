@@ -66,6 +66,8 @@ This creates only what is missing; it never overwrites existing files:
 
 Verify structure at any time with `uv run ~/.copilot/skills/llm-mem/scripts/verify_mem.py`. The verifier also surfaces raw files that have no matching mem coverage (use `--strict` to fail on uncovered raw files in CI contexts).
 
+If the scaffold script fails or cannot be run, manually create the directory structure: create `llmmem/raw/` and `llmmem/mem/` directories, create `llmmem/mem/index.md` with heading `# Knowledge Base Index` and empty body, and create `llmmem/mem/log.md` with heading `# mem Log` and empty body. Inform the user that manual initialization was used.
+
 If Query or Lint runs before any mem exists, tell the user: "Run an ingest first to initialize the mem." Do not auto-create.
 
 ---
@@ -76,7 +78,7 @@ Fetch a source into `llmmem/raw/`, then compile it into `llmmem/mem/`. Always bo
 
 ### Step 1: Fetch (llmmem/raw/)
 
-1. Get the source content. Accept URLs (fetch via tools), local files (read), or pasted text.
+1. Get the source content. Accept URLs (fetch via tools), local files (read), or pasted text. If fetching a URL fails, stop the ingest and inform the user: "Could not retrieve <URL> - reason: <error>. Please paste the content directly or provide a local file path, then retry." Do not create a partial raw file.
 2. Pick a topic directory. Reuse existing `llmmem/raw/` subdirectories when the topic overlaps. Create a new subdirectory only for genuinely distinct topics.
 3. Save as `llmmem/raw/<topic>/YYYY-MM-DD-descriptive-slug.md`.
    - Slug from source title, kebab-case, max 60 characters.
@@ -95,7 +97,7 @@ Determine where new content belongs:
 - **New concept** → Create a new article in the most relevant topic directory. Name the file after the concept, not the raw file.
 - **Spans multiple topics** → Place in the most relevant directory. Add See Also cross-references to related articles elsewhere.
 
-These are not mutually exclusive. A single source may merge into one article while also creating a new article for a distinct concept it introduces.
+These are not mutually exclusive. A single source may merge into one article while also creating a new article for a distinct concept it introduces. When a source triggers multiple compile actions, handle them in this order: (1) identify all concepts in the source, (2) for each concept independently apply the merge/create/span-multiple decision, (3) list all resulting article actions before writing any file, (4) execute each action in sequence.
 
 **Conflict handling**: If the new source contradicts existing content, annotate the disagreement with source attribution. When merging, note the conflict inline. When the conflict lives in separate articles, note it in both and cross-link.
 
@@ -105,7 +107,7 @@ See [article-template.md](./references/article-template.md) for article format.
 
 After the primary article, check for ripple effects:
 
-1. Scan articles in the same topic directory for content affected by the new source.
+1. Scan articles in the same topic directory. Update any article whose factual claims, recommendations, or cross-references are directly contradicted, extended, or superseded by the new source. Skip articles that are merely thematically related but not factually affected.
 2. Scan `llmmem/mem/index.md` entries in other topics for articles covering related concepts.
 3. Update every article whose content is materially affected. Refresh each file's Updated date.
 
@@ -121,7 +123,7 @@ After the primary article, check for ripple effects:
 - Updated: <cascade-updated article titles>
 ```
 
-3. Discuss key takeaways with the user before proceeding (unless batch-ingesting).
+3. Discuss key takeaways with the user before proceeding (unless the user explicitly provided multiple sources to ingest in a single request - in that case, complete all ingests first, then discuss takeaways for all sources together at the end).
 
 ---
 
@@ -254,7 +256,7 @@ When starting a task, agents SHOULD check if `llmmem/mem/index.md` exists and re
 - In conversation output, use project-root-relative paths (e.g., `llmmem/mem/topic/article.md`).
 - Ingest updates both `llmmem/mem/index.md` and `llmmem/mem/log.md`.
 - Archive (from Query) updates both.
-- Lint updates `llmmem/mem/log.md` (and `llmmem/mem/index.md` only when auto-fixing index entries).
+- Lint updates `llmmem/mem/log.md`, `llmmem/mem/index.md` (when auto-fixing index entries), and article body files (when auto-fixing See Also links).
 - Plain queries do not write any files.
 - The mem lives in the **project repo**, not the skills repo. It is committed to Git and shared with the team.
 

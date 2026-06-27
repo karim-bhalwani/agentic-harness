@@ -1,6 +1,6 @@
 ---
 name: data-narrative
-description: "Turns a raw dataset into a structured, evidence-grounded Markdown report where every claim traces back to the code or source that produced it. Orchestrates four specialist roles: Detective (external context), Analyst (exhaustive data profiling via data-science skill), Editor (narrative angle + report.md), and Inspector (provenance binding → inspector.json). USE FOR: any dataset-to-report workflow where auditability and claim traceability matter — analytical briefings, stakeholder reports, data-backed narratives. DO NOT USE FOR: SQL querying (use data-analyst), pipeline construction (use data-engineering), standalone EDA without a deliverable (use data-science), or architecture diagrams (use excalidraw-diagram)."
+description: "Turns a raw dataset into a structured, evidence-grounded Markdown report where every claim traces back to the code or source that produced it. Orchestrates four specialist roles: Detective (external context), Analyst (exhaustive data profiling via data-science skill), Editor (narrative angle + report.md), and Inspector (provenance binding → inspector.json). USE FOR: any dataset-to-report workflow where auditability and claim traceability matter - analytical briefings, stakeholder reports, data-backed narratives. DO NOT USE FOR: SQL querying (use data-analyst), pipeline construction (use data-engineering), standalone EDA without a deliverable (use data-science), or architecture diagrams (use excalidraw-diagram)."
 argument-hint: "[path to dataset, e.g. data/sales.csv or data/]"
 license: MIT
 compatibility: "VS Code"
@@ -16,7 +16,7 @@ metadata:
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 > Deps: data-science (Analyst), security-boundaries (Detective), verification-before-completion (Inspector gate)
 
-Turns a raw dataset into a `report.md` where every claim is evidence-traced. Four sequential roles run as a fixed pipeline; each role reads what the previous one produced. The pipeline always runs in full — there are no skip-ahead paths.
+Turns a raw dataset into a `report.md` where every claim is evidence-traced. Four sequential roles run as a fixed pipeline; each role reads what the previous one produced. The pipeline always runs in full - there are no skip-ahead paths.
 
 ---
 
@@ -35,13 +35,13 @@ Turns a raw dataset into a `report.md` where every claim is evidence-traced. Fou
 Load these before starting:
 
 ```
-skills/data-narrative/detective/SKILL.md      — before running Detective
-skills/data-narrative/analyst/SKILL.md        — before running Analyst
-skills/data-narrative/editor/SKILL.md         — before running Editor
-skills/data-narrative/inspector/SKILL.md      — before running Inspector
-skills/data-science/SKILL.md                  — loaded by Analyst role
-skills/security-boundaries/SKILL.md           — loaded by Detective role
-skills/verification-before-completion/SKILL.md — loaded at Inspector gate
+~/.copilot/skills/data-narrative/detective/SKILL.md      - before running Detective
+~/.copilot/skills/data-narrative/analyst/SKILL.md        - before running Analyst
+~/.copilot/skills/data-narrative/editor/SKILL.md         - before running Editor
+~/.copilot/skills/data-narrative/inspector/SKILL.md      - before running Inspector
+~/.copilot/skills/data-science/SKILL.md                  - loaded by Analyst role
+~/.copilot/skills/security-boundaries/SKILL.md           - loaded by Detective role
+~/.copilot/skills/verification-before-completion/SKILL.md - loaded at Inspector gate
 ```
 
 ---
@@ -62,7 +62,7 @@ Before running any role, determine whether the input is a **single file** or a *
 
 1. List all `.csv` / `.xlsx` files in the folder (ignore hidden files and `__pycache__`)
 2. For each file, read column names and 5 sample rows
-3. Identify likely join keys: columns with the same name across files are join candidates — flag them
+3. Identify likely join keys: columns with the same name across files are join candidates - flag them
 4. Assess relationship type:
    - **Same schema, different periods** (e.g., `jan.csv`, `feb.csv`) → treat as a single concatenated dataset; Analyst should union before profiling
    - **Different schemas, shared key** (e.g., `orders.csv` + `customers.csv`) → treat as a relational dataset; Analyst should join on the shared key before profiling
@@ -74,16 +74,16 @@ Pass the full pre-flight record to the Detective so it has context about the ful
 #### Both cases
 
 - Create `narrative-output/` if it does not exist
-- Read `PROJECT_CONTEXT.md` if present — use domain constraints
+- Read `PROJECT_CONTEXT.md` if present - use domain constraints
 - Write `narrative-output/preflight.json` with the pre-flight record so every downstream role can read it
 
 If the dataset path is missing, unreadable, or relationship is `"unrelated"`, stop and ask the user before proceeding.
 
 ---
 
-### Role 1 — Detective
+### Role 1 - Detective
 
-**Load:** `skills/data-narrative/detective/SKILL.md`
+**Load:** `~/.copilot/skills/data-narrative/detective/SKILL.md`
 
 **Task:** Gather the external context that frames the dataset. Pass the Detective:
 
@@ -95,9 +95,9 @@ If the dataset path is missing, unreadable, or relationship is `"unrelated"`, st
 
 ---
 
-### Role 2 — Analyst
+### Role 2 - Analyst
 
-**Load:** `skills/data-narrative/analyst/SKILL.md` + `skills/data-science/SKILL.md`
+**Load:** `~/.copilot/skills/data-narrative/analyst/SKILL.md` + `~/.copilot/skills/data-science/SKILL.md`
 
 **Task:** Run exhaustive profiling of the dataset and produce a findings manifest where every finding is paired with a Python script.
 
@@ -107,13 +107,13 @@ If the dataset path is missing, unreadable, or relationship is `"unrelated"`, st
 - At least one Python script exists in `narrative-output/analyst/`
 - Every finding in `analyst.json` has a `code.script` that points to an existing file
 
-**Analyst → Editor handoff check:** If the Analyst finds no findings of `"significance": "high"`, surface this to the user before proceeding — the dataset may be too sparse to support a meaningful narrative.
+**Analyst → Editor handoff check:** If the Analyst finds no findings of `"significance": "high"`, surface this to the user before proceeding - the dataset may be too sparse to support a meaningful narrative.
 
 ---
 
-### Role 3 — Editor
+### Role 3 - Editor
 
-**Load:** `skills/data-narrative/editor/SKILL.md`
+**Load:** `~/.copilot/skills/data-narrative/editor/SKILL.md`
 
 **Task:** Select a single narrative angle and draft the report.
 
@@ -127,16 +127,16 @@ If the dataset path is missing, unreadable, or relationship is `"unrelated"`, st
 
 ---
 
-### Role 4 — Inspector
+### Role 4 - Inspector
 
-**Load:** `skills/data-narrative/inspector/SKILL.md` + `skills/verification-before-completion/SKILL.md`
+**Load:** `~/.copilot/skills/data-narrative/inspector/SKILL.md` + `~/.copilot/skills/verification-before-completion/SKILL.md`
 
 **Task:** Bind every claim in `report.md` to its upstream evidence and write the provenance manifest.
 
 **Done when:**
 
 - `narrative-output/inspector.json` exists and is schema-valid
-- ≥ 80% of quantitative claims are bound to code evidence
+- ≥ 80% of quantitative claims in `report.md` must be bound to a Python script in `narrative-output/analyst/` as their primary evidence source (evidence type: `code`). Claims sourced exclusively from `detective.json` may be tagged as evidence type `reference` and do not count toward the 80% threshold.
 - `report.md` has the Provenance footer appended by the Inspector
 
 **Verification gate:** After the Inspector writes `inspector.json`, confirm the file exists and contains a non-empty `claims[]` array. Report the claim count and evidence type distribution to the user.
@@ -158,7 +158,7 @@ Claims bound   : <n> total | <code_count> code evidence | <ref_count> reference 
 Analyst scripts: <count> scripts in narrative-output/analyst/
 
 To verify all claims:
-  python skills/data-narrative/inspector/scripts/verify_claims.py \
+  python ~/.copilot/skills/data-narrative/inspector/scripts/verify_claims.py \
       --inspector narrative-output/inspector.json
 ```
 
@@ -170,7 +170,7 @@ To verify all claims:
 | -------------------------------------- | ------------------ | --------------------------------------------------------------------- |
 | `narrative-output/detective.json`      | Detective          | External context items with source URLs                               |
 | `narrative-output/analyst.json`        | Analyst            | Findings manifest with code line references                           |
-| `narrative-output/analyst/*.py`        | Analyst            | Python scripts — one per finding group                                |
+| `narrative-output/analyst/*.py`        | Analyst            | Python scripts - one per finding group                                |
 | `narrative-output/analyst/plots/*.png` | Analyst            | Visualisations (if produced)                                          |
 | `narrative-output/editor.md`           | Editor             | Editorial outline: chosen angle + section plan                        |
 | `narrative-output/report.md`           | Editor + Inspector | Final narrative report with Provenance footer                         |
@@ -180,11 +180,12 @@ To verify all claims:
 
 ## Error Handling
 
-| Situation                                         | Action                                                               |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
-| Dataset not found                                 | Stop, ask user for correct path                                      |
-| Detective finds no context (0 items)              | Warn and continue — Editor will note "no external context available" |
-| Analyst finds no high-significance findings       | Stop, present findings list to user, ask whether to proceed          |
-| Editor needs a number the Analyst did not compute | Re-task Analyst before writing report.md                             |
-| Inspector cannot bind a claim to evidence         | Flag in inspector.json as unbound; do not fabricate evidence         |
-| Inspector coverage < 60%                          | Report the gap to the user before declaring complete                 |
+| Situation                                                          | Action                                                                                                                                                        |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dataset not found                                                  | Stop, ask user for correct path                                                                                                                               |
+| Detective finds no context (0 items)                               | Warn and continue - Editor will note "no external context available"                                                                                          |
+| Analyst finds no high-significance findings                        | Stop, present findings list to user, ask whether to proceed                                                                                                   |
+| Editor needs a number the Analyst did not compute                  | Re-task Analyst before writing report.md                                                                                                                      |
+| Analyst re-tasked more than 2 times for the same missing statistic | Stop, report the statistic that cannot be produced and the reason, and ask the user whether to omit that claim from the report or provide the value manually. |
+| Inspector cannot bind a claim to evidence                          | Flag in inspector.json as unbound; do not fabricate evidence                                                                                                  |
+| Inspector coverage < 60%                                           | Report the gap to the user before declaring complete                                                                                                          |

@@ -13,13 +13,17 @@ tools:
 
 Data science task: **${input:task}**
 
+## Skill Load
+
+Load `~/.copilot/skills/data-science/SKILL.md` via `read_file` before taking any other action. If `~/.copilot/skills/data-science/SKILL.md` cannot be read, stop and respond: "Skill file not found at ~/.copilot/skills/data-science/SKILL.md. Please ensure the file exists before continuing." Do not proceed without it.
+
 ## Pre-task Validation
 
-If the task description is ambiguous or missing critical context, ask for clarification before proceeding:
+If the task description is ambiguous or missing critical context, ask only for the following before proceeding. Do not ask persona-specific questions (e.g., AUC vs. RMSE tradeoffs) until after the skill is loaded:
 
-- **No dataset provided**: ask where the data lives (file path, database table, or API endpoint) and what the target variable is (for modeling tasks).
-- **No business question**: ask what decision this analysis will inform - "improve the model" is not a business question.
-- **Evaluation metric unclear**: for modeling tasks, ask what success looks like (AUC? RMSE? Precision at K?). For experiments, ask what the primary metric and minimum detectable effect are.
+- **Dataset location**: where the data lives (file path, database table, or API endpoint).
+- **Business question**: what decision this analysis will inform.
+- **Success metric**: what a good outcome looks like (e.g., AUC, RMSE, Precision at K, or minimum detectable effect for experiments).
 
 ## Context to Load
 
@@ -27,11 +31,11 @@ Before starting:
 
 - Check `.copilot/context/PROJECT_CONTEXT.md` for project constraints, data ownership, and previously agreed conventions.
 - Check `.copilot/specs/SPEC.md` if a spec exists (use it as the source of truth for feature definitions, target variable, and acceptance criteria).
-- Check `.copilot/artifacts/` for prior EDA reports, experiment logs, or model evaluation reports on the same dataset - do not repeat work already done.
+- Check `.copilot/artifacts/` for prior EDA reports, experiment logs, or model evaluation reports on the same dataset. If a prior artifact covers the same dataset and question, summarize what was found and explicitly state which steps you are skipping and why. If the prior artifact is more than 30 days old or the dataset has changed, treat it as stale and redo the relevant steps.
 
 ## Workflow
 
-Load `skills/data-science/SKILL.md` via `read_file`. The skill is the single source of truth for:
+The skill loaded above is the single source of truth for:
 
 - Persona selection decision tree (EDA Analyst / Modeling Engineer / Forecaster / Experimenter / Model Optimizer)
 - Leakage prevention rules (split before engineering, no future features, target isolation)

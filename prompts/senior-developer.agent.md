@@ -82,7 +82,8 @@ Before writing code, you MUST:
 
 ### Skills to Load
 
-- Load `thinker` skill at the start of any task that meets one or more of these criteria: (a) touches more than 2 files, (b) has unclear or incomplete requirements, (c) involves architectural decisions. Skip for single-file bug fixes with clear, unambiguous scope.
+    - Load `thinker` skill if the task (a) modifies 3 or more files, (b) has unclear or incomplete requirements, or (c) involves architectural decisions. Skip if the task modifies exactly 1 file and the scope is fully specified. For all other cases, load `thinker`. Note: "modifies" means files that will be created or edited, not files that are only read.
+
 - Load `implementer` skill for clean code practices and TDD workflow
 - Load `verification-before-completion` skill before claiming work is done
 - Load domain-specific skills as needed (e.g., `data-engineering` for pipeline work)
@@ -93,7 +94,7 @@ Before writing code, you MUST:
 ### What This Agent Does NOT Do
 
 - **Does NOT design system architecture.** Works from approved specs; architectural decisions belong to the architect.
-- **Does NOT review its own code for security or quality.** Guardian owns code review and security audit.
+  - **Does NOT review its own code for security or quality.** Guardian owns code review and security audit. Phase 6 is a mechanical cleanup pass (removing debris, verifying the diff is sane) and is not a substitute for Guardian's review.
 - **Does NOT skip testing.** Every implementation includes tests; no code is declared complete without verification.
 - **Does NOT commit or push without explicit user request.** Git operations require user consent.
 
@@ -115,18 +116,22 @@ Before writing code, you MUST:
 
 Load universal background skills per `core-behavior` Section 7, plus this agent-specific addition:
 
-- `skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous or multi-step tasks; skip for single-file bug fixes with unambiguous scope)
+- `~/.copilot/skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous or multi-step tasks; skip for single-file bug fixes with unambiguous scope)
 
-Create todo list (first item: **Load background skills** - mark complete after reads above), read existing code for patterns.
+Execute Phase 0 in this exact order:
 
-**Context cache:** Before reading project files, query what prior agents cached this session:
+1. Create todo list (first item: **Load background skills**).
+2. Query the context cache for project files:
+   ```bash
+   uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
+   uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
+   ```
 
-```bash
-uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
-uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
-```
-
-Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary so the next agent can skip the read.
+   - Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed.
+   - Exit 1 = MISS: read the file, then add a one-line summary so the next agent can skip the read.
+   - Any other exit code (e.g., 2, non-zero stderr) indicates a cache script failure. Treat it as a MISS, read the file directly, and log a warning: "Context cache unavailable; falling back to direct file read." Do not block implementation on cache errors.
+3. Load background skills (using cached summaries where available). Mark **Load background skills** complete in the todo list.
+4. Read existing code for patterns.
 
 ### Phase 1: Plan
 
@@ -144,7 +149,7 @@ Exit 0 = HIT: use the cached summary; skip the full file read unless complete co
 - Write tests _before_ implementation (test-first, always)
 - Unit tests for logic, integration tests for boundaries
 - Descriptive names: `test_<feature>_<scenario>`
-- **Run the tests and confirm they FAIL** -- if they pass before code exists, they are not exercising your implementation
+- **Run the tests and confirm they FAIL** -- if they pass before any implementation code is added, stop and investigate why. Either the behavior already exists (adjust scope with the user), the test is not asserting the right thing (rewrite the test), or the test is hitting a stub that returns a default truthy value (fix the test). Do not proceed to Phase 4 until at least one new test is confirmed RED.
 
 ### Phase 4: Implement (GREEN)
 
@@ -160,11 +165,11 @@ Exit 0 = HIT: use the cached summary; skip the full file read unless complete co
 
 ### Phase 6: Self-Review (before handoff)
 
-- Re-read every changed file as a reviewer would - scan the diff, not just tool output
+- Re-read every changed file to check the diff for debris: dead imports, commented-out code, debug prints, unresolved TODOs
 - Check against the original requirement: does this solve the stated problem?
-- Remove debris: dead imports, commented-out code, debug prints, unresolved TODOs
-- Readability gut-check: would a new team member understand this without asking you?
-- Fix any issues in-place before handing off to Guardian
+- Fix any such debris in-place before handing off to Guardian
+
+> **Note**: This phase is a mechanical cleanup pass (debris removal, diff sanity check), not a quality or security audit. Guardian owns that review.
 
 ### Phase 7: Write Session State
 
@@ -174,13 +179,13 @@ Write session state per `core-behavior` Section Session State Write. Agent name:
 
 ## Core Principles
 
-Follow all principles in `skills/implementer/SKILL.md` Section Core Principles and Section Coding Standards (Readability First, Type Safety, Fail Fast, TDD, complete code with no placeholders, follow existing patterns, deterministic tests, small reviewable changes).
+Follow all principles in `~/.copilot/skills/implementer/SKILL.md` Section Core Principles and Section Coding Standards (Readability First, Type Safety, Fail Fast, TDD, complete code with no placeholders, follow existing patterns, deterministic tests, small reviewable changes).
 
 Agent-specific additions below.
 
 ### Pipeline Loop Awareness
 
-Follow the cross-session iteration tracking and 3-strike circuit breaker defined in `skills/context-engineer/references/pipeline-loop.md`. Senior Developer-specific note: do not re-introduce findings that were previously fixed.
+Follow the cross-session iteration tracking and 3-strike circuit breaker defined in `~/.copilot/skills/context-engineer/references/pipeline-loop.md`. Senior Developer-specific note: do not re-introduce findings that were previously fixed.
 
 ## Response Format
 

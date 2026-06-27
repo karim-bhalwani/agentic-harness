@@ -18,9 +18,11 @@ metadata:
 
 Load the following via `read_file` before using this skill:
 
-- `skills/data-engineering/SKILL.md` - pipeline patterns, schema conventions, and Delta/dbt patterns referenced throughout deprecation analysis
-- `skills/data-analyst/SKILL.md` - T-SQL and Data Vault querying patterns used to probe access logs and dependency graphs
-- `skills/guardian/SKILL.md` - security and quality checks applied to deprecated object removal plans
+- `~/.copilot/skills/data-engineering/SKILL.md` - pipeline patterns, schema conventions, and Delta/dbt patterns referenced throughout deprecation analysis
+- `~/.copilot/skills/data-analyst/SKILL.md` - T-SQL and Data Vault querying patterns used to probe access logs and dependency graphs
+- `~/.copilot/skills/guardian/SKILL.md` - security and quality checks applied to deprecated object removal plans
+
+> **Dependency load failure**: If any dependency skill file cannot be loaded, halt and notify the user with the specific missing path (e.g., `~/.copilot/skills/guardian/SKILL.md` not found). Do not proceed with analysis until all dependencies are confirmed loaded, as missing context may produce incomplete risk or security assessments.
 
 ## When to Use This Skill
 
@@ -53,7 +55,7 @@ Use when:
 
 1. Identify access log sources (SQL Server Audit, Splunk, application logs, ODBC traces)
 2. Define key variables: Timestamp, Application_Name, Database_Object, User_Account, Query_Text
-3. Establish analysis time window (typically 6-24 months)
+3. Establish analysis time window (typically 12-24 months; minimum 12 months required for accurate tiering)
 4. Extract and normalize log data into analysis-ready format
 
 ### Phase 2: Dead Data Detection
@@ -61,11 +63,13 @@ Use when:
 1. Group access records by Database_Object
 2. Calculate Max_Access_Date (last access) for each object
 3. Assign tier based on access recency:
-   - **Ghost Tier**: No access in >18 months
-   - **Cold Tier**: No access in >12 months
-   - **Cool Tier**: No access in >6 months
-   - **Active**: Accessed within last 6 months
-4. Prioritize false negatives: Any access in 6 months = Active
+   - **Ghost Tier**: No access in strictly >18 months
+   - **Cold Tier**: No access in strictly >12 months and up to and including 18 months
+   - **Cool Tier**: No access in strictly >6 months and up to and including 12 months
+   - **Active**: Accessed within the last 6 months (including exactly 6 months ago)
+   - **Unobserved**: Present in current catalog but no log entries in the analysis window - flag for manual review (see Analysis Standards)
+4. Boundary rule: Use strict greater-than for upper bounds. An object last accessed exactly 6 months ago is Active. An object last accessed exactly 12 months ago is Cold. An object last accessed exactly 18 months ago is Cold (not Ghost). Ghost requires strictly more than 18 months with no access.
+5. Prioritize false negatives: Any access in 6 months = Active
 
 ### Phase 3: Legacy Pattern Recognition
 
@@ -97,22 +101,25 @@ Use when:
 
 ### Tiering Thresholds
 
-| Tier   | Last Access | Risk Level              | Action                          |
-| :----- | :---------- | :---------------------- | :------------------------------ |
-| Ghost  | >18 months  | Low (safe to deprecate) | Archive and remove              |
-| Cold   | >12 months  | Medium                  | Flag for review, contact owners |
-| Cool   | >6 months   | Medium-High             | Monitor, investigate usage      |
-| Active | <6 months   | N/A                     | Keep, optimize if needed        |
+| Tier       | Last Access                            | Risk Level              | Action                                                                                        |
+| :--------- | :------------------------------------- | :---------------------- | :-------------------------------------------------------------------------------------------- |
+| Ghost      | Strictly >18 months                    | Low (safe to deprecate) | Archive and remove                                                                            |
+| Cold       | Strictly >12 months, ≤18 months        | Medium                  | Flag for review, contact owners                                                               |
+| Cool       | Strictly >6 months, ≤12 months         | Medium-High             | Monitor, investigate usage                                                                    |
+| Active     | ≤6 months (including exactly 6 months) | N/A                     | Keep, optimize if needed                                                                      |
+| Unobserved | No log entries in analysis window      | High (manual review)    | Flag for manual review; absence of logs may indicate log coverage gap, not genuine inactivity |
+
+> **Boundary rule**: Use strict greater-than for upper bounds. An object last accessed exactly 6 months ago is Active. An object last accessed exactly 12 months ago is Cold. An object last accessed exactly 18 months ago is Cold (not Ghost). Ghost requires strictly more than 18 months with no access.
 
 ### Legacy Application Indicators
 
-| Indicator               | Concern                         | Recommended Action                  |
-| :---------------------- | :------------------------------ | :---------------------------------- |
-| "Microsoft Access"      | End-of-life technology          | Migrate to modern BI tool           |
-| "Excel 2013" or older   | Legacy Office version           | Upgrade or migrate workflow         |
-| "ODBC 3.0"              | Outdated driver                 | Update connection strings           |
-| Generic "Python Script" | Unknown/undocumented automation | Document and modernize              |
-| ".Net App" (unnamed)    | Untracked application           | Identify owner, document dependency |
+| Indicator               | Concern                         | Recommended Action                                                                                                                                                                                                             |
+| :---------------------- | :------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Microsoft Access"      | End-of-life technology          | Migrate to modern BI tool                                                                                                                                                                                                      |
+| "Excel 2013" or older   | Legacy Office version           | Upgrade or migrate workflow                                                                                                                                                                                                    |
+| "ODBC 3.0"              | Outdated driver                 | Update connection strings                                                                                                                                                                                                      |
+| Generic "Python Script" | Unknown/undocumented automation | Identify script owner via service account mapping, add entry to application inventory with purpose and schedule, and flag for replacement with a managed pipeline (e.g., dbt model or ADF pipeline) in the remediation backlog |
+| ".Net App" (unnamed)    | Untracked application           | Identify owner, document dependency                                                                                                                                                                                            |
 
 ### Query Anti-Patterns
 
@@ -129,7 +136,8 @@ Use when:
 
 ### Data Collection
 
-- Collect minimum 12 months of access logs for accurate tiering
+- Collect minimum 12 months of access logs for accurate tiering (analysis time window must be at least 12 months; flag and reject inputs with fewer than 12 months of data)
+- **Unobserved objects**: Objects present in the current catalog with no log entries in the analysis window should be flagged as Unobserved (not Ghost) and treated as high-priority for manual review, since absence of logs may indicate a gap in log coverage rather than genuine inactivity
 - Normalize timestamps to UTC for consistent analysis
 - Include both successful and failed access attempts
 - Capture full query text when possible for pattern analysis

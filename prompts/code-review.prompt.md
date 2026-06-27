@@ -13,7 +13,14 @@ tools:
 {% if input:target %}
 Review the following code: **${input:target}**
 
-**Process** (do not duplicate skill content here, always defer to the skill):
+**Process**:
+
+1. Load `~/.copilot/skills/guardian/SKILL.md` via `read_file`. The skill is the single source of truth for review scope (Security / Correctness / Performance / Maintainability / Architecture), severity calibration, and report format. If `~/.copilot/skills/guardian/SKILL.md` cannot be read, stop and respond with: "Error: Could not load SKILL.md from `~/.copilot/skills/guardian/SKILL.md`. Ensure the file exists and is readable before retrying. Review cannot proceed without it."
+2. Run the Review Workflow defined in that skill against `${input:target}`.
+3. Produce the review report using the skill's `review_report.md` template.
+4. Persist to `.copilot/artifacts/review-report.md`, overwriting any existing file. Do not append or version the filename.
+
+A team lead must be able to make a ship/no-ship decision from this report without re-reading the code.
 {% else %}
 **Error**: Missing or invalid target. Please provide a file, folder, or PR to review via the `target` parameter.
 
@@ -25,10 +32,3 @@ Example usage:
 
 Cannot proceed without a valid review target.
 {% endif %}
-
-1. Load `skills/guardian/SKILL.md` via `read_file`. The skill is the single source of truth for review scope (Security / Correctness / Performance / Maintainability / Architecture), severity calibration, and report format.
-2. Run the Review Workflow defined in that skill against `${input:target}`.
-3. Produce the review report using the skill's `review_report.md` template.
-4. Persist to `.copilot/artifacts/review-report.md` so `release-manager` can verify it via `verify_review.py`.
-
-A team lead must be able to make a ship/no-ship decision from this report without re-reading the code.

@@ -200,5 +200,3 @@ def generate_with_rag(question: str):
 - **Retrieval**: Hybrid search (semantic + keyword) performs better than pure semantic
 - **Citations**: Always return source references with generated answers
 - **Overlap**: 10-15% chunk overlap prevents context splitting at boundaries
-
-

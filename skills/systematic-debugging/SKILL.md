@@ -17,7 +17,7 @@ metadata:
 
 Load the following via `read_file` before using this skill. Skills marked ★ have `disable-model-invocation: true` and cannot self-invoke - they **must** be loaded explicitly.
 
-- `skills/verification-before-completion/SKILL.md` ★ - completion gate; must be passed before declaring a fix verified
+- `~/.copilot/skills/verification-before-completion/SKILL.md` ★ - completion gate; must be passed before declaring a fix verified. If this file cannot be loaded, halt and notify the user: "Cannot proceed - verification-before-completion skill is required but could not be loaded. Please ensure the file exists at ~/.copilot/skills/verification-before-completion/SKILL.md." Do not substitute an informal check.
 
 ---
 
@@ -59,15 +59,34 @@ Stop and re-read the Iron Law if you notice yourself doing any of these:
 Use this table to identify failure mode and follow the recovery path immediately.
 Do not improvise recovery. Do not retry without matching a failure mode first.
 
-| Failure Mode               | Symptom                                                    | Immediate Recovery                                               |
-| -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| `root_cause_unconfirmed`   | Same fix applied 3+ times, still failing                   | STOP. Return to Phase 1. Re-read error from scratch.             |
-| `stale_file_content`       | `replace_string_in_file` match fails                       | Re-read the file before retrying. Never retry on stale content.  |
-| `hypothesis_not_tested`    | "I think this is the issue" → fix applied without test     | Form a test first. Confirm the hypothesis before any edit.       |
-| `reproducer_missing`       | Cannot reproduce the failure consistently                  | Do not fix what you cannot reproduce. Add instrumentation first. |
-| `test_evaluator_mismatch`  | Fix passes local test, CI or acceptance still fails        | Check test scope. Are you fixing the symptom or the cause?       |
-| `scope_creep_during_debug` | Editing multiple files simultaneously to "cover all cases" | Revert extra changes. Fix one location at a time.                |
-| `three_strike_loop`        | Same file or test fails 3 times after your fixes           | Stop. Surface to the user. Do not attempt a 4th fix alone.       |
+| Failure Mode               | Symptom                                                    | Immediate Recovery                                                                                                                                            |
+| -------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root_cause_unconfirmed`   | Same fix applied 3+ times, still failing                   | STOP. Return to Phase 1. Re-read error from scratch.                                                                                                          |
+| `stale_file_content`       | `replace_string_in_file` match fails                       | Re-read the file before retrying. Never retry on stale content.                                                                                               |
+| `hypothesis_not_tested`    | "I think this is the issue" → fix applied without test     | Form a test first. Confirm the hypothesis before any edit.                                                                                                    |
+| `reproducer_missing`       | Cannot reproduce the failure consistently                  | Do not fix what you cannot reproduce. Add instrumentation first.                                                                                              |
+| `test_evaluator_mismatch`  | Fix passes local test, CI or acceptance still fails        | Check test scope. Are you fixing the symptom or the cause?                                                                                                    |
+| `scope_creep_during_debug` | Editing multiple files simultaneously to "cover all cases" | Revert extra changes. Fix one location at a time.                                                                                                             |
+| `three_strike_loop`        | Same file or test fails 3 times after your fixes           | Stop. Increment the Strike Counter (see [Strike Counter](#strike-counter-canonical-rule)). At 3 strikes, surface to the user. Do not attempt a 4th fix alone. |
+
+---
+
+## Strike Counter (Canonical Rule)
+
+The Strike Counter is a **single shared counter** - not three separate counters for different phases.
+
+**What increments it (any of the following adds +1):**
+
+- A rejected hypothesis in Phase 3
+- A fix that fails to resolve the target failure in Phase 4
+- A fix that breaks sibling tests in Phase 4
+
+**What resets it:**
+
+- A confirmed root cause (Phase 3 hypothesis confirmed by a reproducible test)
+- A full return to Phase 1 with broader instrumentation
+
+**Escalation trigger (at 3 strikes):** Stop all further attempts immediately. Surface to the user with: current hypothesis log, last error output, and affected components. Escalate architectural issues to `architect`.
 
 ---
 
@@ -154,7 +173,7 @@ Name **one command** you have already run at least once (paste the invocation an
 2. **Define what would confirm and reject it** - "If this is correct, adding `[x]` should produce `[y]`. If wrong, the output will still be `[z]`."
 3. **Test with the minimal possible change** - isolate the variable; don't combine changes.
 4. **Document the result** - confirmed, rejected, or inconclusive. Rejected hypotheses are as valuable as confirmed ones.
-5. **3-strike rule** - if three independent hypotheses are rejected, do NOT form a fourth. The evidence base is insufficient. Return to Phase 1 with broader instrumentation.
+5. **Strike Counter** - if three hypotheses are rejected - regardless of whether they share a common assumption - do NOT form a fourth. Increment the Strike Counter (see [Strike Counter](#strike-counter-canonical-rule)). The evidence base is insufficient. Return to Phase 1 with broader instrumentation.
 
 **Exit condition**: One hypothesis is confirmed by a reproducible test.
 
@@ -162,11 +181,11 @@ Name **one command** you have already run at least once (paste the invocation an
 
 **Objective**: Apply the minimal fix that resolves the root cause without side effects.
 
-1. **Write a failing test first** - create a test that reproduces the bug. It must fail before the fix and pass after. Write it at the **correct seam** - one where the test exercises the real bug pattern as it occurs at the call site. If no correct seam exists (the only available seam is too shallow, or the architecture prevents locking down the bug), **that itself is the finding**: note it, do not force a shallow test, and flag it at the post-mortem step.
+1. **Formalize the reproducer as a test** - promote the loop command from Phase 1 into a committed test (if it is not already one). The test must fail before the fix and pass after. Write it at the **correct seam** - one where the test exercises the real bug pattern as it occurs at the call site. If no correct seam exists (the only available seam is too shallow, or the architecture prevents locking down the bug), **that itself is the finding**: note it, do not force a shallow test, and flag it at the post-mortem step.
 2. **Apply the fix** - one change. If the fix requires multiple changes in unrelated locations, that is a signal the root cause analysis is incomplete.
 3. **Run the failing test** - confirm it now passes.
 4. **Run the full test suite** - confirm no regressions.
-5. **3-strike architectural escalation** - if fixes keep breaking sibling tests, stop. The root cause is architectural, not local. Escalate to `architect`.
+5. **Strike Counter** - if fixes keep failing or breaking sibling tests, increment the Strike Counter (see [Strike Counter](#strike-counter-canonical-rule)). At 3 strikes, stop. The root cause is architectural, not local. Escalate to `architect`.
 6. **Load `verification-before-completion`** - complete the evidence gate before declaring done.
 7. **Post-mortem** - ask: "What would have prevented this bug?" If the answer involves architectural change (no good test seam, tangled callers, hidden coupling), hand off to `architect` with the specifics - make the recommendation **after** the fix is in, when you have more information than when you started.
 

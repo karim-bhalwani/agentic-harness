@@ -191,5 +191,3 @@ class AgentTeam:
 - **Multi-Agent**: For tasks benefiting from specialized expertise
 - **Iterations**: Limit max iterations (10-15) to prevent infinite loops
 - **Tool Selection**: Provide clear, specific tool descriptions
-
-

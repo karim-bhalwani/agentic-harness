@@ -15,15 +15,16 @@ Run a retrospective for the cycle: **${input:cycle}**
 
 ### Phase 1: Validate Foundation (PRIORITY: CRITICAL)
 
-1. Read `skills/context-engineer/SKILL.md` (has `disable-model-invocation: true`)
-2. Read `skills/context-engineer/references/templates-and-retrospectives.md`
-3. **If either file is missing or inaccessible**: Log error, terminate process, notify user with missing file path.
-4. Confirm both files contain required sections: retrospective template, rework-tracking rules, harness-review protocol, entropy-audit checklist.
+1. Read `~/.copilot/skills/context-engineer/SKILL.md` (has `disable-model-invocation: true`)
+2. Read `~/.copilot/skills/context-engineer/references/templates-and-retrospectives.md`
+3. **If either file is missing or unreadable**: immediately halt and output: "Foundation file [filename] is missing or unreadable. Cannot proceed until resolved." Do not proceed to Phase 2.
+4. Confirm both files contain all required sections: retrospective template, rework-tracking rules, harness-review protocol, entropy-audit checklist. If any required section is missing from either foundation file, halt and notify the user: "Foundation file [filename] is missing required section: [section name]. Cannot proceed until resolved."
 
 ### Phase 2: Gather Input Files (PRIORITY: REQUIRED)
 
-Attempt to read each; if **all critical files are missing**, terminate with error.  
-**Critical files** (at least 2 must exist):
+Read both critical files. **Both must exist.** If either is missing or unreadable, immediately halt and output: "Cannot complete retrospective: missing required input files (SPEC.md, review-report.md, or both). Verify cycle completion and file availability." Do not proceed to Phase 3.
+
+**Critical files** (both must exist):
 
 - `.copilot/specs/SPEC.md` - original specification
 - `.copilot/artifacts/review-report.md` - Guardian gate report
@@ -32,8 +33,6 @@ Attempt to read each; if **all critical files are missing**, terminate with erro
 
 - `.copilot/state/SESSION_STATE.md` - pipeline checkpoint and retry counts
 - `.copilot/context/DECISIONS.md` - architectural decision log
-
-**Error handling**: If critical files missing, log exact file paths and halt with message: "Cannot complete retrospective: missing required input files (SPEC.md, review-report.md, or both). Verify cycle completion and file availability."
 
 ### Phase 3: Process Retrospective (PRIORITY: HIGH)
 
@@ -44,7 +43,7 @@ Attempt to read each; if **all critical files are missing**, terminate with erro
 
 ### Phase 4: Generate Output (PRIORITY: HIGH)
 
-1. Create `.copilot/retrospectives/RETROSPECTIVE-${input:cycle}.md` with findings covering: spec quality, handoff effectiveness, rework incidents, harness review, entropy audit, lessons learned
-2. Append new ADRs to `.copilot/context/DECISIONS.md` from Harness Review (prioritize `SIMPLIFY` or `RETIRE` verdicts)
+1. Create `.copilot/retrospectives/RETROSPECTIVE-${input:cycle}.md` with findings covering: spec quality, handoff effectiveness, rework incidents, harness review, entropy audit, lessons learned. If writing this file fails, halt and notify the user with the exact file path and error reason. Do not proceed to step 2.
+2. Append all new ADRs to `.copilot/context/DECISIONS.md`. ADRs with `SIMPLIFY` or `RETIRE` verdicts must be listed first and marked with a `[HIGH PRIORITY]` prefix.
 
 **Key Rule**: The skill and its references are the single source of truth; do not paraphrase here.

@@ -30,6 +30,7 @@ Translates natural language requests into optimized, production-safe T-SQL again
 ### Ambiguity Resolution
 
 - If a term maps to multiple tables, list candidates and ask
+- If no schema context has been provided and the query references specific table or column names that cannot be verified, state explicitly: "I do not have schema information for this database. The following query is based on assumed naming conventions - validate table and column names before executing." Then generate the best-guess query using standard naming conventions.
 - If the user's intent is unclear, propose 2-3 interpretations as SQL queries
 - Always state assumptions
 - For Data Vault: prefer Information Mart views over raw vault joins when they answer the question
@@ -51,28 +52,36 @@ Every SQL response MUST include:
 
 ## Query Strategy Decision Tree (Data Vault)
 
-### Step 1: Identify Temporal Intent
+### Step 1: Check for Pre-Built Views
+
+Before applying any temporal pattern, check whether a pre-built `Dim*`/`Fact*` or Information Mart view answers the question. If yes, query it directly and skip Steps 2-3.
+
+- **"report", "dashboard", "summary"** → Query Dim*/Fact* (Information Mart) tables first
+
+### Step 2: Identify Temporal Intent
+
 - **"current", "latest", "active"** → Current state query
 - **"as of [date]", "historical snapshot"** → Point-in-time query
 - **"all changes", "history", "audit trail"** → Full history scan
 
-### Step 2: Select Pattern by Intent
+### Step 3: Select Pattern by Intent
 
 #### Current State
+
 Use `ROW_NUMBER() OVER (PARTITION BY HK ORDER BY Process_Date DESC) = 1` to isolate latest record per entity.
 
 #### Point-in-Time
+
 Use PIT table if available, else apply `WHERE Process_Date <= @AsOfDate` + ROW_NUMBER.
 
 #### Full History
+
 Select all rows ordered by `Process_Date` (no filtering).
 
-### Step 3: Handle Relationships
+### Step 4: Handle Relationships
+
 - **"relationship", "linked to"** → Join Hub → Link → Hub
 - **"active relationship", "current subscription"** → Filter EffSat with `MAX(Load_Date)` + `BETWEEN`
-
-### Step 4: Check for Pre-Built Views
-- **"report", "dashboard", "summary"** → Query Dim*/Fact* (Information Mart) tables first
 
 **For full DV navigation protocol**: load [data-vault-navigation.md](./references/data-vault-navigation.md)
 
@@ -80,9 +89,21 @@ Select all rows ordered by `Process_Date` (no filtering).
 
 - **NEVER** generate `DROP`, `DELETE`, `TRUNCATE`, `UPDATE`, or `INSERT` unless explicitly requested
 - **Default to SELECT** (read-only) queries
-- **Always parameterize** user-supplied values
+- **Declare all filter values, date literals, and string constants as T-SQL variables** (e.g., `DECLARE @CustomerID INT = <value>`) at the top of the script so the query contains no inline literals
 - **Warn** if a query might return PII and suggest masking
-- **Add `TOP 100`** to exploratory queries
+- **Add `TOP 100`** to any query where the user has not specified a row limit and the query does not aggregate to a summary result (i.e., no `GROUP BY` reducing to a small set). Annotate with: `-- Safety limit: remove if full result set is required`
+
+### When DML Is Explicitly Requested
+
+If the user explicitly requests `INSERT`, `UPDATE`, `DELETE`, or `TRUNCATE`:
+
+1. Wrap the DML in `BEGIN TRANSACTION` / `ROLLBACK TRAN` with a comment instructing the user to change `ROLLBACK` to `COMMIT` after review
+2. Add a `SELECT` preview query showing affected rows before the DML statement
+3. Include a header warning at the top of the script:
+
+```sql
+-- WARNING: This script modifies data. Execute in a test environment first.
+```
 
 ## Common Pitfalls
 
@@ -104,11 +125,11 @@ Select all rows ordered by `Process_Date` (no filtering).
 ## Definition of Done
 
 - [ ] Syntactically valid T-SQL with explicit column names
-- [ ] Parameterized values for user-supplied inputs
+- [ ] Filter values, date literals, and string constants declared as T-SQL variables at the top of the script
 - [ ] Header comment block included
 - [ ] DV queries use correct temporal patterns and filter ghost records
 - [ ] PIT/Bridge/Mart tables preferred when available
-- [ ] No destructive operations unless explicitly requested
+- [ ] No `DROP`, `DELETE`, `TRUNCATE`, `UPDATE`, or `INSERT` unless explicitly requested
 - [ ] PII columns flagged or masked
 
 ## References

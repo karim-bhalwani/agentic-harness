@@ -1,6 +1,6 @@
 ---
 name: genai-security
-description: "Security auditing for GenAI/LLM applications. Primary focus: OWASP Top 10 for LLMs (2025). Use for LLM-powered applications, RAG pipelines, AI agents, prompt templates, and generative AI integrations. For agentic risks, prompt injection patterns, MITRE ATLAS mappings, threat modeling, or red teaming, load specific reference documents. NOT for: general code security (use guardian), building LLM apps (use llm-app-patterns), runtime rules (use security-boundaries), or infrastructure."
+description: "Security auditing for GenAI/LLM applications. Primary focus: OWASP Top 10 for LLMs (2025). Use for LLM-powered applications, RAG pipelines, AI agents, prompt templates, and generative AI integrations. For agentic risks, prompt injection patterns, MITRE ATLAS mappings, threat modeling, or structured red teaming methodology, load specific reference documents - outputs are analysis and findings, not formal penetration test reports. NOT for: general code security (use guardian), building LLM apps (use llm-app-patterns), runtime rules (use security-boundaries), or infrastructure."
 argument-hint: "[LLM application to audit]"
 license: MIT
 compatibility: "VS Code"
@@ -16,10 +16,12 @@ metadata:
 
 Specialized security reference for GenAI applications. Extends Guardian with AI-specific threat models sourced from [OWASP GenAI Security Project](https://genai.owasp.org/).
 
+> **Scope check**: If the submitted artefact contains no LLM API calls, prompt templates, vector database interactions, or agent logic, respond with: "This artefact does not appear to be an LLM application. For general code security use the guardian skill; for infrastructure use the appropriate infrastructure security skill. No GenAI Security Review Report will be produced."
+
 ## Dependencies
 
-- `skills/guardian/SKILL.md` - baseline code review and OWASP Top 10
-- `skills/llm-app-patterns/SKILL.md` - production LLM architecture patterns
+- `~/.copilot/skills/guardian/SKILL.md` - baseline code review and OWASP Top 10
+- `~/.copilot/skills/llm-app-patterns/SKILL.md` - production LLM architecture patterns
 
 ## When to Load
 
@@ -68,7 +70,7 @@ For full checklist, load [agentic-top-10-checklist.md](./references/agentic-top-
 - [ ] System prompts contain no secrets, keys, or sensitive architecture details
 - [ ] Input validation pipeline exists (sanitization, length limits, content filtering)
 - [ ] Output validation pipeline exists (encoding, schema validation, safety filtering)
-- [ ] Anti-prompt-injection defenses tested with adversarial examples
+- [ ] Confirm that anti-prompt-injection defenses have been tested with adversarial examples; look for test cases, CI results, or documented red-team findings as evidence. Do not execute live tests.
 
 ### Data & Model Security
 
@@ -83,6 +85,11 @@ For full checklist, load [agentic-top-10-checklist.md](./references/agentic-top-
 - [ ] Agent loop limits enforced (hard cap on iterations)
 - [ ] Human-in-the-loop required for destructive or irreversible actions
 - [ ] All tool invocations logged with full audit trail
+
+#### Memory Security
+
+Evaluate the following four controls as a coordinated family; scoping and auditing controls are only meaningful if sanitization is present.
+
 - [ ] Memory files treated as **untrusted input** - stored memory is read back into context and is a prompt injection vector (memory poisoning); never trust stored content as instructions
 - [ ] Memory content sanitized before storage: filter injected directives, strip executable patterns, enforce max file size
 - [ ] Memory scoped per-user and per-project to prevent cross-contamination between tenants or tasks
@@ -124,7 +131,7 @@ For full checklist, load [agentic-top-10-checklist.md](./references/agentic-top-
 ## Definition of Done
 
 - [ ] GenAI Security Review Report produced following structure above
-- [ ] All 10 LLM risks assessed (Pass/Fail/N/A with evidence)
+- [ ] All 10 LLM risks assessed (Pass/Fail/N/A); each non-N/A verdict must cite a specific code location, configuration entry, or absence thereof as supporting evidence
 - [ ] Agentic risks assessed if agents or tools are present
 - [ ] Critical findings have specific remediation steps
 - [ ] Gate status explicitly stated
@@ -133,7 +140,9 @@ For full checklist, load [agentic-top-10-checklist.md](./references/agentic-top-
 
 - Does NOT fix code or implement remediations (produces findings only)
 - Does NOT design system architecture (consult architect)
-- Does NOT replace formal penetration testing or compliance audits
+- When the input is a prompt template or non-code artefact rather than source code, apply only the Prompt & I/O Security checklist items and note all code-dependent checklist items as N/A with the reason "no source code provided"
+- Red teaming outputs are structured findings and methodology guidance; they do not constitute formal penetration test reports accepted by compliance frameworks
+- Does NOT replace compliance audits
 
 ## References
 

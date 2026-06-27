@@ -19,9 +19,9 @@ metadata:
 
 Load the following via `read_file` before using this skill. Skills marked ★ have `disable-model-invocation: true` and cannot self-invoke - they **must** be loaded explicitly.
 
-- `skills/architect/SKILL.md` - spec and holdout scenario authoring patterns (required for the Architect role in this workflow)
-- `skills/guardian/SKILL.md` - holdout evaluation is a Guardian-owned phase; QA patterns apply
-- `skills/verification-before-completion/SKILL.md` ★ - completion gate; confirm all holdout scenarios are evaluated before declaring review complete
+- `~/.copilot/skills/architect/SKILL.md` - spec and holdout scenario authoring patterns (required for the Architect role in this workflow)
+- `~/.copilot/skills/guardian/SKILL.md` - holdout evaluation is a Guardian-owned phase; QA patterns apply
+- `~/.copilot/skills/verification-before-completion/SKILL.md` ★ - completion gate; confirm all holdout scenarios are evaluated before declaring review complete
 
 ## When to Load This Skill
 
@@ -48,33 +48,38 @@ These rules are **structural constraints**, not behavioral suggestions. Reasonin
 
 ### Quick Reference
 
-| Agent Role                                         | Access     |
-| -------------------------------------------------- | ---------- |
-| **Architect**                                     | WRITE only |
+| Agent Role                                          | Access     |
+| --------------------------------------------------- | ---------- |
+| **Architect**                                       | WRITE only |
 | **Implementation agents** (dev, data, data-sci, ai) | **NONE**   |
-| **Guardian**                                      | READ only  |
-| **Context-engineer**                              | READ only  |
+| **Guardian**                                        | READ only  |
+| **Context-engineer**                                | READ only  |
 
 ### Detailed Rules by Role
 
 **Architect** – WRITE only
+
 - Authors holdout scenarios during specification
 - Spec references the holdout file but does NOT include scenarios inline
 
 **Implementation agents** (`senior-developer`, `data-engineer`, `data-scientist`, `ai-engineer`) – **NONE**
+
 - MUST NOT read files in `.copilot/holdout/`
-- If requested, deny access
+- If an implementation agent is given access to or asked to read a file in `.copilot/holdout/`, the agent MUST respond: "Access denied: holdout files are reserved for Guardian evaluation. Proceeding with spec-based testing only." and continue implementation using only the specification.
 
 **Guardian** – READ only
+
 - Loads holdout scenarios during review
 - Evaluates implementation against them
 
 **Context-engineer** – READ only
+
 - Tracks holdout pass rates in retrospective documents
 
 ### Exception: Missing Holdouts
 
 If holdout scenarios don't exist:
+
 - Implementation agents proceed normally with spec-based testing
 - Guardian notes "No holdout scenarios found" in the review
 - Guardian recommends Architect provide them for future iterations
@@ -113,10 +118,10 @@ A holdout scenario is an **intent-level validation statement**, not a unit test.
 
 ### During Design (Architect Produces)
 
-1. After completing the specification, the Architect writes 3-10 holdout scenarios per feature
+1. After completing the specification, the Architect writes 3–10 holdout scenarios per specification document (i.e., per discrete unit of work that has its own spec file)
 2. Scenarios focus on **user-observable outcomes**, not implementation details
 3. Scenarios are written to `.copilot/holdout/` (or a user-specified directory)
-4. Each scenario file is named `HOLDOUT.md`
+4. Each scenario file is named `HOLDOUT-<feature>.md`, matching the naming convention in the File Layout section
 5. The spec references the holdout file but does NOT include the scenarios inline
 
 ### During Implementation (Developer Is Blind)
@@ -132,6 +137,7 @@ A holdout scenario is an **intent-level validation statement**, not a unit test.
 2. For each scenario, Guardian evaluates whether the implementation satisfies the intent
 3. Guardian produces a **Holdout Evaluation Report** as part of its review
 4. Holdout failures are rated as High severity (they indicate spec-to-intent gaps)
+5. When one or more holdout scenarios fail, Guardian MUST block the review from passing and raise a finding requiring the implementation agent to address the gap before completion is declared. Guardian should reference the verification-before-completion skill to confirm all failures are resolved.
 
 ### Holdout Evaluation Report Format
 
@@ -200,12 +206,12 @@ Guardian evaluation during review.
 
 ## Integration Points
 
-| Phase          | Input From                     | Output To                                            | Context                                            |
-| -------------- | ------------------------------ | ---------------------------------------------------- | -------------------------------------------------- |
-| Design         | `architect`                    | Holdout scenario files                               | Architect writes scenarios after spec              |
+| Phase          | Input From                     | Output To                                                               | Context                                            |
+| -------------- | ------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------- |
+| Design         | `architect`                    | Holdout scenario files                                                  | Architect writes scenarios after spec              |
 | Implementation | Spec (no holdouts)             | `senior-developer` / `data-engineer` / `data-scientist` / `ai-engineer` | Developers work from spec only                     |
-| Review         | Holdout files + implementation | `guardian`                                           | Guardian evaluates implementation against holdouts |
-| Tracking       | Holdout evaluation report      | `context-engineer`                                   | Track holdout pass rates over time                 |
+| Review         | Holdout files + implementation | `guardian`                                                              | Guardian evaluates implementation against holdouts |
+| Tracking       | Holdout evaluation report      | `context-engineer`                                                      | Track holdout pass rates over time                 |
 
 ## References
 

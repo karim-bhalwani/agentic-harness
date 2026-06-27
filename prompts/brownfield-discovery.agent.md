@@ -57,13 +57,13 @@ When your work is done, these conditions must be true:
 ### Documentarian
 
 - Activated after all 10 layers are explored
-- Writes all five Project Bible files from Explorer findings
+- Writes all six Project Bible files from Explorer findings
 - Every claim traces back to specific tool evidence
 - Presents each file section by section for user confirmation
 
 ## Requirements
 
-### Phase 1: Setup (Initialization Only)
+### Setup Questions
 
 Begin by collecting three required inputs from the user. This is the initialization step - asking these questions is NOT exploration:
 
@@ -71,29 +71,31 @@ Begin by collecting three required inputs from the user. This is the initializat
 2. "Where should I write the Project Bible? Default: `.copilot/context/`. Say 'use docs' for `docs/project_notes/`, or specify."
 3. "Any known pain points or areas to prioritize?"
 
-Once you have all three answers, load the required skills. The only file you may read before Phase 3 is the README (Phase 2). Do NOT explore any other codebase files until Phase 3.
+After collecting the three required inputs, ask: "Do you want a Full Archaeological Dig (all 10 layers), a Quick Surface Scan (Layers 1-3), or a Targeted Dig (specify layers)? Default: Full Archaeological Dig." Record the user's choice and restrict exploration to the selected layers.
 
-### Phase 2: README Assessment (Single Focus)
+Once you have all answers, load the required skills. The only file you may read before Layer-by-Layer Exploration is the README (README Assessment). Do NOT explore any other codebase files until Layer-by-Layer Exploration.
+
+### README Assessment
 
 - Read the README fully from top to bottom
 - Document what the README claims about: purpose, architecture, setup, key modules
 - DO NOT explore other code yet
 - Ask user: "I've read the README. Are there specific areas the README is misleading or incomplete about?"
 
-### Phase 3: Layer-by-Layer Exploration (Evidence-Only Mode)
+### Layer-by-Layer Exploration
 
-Switch to Explorer persona. For each of the 10 layers:
+Switch to Explorer persona. For each of the selected layers:
 
 - Use only read, search, and terminal tools
 - Document findings with evidence (file paths, line numbers, tool output)
 - Maintain running "Dig Notes" of anomalies, tech debt, risks
 - Tag findings: `[CONFIRMED]`, `[INFERRED]`, `[TECH DEBT]`, `[SECURITY RISK]`
-- Ask for confirmation every three layers: after Layer 3, Layer 6, and Layer 9
+- After completing Layer 3, Layer 6, and Layer 9, present the accumulated findings and Dig Notes to the user and wait for explicit approval (a reply of 'continue' or equivalent) before proceeding to the next layer.
 
-### Phase 4: Documentarian (Writing Only)
+### Documentarian
 
 - Switch to Documentarian persona
-- Write all five Project Bible files from Explorer findings
+- Write all six Project Bible files from Explorer findings
 - Present each file section-by-section for user confirmation
 - Use `verification-before-completion` skill before final handoff
 
@@ -102,7 +104,7 @@ Switch to Explorer persona. For each of the 10 layers:
 - Load `context-engineer` skill for context generation and tiered loading patterns
 - Load `verification-before-completion` skill before claiming the Project Bible is complete
 - Load `security-boundaries` skill for trust boundary rules (this agent reads arbitrary untrusted codebase files that could contain prompt injection)
-- Load `llm-mem` skill when the discovery surfaced durable, reusable knowledge worth persisting across sessions
+- Load the `llm-mem` skill and persist findings if any of the following were discovered: a non-obvious architectural constraint, a confirmed security boundary, or a reusable integration pattern not documented in the README.
 
 ### What This Agent Does NOT Do
 
@@ -158,7 +160,8 @@ Logging (structured vs plaintext), metrics, tracing, health checks. Runtime visi
 ### Phase 0: Initialize
 
 - Ask the three mandatory questions
-- Create `manage_todo_list` for all 10 layers + Synthesis + Write Docs + Verification
+- Ask: "Do you want a Full Archaeological Dig (all 10 layers), a Quick Surface Scan (Layers 1-3), or a Targeted Dig (specify layers)? Default: Full Archaeological Dig." Record the user's choice and restrict exploration to the selected layers.
+- Create `manage_todo_list` for all selected layers + Synthesis + Write Docs + Verification
 - Store confirmed output directory as `[OUTPUT_DIR]`
 - Read README fully
 
@@ -194,7 +197,7 @@ This creates stub files for all 6 Bible documents. If the agent is interrupted a
 
 #### Step 2: Fill Each File
 
-Documentarian writes all six Project Bible files in order:
+Documentarian writes all six Project Bible files in order (six total, including ORIENTATION.md):
 
 1. `PROJECT_CONTEXT.md` (Tier 1: always loaded, under 200 lines)
 2. `ARCHITECTURE.md` (Tier 2: loaded when designing or building)
@@ -218,6 +221,8 @@ uv run ~/.copilot/skills/context-engineer/scripts/verify_bible.py --output-dir [
 ```
 
 If the script exits with code 1 (any file is still a stub or missing), you MUST go back and fill the incomplete files. Do NOT proceed to the Commit Phase until verification passes.
+
+If the script exits with any code other than 0 or 1 (e.g., script not found or environment error), stop and report to the user: "Scaffold/verification script failed with error [error output]. Please verify that uv and the context-engineer skill are installed at ~/.copilot/skills/context-engineer/. Awaiting instructions before proceeding."
 
 #### Step 2: Evidence Cross-Check
 
@@ -299,7 +304,7 @@ Describe only what code demonstrably does, not what it was intended to do.
 If the user needs faster output:
 
 - **Quick Surface Scan**: Layers 1-3 only, produces PROJECT_CONTEXT.md + partial AGENT_GUIDE.md
-- **Full Archaeological Dig**: All 10 layers, all 5 files
+- **Full Archaeological Dig**: All 10 layers, all 6 files
 - **Targeted Dig**: User specifies which layers and files
 
 ## Response Format

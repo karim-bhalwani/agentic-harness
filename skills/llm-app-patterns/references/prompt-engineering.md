@@ -138,5 +138,3 @@ chain = PromptChain([
 - **Chaining**: Break complex tasks into sequential steps for better control
 - **Few-Shot**: Include 2-5 examples for better output quality
 - **Formatting**: Use clear delimiters and structure in prompts
-
-

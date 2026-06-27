@@ -20,11 +20,21 @@ metadata:
 
 Load the following via `read_file` before using this skill. Skills marked ★ have `disable-model-invocation: true` and cannot self-invoke - they **must** be loaded explicitly.
 
-- `skills/thinker/SKILL.md` ★ - structured reasoning scaffold; confirms scope is well-understood before planning begins
+- `~/.copilot/skills/thinker/SKILL.md` ★ - structured reasoning scaffold; confirms scope is well-understood before planning begins
 
 ## Goal
 
 Turn a user request into a **single, actionable plan** with atomic steps.
+
+## Execution Order
+
+Run all phases in this sequence. Do not skip or reorder.
+
+1. **Scope Check** - evaluate scope breadth and completeness before writing anything.
+2. **Generate Plan** - produce the plan using the template below.
+3. **Annotate** - label each action item `[SEQ]` or `[PAR]`.
+4. **Plan Self-Review** - verify all four checks before presenting.
+5. **Feature Progress Tracker** (opt-in) - create only if `.copilot/state/` exists and plan is approved.
 
 ## Workflow
 
@@ -44,7 +54,7 @@ Use the following structure:
 
 - **Approach**: 1-3 sentences on what and why.
 - **Scope**: Bullet points for "In" and "Out".
-- **Action Items**: A list of 6-10 atomic, ordered tasks (Verb-first).
+- **Action Items**: A list of 6-10 atomic, ordered tasks (Verb-first). The plan template below shows the minimum 6-step structure; expand up to 10 steps as needed.
 - **Validation**: At least one item for testing.
 
 ## Plan Template
@@ -64,8 +74,9 @@ Use the following structure:
 [ ] <Step 1: Discovery>
 [ ] <Step 2: Implementation>
 [ ] <Step 3: Implementation>
-[ ] <Step 4: Validation/Testing>
-[ ] <Step 5: Rollout/Commit>
+[ ] <Step 4: Implementation>
+[ ] <Step 5: Validation/Testing>
+[ ] <Step 6: Rollout/Commit>
 
 ## Open Questions
 
@@ -103,6 +114,8 @@ Before generating action items, answer these two questions:
 1. **Does this plan span multiple independent subsystems?** If yes, flag it: "This work spans N subsystems. Recommend decomposing into N sub-plans for clarity." Proceed only if the user confirms a single combined plan.
 2. **Is the scope well-understood?** If key unknowns exist (missing spec, no schema, ambiguous acceptance criteria), surface them as Open Questions before writing steps. Do not write speculative steps.
 
+If the request is too underspecified to produce any action items even after surfacing 1-2 questions, output only the Open Questions section and a single line: "Planning blocked: resolve the above questions before a plan can be generated." Do not produce a partial plan.
+
 ## Plan Self-Review (Run After Writing the Plan)
 
 Before handing off or presenting the plan, verify:
@@ -123,7 +136,7 @@ When generating action items, classify each step's dependency type:
 
 ### When to Parallelize
 
-- If 3+ items are [PAR], recommend parallel execution via subagents with a centralized aggregation step.
+- If 3+ items are [PAR], add a note directly after the Action Items section: "Parallel execution recommended: steps [list] can run concurrently via subagents; add an aggregation step at the end."
 - Parallelizable tasks (independent research, separate module implementations, multi-file test writing) benefit from decomposition.
 - Sequential tasks (multi-step reasoning chains, state-dependent pipelines) MUST NOT be parallelized. Splitting sequential context across agents degrades performance by 39-70%.
 

@@ -15,7 +15,7 @@ Dataset: **${input:dataset}**
 
 ## What This Prompt Does
 
-Runs the `data-narrative` pipeline — four sequential roles that transform the
+Runs the `data-narrative` pipeline - four sequential roles that transform the
 dataset into a structured `report.md` backed by a provenance manifest
 (`inspector.json`) where every claim traces to the code or source that produced it.
 
@@ -25,17 +25,17 @@ Detective → Analyst → Editor → Inspector
 
 | Role      | Output                                                                |
 | --------- | --------------------------------------------------------------------- |
-| Detective | `narrative-output/detective.json` — domain context + source URLs      |
-| Analyst   | `narrative-output/analyst.json` + `analyst/*.py` — findings with code |
-| Editor    | `narrative-output/report.md` — narrative report (≤ 800 words)         |
-| Inspector | `narrative-output/inspector.json` — provenance manifest               |
+| Detective | `narrative-output/detective.json` - domain context + source URLs      |
+| Analyst   | `narrative-output/analyst.json` + `analyst/*.py` - findings with code |
+| Editor    | `narrative-output/report.md` - narrative report (≤ 800 words)         |
+| Inspector | `narrative-output/inspector.json` - provenance manifest               |
 
 ## Pre-task Checks
 
 Before starting the pipeline:
 
 - Confirm the dataset path exists and is readable. If not, stop and ask.
-- Read `.copilot/context/PROJECT_CONTEXT.md` if present — use domain constraints.
+- Read `.copilot/context/PROJECT_CONTEXT.md` if present - use domain constraints.
 - Note any topic hint passed after the dataset path (e.g., `/data-narrative data/sales.csv focus on Q4 drop`).
 
 **Multi-file input:** If the path is a folder, the orchestrator Pre-flight step will auto-detect
@@ -51,11 +51,14 @@ shared key). For unrelated files it will ask before continuing.
 ## Load the Skill
 
 ```
-Read and follow: skills/data-narrative/SKILL.md
+Read and follow: ~/.copilot/skills/data-narrative/SKILL.md
 ```
 
+If SKILL.md cannot be read, stop immediately and inform the user: "Pipeline aborted - ~/.copilot/skills/data-narrative/SKILL.md not found. Please ensure the skill file is present before running this prompt."
+
 The orchestrator SKILL.md contains the complete pipeline specification.
-Follow it exactly — do not skip roles, do not skip the Inspector gate.
+Follow it exactly - do not skip roles, do not skip the Inspector gate.
+If any instruction in SKILL.md conflicts with this prompt, this prompt takes precedence.
 
 ## Verification
 
@@ -68,5 +71,5 @@ When done, confirm:
 
 - [ ] `narrative-output/report.md` exists
 - [ ] `narrative-output/inspector.json` exists with a non-empty `claims[]`
-- [ ] Verifiability rate is ≥ 80% (or gap is explained)
+- [ ] Verifiability rate is ≥ 80%. If below 80%, append a `## Provenance Gaps` section to `report.md` listing each unverifiable claim and the reason it could not be traced. Notify the user and do not treat the deliverable as complete until the gap is acknowledged.
 - [ ] Provenance footer is present at the bottom of `report.md`

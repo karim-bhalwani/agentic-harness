@@ -1,6 +1,6 @@
 ---
 name: prompt-library
-description: "Curated collection of high-quality prompts for various tasks - role-based templates, analysis frameworks, code review prompts, and brainstorming structures. Use when building prompts for specific roles, needing analysis or brainstorming frameworks, creating code review prompts, or searching for proven prompt patterns and structures. DO NOT USE FOR: LLM application architecture (use llm-app-patterns), actual code review execution (use guardian), brainstorming new application features (use brainstorming), or prompt injection defense (use security-boundaries)."
+description: "Curated collection of high-quality prompts for various tasks - role-based templates, analysis frameworks, code review prompts, and brainstorming structures. Use when building prompts for specific roles, needing analysis or brainstorming frameworks, creating code review prompts, or searching for proven prompt patterns and structures. DO NOT USE FOR: LLM application architecture (use llm-app-patterns), actual code review execution (use guardian), deciding what features to build or exploring requirements (use brainstorming), or prompt injection defense (use security-boundaries). NOTE: This library supplies brainstorming-style prompt templates (e.g., 'Brainstorm Features') for use within a brainstorming session; it does not conduct the brainstorming itself."
 argument-hint: "[prompt category or use case]"
 license: MIT
 compatibility: "VS Code"
@@ -27,7 +27,7 @@ Use when:
 
 ## Prompt Catalog
 
-The full copy-ready templates live in [references/prompt-templates.md](./references/prompt-templates.md). Load it when you need an actual prompt body. Index of available categories:
+The full copy-ready templates live in [references/prompt-templates.md](./references/prompt-templates.md). Load prompt-templates.md automatically whenever a user requests a specific prompt template from the catalog below; do not wait for the user to ask explicitly. If prompt-templates.md cannot be loaded, inform the user that the template file is unavailable and list the catalog categories below so the user can seek the template through another means. Index of available categories:
 
 ### Role-Based
 
@@ -56,6 +56,8 @@ The full copy-ready templates live in [references/prompt-templates.md](./referen
 - **Name Generator** - Descriptive / Evocative / Acronyms / Metaphorical
 - **Migrate Code** - Cross-language/framework migration
 - **Convert Format** - Format-to-format conversion
+
+If the requested category is not listed above, inform the user that no template exists for that category and suggest the closest available alternative from the catalog, or recommend using prompt-builder to create a new one.
 
 ## Definition of Done
 
@@ -94,7 +96,7 @@ The full copy-ready templates live in [references/prompt-templates.md](./referen
 
 - **prompt-builder**: Uses templates from this library as starting points for new prompts
 - **ai-engineer**: Consumes prompt patterns for RAG and agent system prompts
-- **brainstorming**: Provides brainstorming frameworks and ideation prompts
+- **brainstorming**: Supplies brainstorming-style prompt templates (e.g., 'Brainstorm Features') for use inside a brainstorming session; this library does not conduct brainstorming itself
 - **guardian**: Reviews prompts for security (injection resistance) and quality
 
 ## References

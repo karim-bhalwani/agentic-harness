@@ -20,57 +20,6 @@ metadata:
 
 Load this skill before delegating any task to another agent. If you are handling the task yourself, you do not need this.
 
-## The Six Checks
-
-Before delegating to another agent, evaluate the task against these criteria (derived from Google/DeepMind/MIT agent scaling research):
-
-### 1. Sequentiality Check
-
-Does step N depend on step N-1's output?
-
-- **YES**: Single agent. Multi-agent coordination degrades sequential reasoning tasks by 39-70%.
-- **NO**: Proceed to decomposability check.
-
-### 2. Decomposability Check
-
-Can the task be split into independent sub-problems that don't share mutable state?
-
-- **YES** (e.g., analyze revenue + analyze costs + analyze market independently): Consider parallel specialist dispatch with centralized aggregation. Centralized coordination yields up to +80.9% on decomposable tasks.
-- **NO** (e.g., each step modifies shared state the next step reads): Single agent. Artificial decomposition of inherently sequential work wastes token budget on coordination instead of reasoning.
-
-### 3. Domain Complexity Check
-
-Estimate task complexity on a Low/Medium/High scale.
-
-- **Low** (structured output, clear subtask boundaries, e.g., generate config, write CRUD): Multi-agent overhead is tolerable; delegate if specialist adds value.
-- **Medium** (moderate decomposability, some sequential dependencies, e.g., feature implementation, pipeline design): Delegate only when the specialist's domain expertise clearly exceeds yours.
-- **High** (strict sequential dependencies, dynamic state evolution, e.g., debugging production failures, stateful migration, multi-step constraint satisfaction): Single agent strongly preferred. Coordination overhead consumes reasoning capacity at high complexity.
-
-### 4. Competence Check
-
-Is this task within your declared expertise?
-
-- **YES** at >50% confidence: Handle it yourself. Capability saturation means delegation adds overhead without accuracy gain once a single agent exceeds ~45% baseline.
-- **NO**: Delegate to the specialist agent.
-
-### 5. Tool Density Check
-
-Does the sub-task require 5+ distinct tool calls?
-
-- **YES**: Single agent. Coordination overhead consumes context budget needed for tool use.
-- **NO**: Multi-agent may help if the task is parallelizable.
-
-### 6. Cost-Benefit Check
-
-Will delegation increase token cost >2x for <10% likely improvement?
-
-- **YES**: Single agent.
-- **NO**: Delegate if the specialist's domain expertise justifies the overhead.
-
-### Default Posture
-
-**Prefer self-sufficiency.** Delegation is a cost (context loss, token overhead, error amplification risk), not a free upgrade.
-
 ## Quick-Fix Fast Lane
 
 Before running the 6 checks, assess whether the task qualifies for the fast lane. Fast-lane tasks bypass all delegation checks and the full pipeline:
@@ -88,6 +37,70 @@ If all conditions are met, use `/quick-fix` directly. No spec, no Guardian revie
 
 ---
 
+## The Six Checks
+
+Before delegating to another agent, evaluate the task against these criteria (derived from Google/DeepMind/MIT agent scaling research).
+
+**Decision summary - use this to navigate early exits:**
+
+| Check                | YES outcome                                   | NO outcome          |
+| -------------------- | --------------------------------------------- | ------------------- |
+| 1. Sequentiality     | STOP - Single Agent                           | Proceed to Check 2  |
+| 2. Decomposability   | Proceed to Check 3                            | STOP - Single Agent |
+| 3. Domain Complexity | High → STOP - Single Agent; Low/Med → Proceed | -                   |
+| 4. Competence        | STOP - Single Agent                           | Delegate            |
+| 5. Tool Density      | STOP - Single Agent                           | Proceed to Check 6  |
+| 6. Cost-Benefit      | STOP - Single Agent                           | Delegate            |
+
+### 1. Sequentiality Check
+
+Does step N depend on step N-1's output?
+
+- **YES**: **STOP - Single Agent.** Multi-agent coordination degrades sequential reasoning tasks by 39-70%.
+- **NO**: Proceed to Check 2.
+
+### 2. Decomposability Check
+
+Can the task be split into independent sub-problems that don't share mutable state?
+
+- **YES** (e.g., analyze revenue + analyze costs + analyze market independently): Consider parallel specialist dispatch with centralized aggregation. Centralized coordination yields up to +80.9% on decomposable tasks. Proceed to Check 3.
+- **NO** (e.g., each step modifies shared state the next step reads): **STOP - Single Agent.** Artificial decomposition of inherently sequential work wastes token budget on coordination instead of reasoning.
+
+### 3. Domain Complexity Check
+
+Estimate task complexity on a Low/Medium/High scale.
+
+- **Low** (structured output, clear subtask boundaries, e.g., generate config, write CRUD): Multi-agent overhead is tolerable; delegate if specialist adds value.
+- **Medium** (moderate decomposability, some sequential dependencies, e.g., feature implementation, pipeline design): Delegate only when the specialist's domain expertise clearly exceeds yours.
+- **High** (strict sequential dependencies, dynamic state evolution, e.g., debugging production failures, stateful migration, multi-step constraint satisfaction): **STOP - Single Agent.** Coordination overhead consumes reasoning capacity at high complexity.
+
+### 4. Competence Check
+
+Is this task within your declared expertise?
+
+- **YES** - if you estimate your confidence at >50%: **STOP - Single Agent.** (Research basis: accuracy gains from delegation plateau once a single agent exceeds ~45% task baseline accuracy.)
+- **NO**: Delegate to the specialist agent.
+
+### 5. Tool Density Check
+
+Does the sub-task require 5+ distinct tool calls?
+
+- **YES**: **STOP - Single Agent.** Coordination overhead consumes context budget needed for tool use.
+- **NO**: Multi-agent may help if the task is parallelizable. Proceed to Check 6.
+
+### 6. Cost-Benefit Check
+
+Will delegation increase token cost >2x for less than a 10% likely improvement in output quality or task accuracy?
+
+- **YES**: **STOP - Single Agent.**
+- **NO**: Delegate if the specialist's domain expertise justifies the overhead.
+
+### Default Posture
+
+**Prefer self-sufficiency.** Delegation is a cost (context loss, token overhead, error amplification risk), not a free upgrade.
+
+**Conflicting check results:** If checks produce conflicting recommendations (e.g., sequentiality check favors single agent but competence check favors delegation), the single-agent recommendation takes precedence. Sequentiality (Check 1) and Tool Density (Check 5) checks override all others when they fire.
+
 ## Coordination Anti-Patterns
 
 These patterns are proven to degrade agent system performance. Avoid them.
@@ -104,9 +117,9 @@ These patterns are proven to degrade agent system performance. Avoid them.
 
 ## Context Isolation
 
-See `skills/subagent-execution/SKILL.md` section "Context Mode: Fresh vs Inherited" for the canonical rules. Summary: default to fresh context (task spec, file paths, acceptance criteria only); use inherited context only when explicitly justified (continuation, prior-attempt awareness).
+See `~/.copilot/skills/subagent-execution/SKILL.md` section "Context Mode: Fresh vs Inherited" for the canonical rules. Summary: default to fresh context (task spec, file paths, acceptance criteria only); use inherited context only when explicitly justified (continuation, prior-attempt awareness).
 
-For structured multi-task execution with two-stage review, load `skills/subagent-execution/SKILL.md`.
+For structured multi-task execution with two-stage review, load `~/.copilot/skills/subagent-execution/SKILL.md`.
 
 ## PLAN-phase Agent Routing (v8.0)
 

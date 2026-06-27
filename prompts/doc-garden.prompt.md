@@ -6,6 +6,7 @@ tools:
   - read
   - search
   - execute
+  - edit
 ---
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
@@ -19,16 +20,16 @@ Audit the documentation in this repository for:
 **Scope**: ${input:scope}
 
 **Priority 1: Load Audit Criteria**
-Load `skills/guardian/references/doc-audit-checklist.md` via `read_file`. If inaccessible, halt and report: "Critical: doc-audit-checklist.md is inaccessible. Cannot proceed without audit criteria."
+Load `~/.copilot/skills/guardian/references/doc-audit-checklist.md` via `read_file`. If inaccessible, halt and report: "Critical: doc-audit-checklist.md is inaccessible. Cannot proceed without audit criteria."
 
 **Priority 2: Audit One Category at a Time**
-For each of the 6 categories in the checklist (in order), scan the documentation and record findings with severity levels. Focus on one category completely before moving to the next.
+For each category in the checklist (in order), scan the documentation and record findings with severity levels. Focus on one category completely before moving to the next.
 
 **Priority 3: Validate Cross-References**
-Execute `audit.py --lint` to check for broken links and version mismatches.
+Execute `audit.py --lint` to check for broken links and version mismatches. If `audit.py --lint` is not found or exits with an error, record a Critical finding: "audit.py --lint failed: [error output]. Cross-reference validation incomplete." and continue to Priority 4.
 
 **Priority 4: Generate Report**
-Create `.copilot/artifacts/doc-health-report.md` with all findings, organized by severity (Critical first, then High, Medium).
+Create `.copilot/artifacts/doc-health-report.md` with all findings, organized by severity (Critical first, then High, Medium). If the target directory does not exist, create it before writing the report. If the write fails, output the full report content directly in the conversation and note the write failure.
 
 **Priority 5: Summarize**
 Provide a one-paragraph summary in conversation, highlighting Critical findings only.

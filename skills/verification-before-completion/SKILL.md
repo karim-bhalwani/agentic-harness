@@ -29,7 +29,7 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 
 **Core principle:** Evidence before claims, always.
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+**This rule applies to all implications of completion, not just exact phrases. Reframing a claim in different words does not exempt it from verification.**
 
 ## The Iron Law
 
@@ -55,6 +55,18 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+## Completion Verification Sequence
+
+Before any completion claim, execute these steps **in order**:
+
+1. **Run the Gate Function** (steps 1–5 above). If no verification command exists for the claimed scope (e.g., no test suite, no build tool available), do NOT proceed with the completion claim. Instead, state: "No verification command is available for [claim]. Cannot confirm status. Required action: [specify what must be set up or provided before this claim can be verified]."
+2. **Execute Mid-Execution Drift Checks** if at a phase transition (see section below).
+3. **Verify each Intent Contract condition** against fresh evidence.
+4. **Complete the Definition of Done checklist** - all seven items must be checked.
+5. **Produce the Quality Gates Report** in the required format.
+
+Only after all five steps are complete may you state the completion claim. The Gate Function, Drift Checks, Intent Contract check, Definition of Done, and Quality Gates Report are all required. No step may be skipped.
+
 ## Common Failures
 
 | Claim                 | Requires                        | Not Sufficient                 |
@@ -69,13 +81,13 @@ Skip any step = lying, not verifying
 
 ## Failure Taxonomy
 
-| Failure Mode | Symptom | Immediate Recovery |
-|---|---|---|
-| `claim_without_evidence` | "Tests pass" stated without running tests | Run the command. Get the output. State the claim with the output as evidence. |
-| `partial_verification` | Only some tests run; claiming full pass | Run the full suite. Partial runs are not verification. |
-| `stale_evidence` | Citing a test run from earlier in the session | Re-run. Evidence expires. A pass 10 steps ago is not current evidence. |
-| `agent_self_report_trusted` | Accepting subagent "success" without VCS diff check | Run `git diff` or check file modification timestamps. Agent reports are claims, not evidence. |
-| `exit_code_ignored` | Command ran but exit code not checked | Exit code 0 = success. Any other = failure. Always check. |
+| Failure Mode                | Symptom                                             | Immediate Recovery                                                                                                                                      |
+| --------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `claim_without_evidence`    | "Tests pass" stated without running tests           | Run the command. Get the output. State the claim with the output as evidence.                                                                           |
+| `partial_verification`      | Only some tests run; claiming full pass             | Run the full suite. Partial runs are not verification.                                                                                                  |
+| `stale_evidence`            | Citing a test run from earlier in the session       | Evidence is stale if the verification was not run in the current message turn. Re-run any command whose output was not produced in this exact response. |
+| `agent_self_report_trusted` | Accepting subagent "success" without VCS diff check | Run `git diff` or check file modification timestamps. Agent reports are claims, not evidence.                                                           |
+| `exit_code_ignored`         | Command ran but exit code not checked               | Exit code 0 = success. Any other = failure. Always check.                                                                                               |
 
 ## Red Flags - STOP
 
@@ -90,16 +102,16 @@ Skip any step = lying, not verifying
 
 ## Rationalization Prevention
 
-| Excuse                                  | Reality                |
-| --------------------------------------- | ---------------------- |
-| "Should work now"                       | RUN the verification   |
-| "I'm confident"                         | Confidence ≠ evidence  |
-| "Just this once"                        | No exceptions          |
-| "Linter passed"                         | Linter ≠ compiler      |
-| "Agent said success"                    | Verify independently   |
-| "I'm tired"                             | Exhaustion ≠ excuse    |
-| "Partial check is enough"               | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter     |
+| Excuse                                  | Reality                      |
+| --------------------------------------- | ---------------------------- |
+| "Should work now"                       | RUN the verification         |
+| "I'm confident"                         | Confidence ≠ evidence        |
+| "Just this once"                        | No exceptions                |
+| "Linter passed"                         | Linter ≠ compiler            |
+| "Agent said success"                    | Verify independently         |
+| "I'm tired"                             | Exhaustion ≠ excuse          |
+| "Partial check is enough"               | Partial proves nothing       |
+| "Different words so rule doesn't apply" | No wording escapes this rule |
 
 ## Key Patterns
 
@@ -161,7 +173,7 @@ From 24 failure memories:
 
 ## Checkpoint Templates
 
-For standardized evidence presentation, use the role-specific paste templates in `references/checkpoint-templates.md`. Fill the sections that apply to your role; skip what doesn't. These ensure verification evidence is consistent and auditable across agents and sessions.
+For standardized evidence presentation, use the role-specific paste templates in `references/checkpoint-templates.md`. Fill the sections that apply to your role; skip what doesn't. These ensure verification evidence is consistent and auditable across agents and sessions. If `references/checkpoint-templates.md` is not available in context, use the Quality Gates Report Format defined in this document as the fallback template.
 
 **Rule applies to:**
 
@@ -251,7 +263,7 @@ Before wrapping up any task, run a structured quality gates triage and report in
 
 - Report **deltas only** (PASS/FAIL). No verbose logs unless a gate fails.
 - Include a **requirements coverage** line mapping each requirement to Done/Deferred + reason.
-- If a gate fails, include the actual error output and iterate up to 3 fixes before escalating.
+- If a gate fails, apply one fix, re-run the full verification command, and report the new output. Repeat this cycle up to 3 times. If the gate still fails after 3 attempts, stop and message the user with: what was tried, what failed each time, and what you believe the root cause is.
 
 ## Intent Contracts
 

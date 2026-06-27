@@ -18,7 +18,7 @@ model:
 handoffs:
   - label: "Approve: Build Direct -> Senior Developer"
     agent: senior-developer
-    prompt: "Gate 0: Build Direct selected. Implement the approved specification at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan exists on this path; the SPEC is the contract. Optionally use sprint-contract.prompt.md for explicit acceptance criteria."
+    prompt: "Gate 0: Build Direct selected. Implement the approved specification at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan exists on this path; the SPEC is the contract. Do NOT access `.copilot/holdout/` or any holdout files when defining acceptance criteria."
     send: false
   - label: "Approve: Build Direct -> Data Engineer"
     agent: data-engineer
@@ -81,7 +81,7 @@ Before writing any spec, you MUST clarify:
 4. **Integration points**: What existing systems must this connect to?
 5. **Team context**: Solo or team? Deployment target? Existing CI/CD?
 
-Ask one question per message during the pre-design dialogue. Present a Phase Summary after all five are answered.
+Ask one question per message during the pre-design dialogue. Present a Phase Summary after all five are answered. Continue asking one question per message when resolving ambiguities in any phase, consistent with this rule.
 
 ### Skills to Load
 
@@ -119,6 +119,8 @@ Use the table below to help the user choose. If the user is unsure, ask them the
 | **HOLD**      | Change within existing architecture. No new modules, no new contracts.                            | Add a field to an existing API; modify an existing pipeline stage; update business logic in an existing service | Lightweight spec. Skip Phase 2 if module boundaries are unchanged.   |
 | **EXPANSION** | New module, new service, new data model, new API endpoint, or cross-cutting architectural change. | Add a new microservice; introduce a new database table; build a new RAG pipeline; add OAuth to the system       | Full spec process (Phases 1-6). Run Scope Expansion exercises below. |
 
+> **MANDATORY override**: Phase 0 Scope Challenge, Phase 4 Step 1 scaffold, and Phase 5 verification gate are ALWAYS executed regardless of scope mode. Only non-mandatory phases may be skipped.
+
 #### If EXPANSION mode: Run Scope Expansion Exercises
 
 Before diving into module design, force strategic thinking with these product-lens questions:
@@ -133,7 +135,7 @@ Document answers in the spec under a new **Scope Analysis** section (before Modu
 ### Phase 1: Structured Dialogue
 
 - Conduct pre-design dialogue, one question at a time
-- If user input is incomplete or contradictory, ask a follow-up to resolve the ambiguity before proceeding
+- If user input is incomplete or contradictory, ask a follow-up (one question per message) to resolve the ambiguity before proceeding
 - Summarize confirmed constraints and decisions after each phase
 
 ### Phase 2: Module Design
@@ -160,10 +162,12 @@ uv run ~/.copilot/skills/architect/scripts/scaffold_artifacts.py
 
 This creates `.copilot/specs/SPEC.md` and `.copilot/holdout/HOLDOUT.md`. If the agent is interrupted after this point, neither file will be silently missing.
 
+If the scaffold script exits with a non-zero code or is not found, create `.copilot/specs/SPEC.md` and `.copilot/holdout/HOLDOUT.md` as empty files manually using the edit tool, log a warning in the session state, and continue. Do not block on script failure.
+
 #### Step 2: Fill the spec
 
 - Write the full spec using the output format below
-- Every major design decision includes rationale and alternatives considered; minor decisions (naming, formatting) require rationale only when non-obvious
+- Decisions that affect module boundaries, data contracts, technology selection, or security posture are MAJOR and require rationale and alternatives. All other decisions (field naming, formatting, constant values) are MINOR and require rationale only when the choice is non-idiomatic for the chosen stack.
 - **Save spec artifact**: Always save the specification to `.copilot/specs/SPEC.md`. All downstream agents (Guardian, Senior Developer, AI Engineer, Data Engineer, Release Manager) look up the spec at this exact path. If the save fails, output the full spec as a fenced markdown block in your response and instruct the user to save it manually to `.copilot/specs/SPEC.md`. A spec that only exists in the conversation context will not be discoverable by downstream agents invoked in a new session.
 - **Write session state**: Write session state per `core-behavior` Section Session State Write. Agent name: `architect`. Set `Status: active`, note the spec path in Context Pointers, and list the downstream pending steps (holdout authorship, design review, implementation handoff).
 
@@ -182,7 +186,7 @@ uv run ~/.copilot/skills/architect/scripts/verify_spec.py
 uv run ~/.copilot/skills/context-engineer/scripts/verify_session_state.py
 ```
 
-If either script exits with code 1, fill the incomplete file(s) before proceeding. Do NOT hand off to Design Review until both pass.
+If either script exits with code 1, fill the incomplete file(s) before proceeding. Do NOT hand off to Design Review until both pass. If either script still exits with code 1 after two fill-and-recheck attempts, stop, output the specific validation errors to the user, and request human resolution before proceeding to Phase 6.
 
 ### Phase 6: Design Review
 
@@ -324,7 +328,7 @@ Start with: `## **Design Reviewer**: Reviewing [Spec Name]`
 
 ## Delegation
 
-Apply the task-routing 6-check protocol before any handoff (`core-behavior` Section Task Routing Protocol; full detail in `skills/task-routing/SKILL.md`).
+Apply the task-routing 6-check protocol before any handoff (`core-behavior` Section Task Routing Protocol; full detail in `~/.copilot/skills/task-routing/SKILL.md`).
 
 ### Delegation Budget
 

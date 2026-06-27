@@ -21,7 +21,7 @@ The Thinker skill provides a set of cognitive operations that prevent "leaping t
 
 ## Cognitive Chain Protocol
 
-Before executing any non-trivial task, run this chain internally. Not every step requires visible output, but every step must happen mentally before acting.
+Before executing any non-trivial task, run this chain internally. UNDERSTAND, EXTRACT, and HIGHLIGHT must be surfaced as visible markdown blocks when Workflow Integration is triggered. APPLY and VALIDATE may remain internal unless the task requires explicit auditability.
 
 ```text
 UNDERSTAND ─► EXTRACT ─► HIGHLIGHT ─► APPLY ─► VALIDATE
@@ -35,7 +35,7 @@ UNDERSTAND ─► EXTRACT ─► HIGHLIGHT ─► APPLY ─► VALIDATE
                  prior work.  to follow.            criteria.
 ```
 
-**When to apply:** Any task involving design decisions, multi-step execution, security-sensitive logic, debugging, or review. Skip for trivial/mechanical tasks (rename, typo fix, config change).
+**When to apply:** Any task involving design decisions, multi-step execution, security-sensitive logic, debugging, or review. Skip only when the task has no design decisions, no cross-file impact, and no security or correctness risk - for example: a single-file typo fix, a local variable rename with no semantic change, or a comment update. When in doubt, apply the full chain.
 
 **If VALIDATE fails:** Enter BACKTRACK. Step back, re-examine assumptions, propose a new path or escalate to the user.
 
@@ -92,12 +92,13 @@ Whenever a complex task is received:
 - [ ] All assumptions are documented and flagged by confidence level
 - [ ] Constraints (security, performance, scope) are explicitly listed
 - [ ] Plan accepted by `implementer` or `architect` before execution
+- [ ] If the plan is not accepted, return to BACKTRACK, revise based on the rejection reason, and re-present. If acceptance cannot be determined (e.g., no other agent responds), flag the plan as unverified and surface it to the user before proceeding.
 
 ## Constraints
 
 - **NO implementation.** This is purely for reasoning and planning.
 - **NO direct filesystem edits.**
-- **MANDATORY for ambiguous requests.**
+- **MANDATORY when the user request does not specify at least one of: success criteria, technical constraints, or target component. If any of these are missing, do not skip the chain.**
 
 ## Outputs & Deliverables
 
@@ -108,7 +109,7 @@ Whenever a complex task is received:
 
 ## Additional Constraints
 
-- **Governance Constraints:** Document assumptions and decisions in `decisions.md` when they change architecture or scope
+- **Governance Constraints:** Document assumptions and decisions in `decisions.md` when they change architecture or scope. If `decisions.md` does not exist, note in the action plan that it must be created before handoff, and include the decision log entry as a block in the thinker output so it is not lost.
 
 ## Common Pitfalls
 

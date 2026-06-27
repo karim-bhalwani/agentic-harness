@@ -2,6 +2,7 @@
 name: guardian
 description: "Comprehensive quality assurance, security auditing, automated testing, and performance optimization. Covers code review, OWASP Top 10, testing pyramid, E2E automation, visual regression, and vulnerability scanning. Use when reviewing code, hunting bugs, scanning for vulnerabilities, profiling performance, building test suites, or validating implementation quality. DO NOT USE FOR: writing production code (use implementer), system design (use architect), debugging root cause analysis (use systematic-debugging), or LLM-specific security (use genai-security)."
 argument-hint: "[code to review]"
+disable-model-invocation: false
 license: MIT
 compatibility: "VS Code"
 metadata:
@@ -15,6 +16,10 @@ metadata:
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Tiered: core (~150 lines) + on-demand references
 
 Unified reference for code quality gates. For extended procedures (doc staleness, entropy, wiki health, quality grading, feedback rules), load the deep-dive reference.
+
+**Input handling**: If no code or artifact is provided, respond with: "No artifact was supplied. Please paste the code, file path, or PR diff you want reviewed. Guardian requires source material to produce a report." Do not generate a review report against an empty input.
+
+**Non-source artifacts**: If the submitted artifact is not application source code (e.g., IaC, SQL migrations, shell scripts), apply only the applicable sub-sections of the checklist and explicitly note which sections were skipped and why.
 
 ## Code Review Standards
 
@@ -35,7 +40,7 @@ Unified reference for code quality gates. For extended procedures (doc staleness
 0. **Phase 0 (SCOPE AUDIT)**: Verify implementation matches spec before assessing quality. See Scope Drift Detection below.
 1. **Phase 1 (CRITICAL)**: SQL & Data Safety, Race Conditions, LLM Trust Boundary, Auth. Blocks merge. Load [review-checklist.md](./references/review-checklist.md) for full checklist.
 2. **Phase 2 (INFORMATIONAL)**: Side Effects, Dead Code, Test Gaps, Performance, Crypto, Doc Staleness. Advisory only.
-3. **Phase 3 (FRAGILITY, opt-in)**: Future-edit fragility analysis. For each non-trivial function, ask: "What plausible change by a developer without full context would break this?" Load [fragility-catalogue.md](./references/fragility-catalogue.md) for the 10-pattern catalogue and post-mortem format. Activate via `/pre-mortem` prompt or when explicitly requested.
+3. **Phase 3 (FRAGILITY, opt-in)**: Future-edit fragility analysis. For each function with cyclomatic complexity > 3, more than one caller, or any shared mutable state, ask: "What plausible change by a developer without full context would break this?" Load [fragility-catalogue.md](./references/fragility-catalogue.md) for the 10-pattern catalogue and post-mortem format. Activate via `/pre-mortem` prompt or when explicitly requested.
 
 ### Scope Drift Detection
 
@@ -78,7 +83,7 @@ For GenAI/LLM security, load the `genai-security` skill.
 
 ## Calibration
 
-Load calibration examples when findings are borderline or severity is unclear:
+Load calibration examples when a finding matches a known ambiguous pattern (e.g., a pattern also present in false_positives.md), when two severity levels are equally defensible, or when the finding is in a grey-area category such as performance or documentation:
 
 - [true_positives.md](./references/calibration_examples/true_positives.md) - Bugs Guardian MUST catch
 - [false_positives.md](./references/calibration_examples/false_positives.md) - Patterns that look suspicious but are correct
@@ -111,7 +116,7 @@ Load calibration examples when findings are borderline or severity is unclear:
 
 ### Documentation Staleness
 
-[Load extended-review-procedures.md for full procedure]
+If extended-review-procedures.md is not loaded, perform a minimal check: flag any doc file whose last-modified date predates the code it describes by more than 30 days, and note findings as INFORMATIONAL. For the full procedure, load [extended-review-procedures.md](./references/extended-review-procedures.md).
 ```
 
 ## Definition of Done
@@ -128,10 +133,11 @@ Load calibration examples when findings are borderline or severity is unclear:
 - Does NOT modify code (read-only analysis and reporting)
 - Does NOT implement fixes (hand off to implementation agent)
 - Does NOT replace formal security audits or compliance certifications
+- Does NOT write or persist files regardless of available tooling; file persistence is always delegated to the orchestrator or user
 
 ## Scripts
 
-- [scripts/verify_review.py](./scripts/verify_review.py) - Verification gate for `.copilot/artifacts/review-report.md`. Run from the orchestrating agent (typically Release Manager) before gating on the review verdict. Guardian itself cannot write files (no `editFiles` tool); the orchestrator or user persists the report. Exits 1 if the report is missing, too short, or lacks expected tokens (Findings/Verdict/Severity/Scope).
+- [scripts/verify_review.py](./scripts/verify_review.py) - Verification gate for `.copilot/artifacts/review-report.md`. Run from the orchestrating agent (typically Release Manager) before gating on the review verdict. The orchestrator or user persists the report; Guardian is read-only. Exits 1 if the report is missing, too short, or lacks expected tokens (Findings/Verdict/Severity/Scope).
 
 ## References
 

@@ -17,11 +17,11 @@ If the input fix description is invalid or unclear, respond with: "The fix descr
 
 **Eligibility check** (all must be true, otherwise use `/feature-plan` instead):
 
-- Single file change (or 2-3 files for a rename/refactor ripple)
+- Single file change only (rename/refactor ripples touching 2-3 files do not qualify; use `/feature-plan` instead)
 - Under ~20 lines changed
 - No new dependencies introduced
 - No architectural or API contract changes
-- Fix description includes a clear expected outcome, verifiable through automated tests or a defined manual checklist
+- Fix description includes a clear expected outcome verifiable through automated tests. Manual verification is only acceptable if the expected outcome can be expressed as explicit, enumerated steps the model can state in its output (e.g., "open X, click Y, confirm Z appears")
 - Not a security-critical code path
 
 If ANY condition is false, stop and say: "This exceeds quick-fix scope. Use `/feature-plan` to plan it properly."
@@ -32,6 +32,7 @@ If ANY condition is false, stop and say: "This exceeds quick-fix scope. Use `/fe
 2. **Match conventions** of the existing code (naming, style, patterns)
 3. **Apply** the minimal change that solves the stated problem
 4. **Verify** by running lint/typecheck if configured; run affected tests if they exist
+   - If lint, typecheck, or tests fail after the change, do NOT proceed. State what failed and stop with: "Fix applied but verification failed: [failure summary]. Manual review required before committing."
 5. **Self-check**: re-read the diff. Is it correct, complete, and minimal?
 
 **Output**:

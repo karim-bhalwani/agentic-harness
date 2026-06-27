@@ -54,7 +54,10 @@ Producers create directories if needed. Files always reflect "latest" (no versio
 ### Tiered Loading
 
 - **Tier 1** (< 200 lines): Identity, tech stack, critical rules. Loaded at session start.
-- **Tier 2**: Architecture, patterns, agent guide. Loaded when task matches domain.
+- **Tier 2**: Architecture, patterns, agent guide. Load per these explicit triggers:
+  - `ARCHITECTURE.md`: load when the task involves adding, removing, or evaluating components or dependencies
+  - `CODEBASE_PATTERNS.md`: load when the task involves writing, reviewing, or refactoring code
+  - `AGENT_GUIDE.md`: load when the task involves coordinating between agents or reviewing agent output
 - **Tier 3**: Decision log, historical context. Loaded only when referenced.
 
 ## Smart Project Initialization
@@ -81,7 +84,10 @@ Producers create directories if needed. Files always reflect "latest" (no versio
 
 Agents persist pipeline progress to `.copilot/state/SESSION_STATE.md` for cross-session resume.
 
-1. **On startup**: check for `SESSION_STATE.md`; if `active`/`paused`, summarize and ask to resume
+1. **On startup**: check for `SESSION_STATE.md`:
+   - If `Status: active` or `Status: paused`: summarize and ask to resume
+   - If `Status: completed`: ignore and proceed normally
+   - If `SESSION_STATE.md` exists but `Status` is absent, empty, or not one of `active`, `paused`, `completed`: notify the user of the corrupt state, display the raw `Status` value found, and ask whether to reset the file using `scaffold_session_state.py` or to proceed without session state
 2. **At breakpoints**: write/update the state file
 3. **On completion**: mark status `completed`
 
@@ -91,29 +97,36 @@ Load [session_state_schema.md](./references/session_state_schema.md) for the ful
 
 ### Update Protocol
 
-1. Read existing context first (never overwrite blindly)
-2. Mark changes with date and reason
-3. Move deprecated decisions to `[SUPERSEDED]` with link to replacement
+See **Context File Write Rules** for the authoritative ordered protocol.
 
-### Merge Rules
+## Context File Write Rules
 
-- `[CONFIRMED]` (code-verified) overrides `[DECLARED]` (user-stated)
-- `[DECLARED]` overrides `[INFERRED]` (auto-detected)
-- `[UNKNOWN]` items always surfaced to user
+All write operations to context files follow this ordered priority list:
+
+1. **Read before write**: always read existing context before any update; never overwrite blindly
+2. **Mark changes**: annotate changes with date and reason
+3. **Confidence override hierarchy** (highest to lowest): `[CONFIRMED]` > `[DECLARED]` > `[INFERRED]`
+   - A new `[CONFIRMED]` entry replaces an existing `[DECLARED]` or `[INFERRED]` entry for the same field
+   - A `[DECLARED]` entry replaces an existing `[INFERRED]` entry for the same field
+   - An existing `[CONFIRMED]` entry is never replaced by `[DECLARED]` or `[INFERRED]` evidence; only newer `[CONFIRMED]` evidence may update a `[CONFIRMED]` entry
+4. **Supersede, don't delete**: move deprecated decisions to `[SUPERSEDED]` with a link to the replacement
+5. **Surface unknowns**: `[UNKNOWN]` items are always surfaced to the user
 
 ## Definition of Done
+
+Apply **Context File Write Rules** when producing or updating any context file. All of the following must be true:
 
 - [ ] Tier 1 `PROJECT_CONTEXT.md` exists and is under 200 lines
 - [ ] All detected items marked `[CONFIRMED]`, `[INFERRED]`, or `[UNKNOWN]`
 - [ ] Build and test commands verified (actually run, not assumed)
-- [ ] No `[UNKNOWN]` items remain without a documented reason
+- [ ] No `[UNKNOWN]` items remain without an inline note in `PROJECT_CONTEXT.md` explaining why the value could not be determined (e.g., `[UNKNOWN] - no package manifest found`)
 - [ ] Context files are consistent with actual codebase state
 
 ## Constraints
 
 - Does NOT write application code or tests
-- Does NOT override `[CONFIRMED]` context with `[DECLARED]` or `[INFERRED]`
 - Does NOT generate speculative documentation (everything must have a source)
+- For confidence-level override rules, see **Context File Write Rules** above
 
 ## Integration Points
 
@@ -124,6 +137,8 @@ Load [session_state_schema.md](./references/session_state_schema.md) for the ful
 - **memory tool**: Cross-session facts stored via Copilot Memory
 
 ## Scripts
+
+> **Missing script fallback**: If a referenced script does not exist at the expected path, stop and notify the user with the exact missing path before proceeding. Do not attempt to recreate the script.
 
 - [scripts/scaffold_bible.py](./scripts/scaffold_bible.py) - Create stub files for all 6 Project Bible documents. Run at the start of the documentation phase. Mode: `--mode greenfield` or `--mode brownfield`.
 - [scripts/verify_bible.py](./scripts/verify_bible.py) - Verification gate for the Project Bible. Exits 1 if any of the 6 files is still a stub or missing.

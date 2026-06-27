@@ -16,12 +16,14 @@ metadata:
 
 > **Pipeline position**: **specify** (2 of 4) - `brainstorming` -> **`architect`** -> `concise-planning` -> `implementer`. This skill produces `.copilot/specs/SPEC.md`. It runs AFTER `brainstorming` has aligned intent and BEFORE `concise-planning` sequences execution.
 
+> **Brainstorming gate**: If no brainstorming artifact or documented intent alignment is provided by the user, pause and respond: "This skill requires a completed brainstorming session. Please run the brainstorming skill first and share the output before proceeding." Do not begin scope determination or spec authoring.
+
 ## Dependencies
 
 Load the following via `read_file` before using this skill. Skills marked ★ have `disable-model-invocation: true` and cannot self-invoke - they **must** be loaded explicitly.
 
-- `skills/thinker/SKILL.md` ★ - structured reasoning scaffold (UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY)
-- `skills/brainstorming/SKILL.md` - requirement exploration and idea-to-design dialogue
+- `~/.copilot/skills/thinker/SKILL.md` ★ - structured reasoning scaffold (UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY)
+- `~/.copilot/skills/brainstorming/SKILL.md` - requirement exploration and idea-to-design dialogue
 
 ## Overview
 
@@ -37,7 +39,7 @@ The Architect skill focuses on the "What" and "Where" of a system, rather than t
 
 ## Workflow
 
-0. **Scope Challenge**: Determine scope mode (REDUCTION / HOLD / EXPANSION) before any design work. REDUCTION skips the spec process. HOLD uses a lightweight spec. EXPANSION runs the full workflow including Scope Expansion Exercises.
+0. **Scope Challenge**: Determine scope mode (REDUCTION / HOLD / EXPANSION) before any design work. If REDUCTION: stop here - no spec is produced; apply the fix, review, and conclude. If HOLD: produce sections 1, 3, 4, and 5 only (see per-mode checklist below). If EXPANSION: run the full workflow including Scope Expansion Exercises.
 1. **Understand**: Analyze requirements and identify core business logic primitives.
 2. **Define Boundaries**: Determine where modules start and end.
 3. **Design Contracts**: Define API endpoints, data models, and interface protocols.
@@ -47,11 +49,38 @@ The Architect skill focuses on the "What" and "Where" of a system, rather than t
 
 ### Scope Modes
 
-| Mode          | When                                                | Design Depth                                                 |
-| ------------- | --------------------------------------------------- | ------------------------------------------------------------ |
-| **REDUCTION** | Bug fix, config change, dead code removal           | No spec. Fix, review, done.                                  |
-| **HOLD**      | Feature within existing architecture                | Lightweight spec, skip module design if boundaries unchanged |
-| **EXPANSION** | New module/service/data model, architectural change | Full spec with Scope Expansion Exercises                     |
+| Mode          | When                                                | Design Depth                                                                                                                  |
+| ------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **REDUCTION** | Bug fix, config change, dead code removal           | No spec. Fix, review, done.                                                                                                   |
+| **HOLD**      | Feature within existing architecture                | Sections 1, 3, 4, and 5 only. Omit sections 2, 6–13 unless the feature introduces a new module boundary or data model change. |
+| **EXPANSION** | New module/service/data model, architectural change | Full spec with Scope Expansion Exercises                                                                                      |
+
+### Per-Mode Checklists
+
+**REDUCTION** - Bug fix, config change, dead code removal. No spec is produced.
+
+- [ ] Identify the defect or change target
+- [ ] Apply the fix (code, config, or removal)
+- [ ] Review the change for correctness and side effects
+- [ ] Done - do not advance to concise-planning or create a SPEC.md
+
+**HOLD** - Feature within existing architecture. Partial spec only.
+
+- [ ] Section 1: System Overview (goal, scope, out-of-scope)
+- [ ] Section 3: API Contracts (only for interfaces that change)
+- [ ] Section 4: Data Models (only for models that change)
+- [ ] Section 5: Error Handling (updated rescue map for changed codepaths)
+- [ ] Omit sections 2, 6–13 unless a new module boundary or data model is introduced
+- [ ] Save spec to `.copilot/specs/SPEC.md` with `scope_mode: HOLD`
+- [ ] Advance to concise-planning
+
+**EXPANSION** - New module, service, data model, or architectural change. Full spec required.
+
+- [ ] Complete all thirteen sections (see Mandatory Output below)
+- [ ] Run Scope Expansion Exercises before module design
+- [ ] Create holdout file at `.copilot/holdout/HOLDOUT-<feature-name>.md`
+- [ ] Save spec to `.copilot/specs/SPEC.md` with `scope_mode: EXPANSION`
+- [ ] Advance to concise-planning only after spec is reviewed and approved
 
 ### Scope Expansion Exercises (EXPANSION mode only)
 
@@ -66,7 +95,11 @@ Document answers in the spec under a **Scope Analysis** section (before Module B
 
 ## Mandatory Output: `SPEC.md` Template
 
-Every architectural design must produce or update a specification following this structure. **All thirteen sections are required** - a specification that omits any section leaves room for interpretation and is not considered complete.
+This section applies to **EXPANSION** and **HOLD** modes only. REDUCTION mode produces no spec.
+
+For **EXPANSION** mode, all thirteen sections are required - a specification that omits any section leaves room for interpretation and is not considered complete.
+
+For **HOLD** mode, only sections 1, 3, 4, and 5 are required. Omit sections 2, 6–13 unless the feature introduces a new module boundary or data model change (see Per-Mode Checklists above).
 
 ### Mandatory Frontmatter (Schema Version Contract)
 
@@ -114,10 +147,10 @@ Bumping a schema version is a **breaking change**: every consumer must be update
 
 ### Decision Sections (10–13): Unknowns, Risks & Acceptance
 
-10. **Open Questions**: Decisions that are unresolved at spec time, each with an owner and resolution deadline. These must be resolved before implementation begins.
+10. **Open Questions**: Decisions that are unresolved at spec time, each with an owner and resolution deadline. These must be resolved before implementation begins. If any Open Questions remain unresolved at spec completion, set frontmatter `status` to `"Blocked"` and do not advance to concise-planning until all questions have an owner-confirmed resolution documented in this section.
 11. **Risks**: Identified design risks with likelihood, impact, and mitigation strategy. Includes architectural assumptions that, if wrong, would require significant rework.
 12. **Deferred Decisions**: Design choices deliberately postponed with documented rationale, acceptance criteria for when they must be revisited, and who owns the revisit.
-13. **Acceptance Scenarios**: Reference to the holdout file (`.copilot/holdout/HOLDOUT-<feature-name>.md`). Three to ten intent-level behavioral scenarios authored by the Architect, stored in the holdout directory. Scenarios are NOT included inline - they are referenced only. Implementation agents must not read the holdout file.
+13. **Acceptance Scenarios**: Reference to the holdout file (`.copilot/holdout/HOLDOUT-<feature-name>.md`). Three to ten intent-level behavioral scenarios authored by the Architect, stored in the holdout directory. Scenarios are NOT included inline - they are referenced only. The spec records the holdout file path so stakeholders can locate it. Implementation agents must not open or read the holdout file contents; they may only see the reference path recorded here.
 
 ### Error & Rescue Map (Required in Section 5)
 
@@ -234,7 +267,7 @@ ContentFilterError           | N <- GAP | --                         | 500 error
 - [ ] Holdout file created at `.copilot/holdout/HOLDOUT-<feature-name>.md`
 - [ ] `spec_schema_version` declared in SPEC frontmatter and present in `tests/contracts/schema_versions.SUPPORTED_SCHEMA_VERSIONS`
 - [ ] `holdout_schema_version` declared in HOLDOUT frontmatter
-- [ ] Spec reviewed and accepted by implementer or stakeholder before implementation begins
+- [ ] Spec reviewed and accepted by implementer or stakeholder before implementation begins (implementer reviews `SPEC.md` only; the holdout file referenced in Section 13 must not be opened or read by the implementer)
 
 ## Constraints
 
@@ -269,7 +302,6 @@ Load these when generating specifications and API contracts:
 
 - [SPEC.md](./references/SPEC.md) - System specification template. Load at the start of every architecture task to ensure all required sections (primitives, contracts, boundaries, data flows) are covered.
 - [api-specification.md](./references/api-specification.md) - API contract template with OpenAPI-style schemas. Load when designing REST, gRPC, or event-driven interfaces.
-- [sprint-contract-template.md](./references/sprint-contract-template.md) - Builder/Guardian sprint-contract negotiation template. Load when running `/sprint-contract` to surface ambiguity between the spec and the implementation plan before coding starts.
 - [sprint-contract-template.md](./references/sprint-contract-template.md) - Builder/Guardian sprint-contract negotiation template. Load when running `/sprint-contract` to surface ambiguity between the spec and the implementation plan before coding starts.
 
 ### Scripts

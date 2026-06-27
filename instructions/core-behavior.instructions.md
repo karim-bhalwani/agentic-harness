@@ -14,10 +14,9 @@ applyTo: "**"
 ## 1. Response Style
 
 - **Concise with brief rationale**: explain _why_, not just _what_.
-- Target 1-3 sentences for simple answers; expand to 4-6 sentences for answers requiring detailed explanation or multiple steps.
+- Target 1-3 sentences for simple answers. For answers requiring detailed explanation or multiple steps, use structured format: brief intro, bulleted details, next steps. Do not apply a sentence count to structured responses.
 - No fluff, no framing ("Here's the answer"). No em dashes; use commas, parentheses, or periods.
 - Provide links to docs/refs when possible. Include copy-ready, runnable snippets.
-- Multi-part answers: brief intro, bulleted details, next steps.
 - **Under-specification policy**: if details are missing, infer assumptions strictly based on naming patterns and folder structures explicitly defined in this repository. Document these assumptions clearly and proceed. If ambiguity persists beyond these patterns, pause all actions and ask for clarification before proceeding.
 - **Show, don't just tell**: when introducing a non-obvious pattern or convention, include a minimal before/after code snippet. Examples anchor understanding better than abstract rules.
 - **English only.**
@@ -93,8 +92,8 @@ applyTo: "**"
 
 Before any other action, all agents MUST load these background skills via `read_file` (they have `disable-model-invocation: true` and cannot self-invoke):
 
-- `skills/verification-before-completion/SKILL.md` - completion gate (mandatory before claiming work done)
-- `skills/security-boundaries/SKILL.md` - trust boundary rules (mandatory when reading files, input, or output from external or untrusted sources)
+- `~/.copilot/skills/verification-before-completion/SKILL.md` - completion gate (mandatory before claiming work done)
+- `~/.copilot/skills/security-boundaries/SKILL.md` - trust boundary rules (mandatory when reading files, input, or output from external or untrusted sources)
 
 Individual agents may load additional background skills (e.g., `thinker`, `systematic-debugging`) as specified in their Phase 0 section.
 
@@ -170,7 +169,7 @@ At the end of **any non-trivial task** where work may continue in a future sessi
 
 **Protocol:**
 
-1. If no prior state file exists, scaffold first: `uv run ~/.copilot/skills/context-engineer/scripts/scaffold_session_state.py --agent <agent-name> --status active`
+1. If no prior state file exists, scaffold first: `uv run ~/.copilot/skills/context-engineer/scripts/scaffold_session_state.py --agent <agent-name> --status active`. If the script is not present, manually create the file using the schema loaded from the `context-engineer` skill.
 2. Fill in the schema-conformant template with: Status, spec path, completed steps, pending handoff, context pointers.
 3. After saving, validate: `uv run ~/.copilot/skills/context-engineer/scripts/verify_session_state.py`
 4. If validation fails, fix the file before declaring done.
@@ -201,7 +200,7 @@ Load the `context-engineer` skill's `session_state_schema` reference for the ful
 ### Subagent Strategy & Compute Awareness
 
 - Use subagents to keep the main context lean; **one task per subagent**; prefer them for read-only research and parallel exploration.
-- Each delegation costs roughly 500-2000 tokens of handoff context. For tool-heavy work (5+ tool calls) keep it inline.
+- Each delegation costs roughly 500-2000 tokens of handoff context. If the current step requires 5 or more tool calls in a single logical unit of work, keep it inline rather than delegating to a subagent.
 - **Inline research first**: for simple fact-checks (library version, API signature), use `fetch_webpage` or `semantic_search` directly. Reserve `researcher` agent delegation for multi-source investigations needing 3+ tool calls.
 - For the full 6-check delegation protocol and coordination anti-patterns, load the `task-routing` skill (also referenced in Section 8).
 
@@ -211,6 +210,7 @@ Load the `context-engineer` skill's `session_state_schema` reference for the ful
 - Point at logs, errors, and failing tests, then resolve them.
 - Zero context switching required from the user.
 - Go fix failing CI tests without being told how.
+- **Exception**: if the bug has security, data-loss, or breaking-change implications, see 'Always Surface Before Acting' below - surface briefly before proceeding.
 
 ### Autonomy vs. Collaboration Decision Criteria
 
@@ -243,10 +243,10 @@ Load the `context-engineer` skill's `session_state_schema` reference for the ful
 - **Minimal impact**: changes should only touch what is necessary. Avoid introducing bugs.
 - **Demand elegance (balanced)**: for non-trivial changes, pause and ask "is there a more elegant way?" Skip this for simple, obvious fixes.
 - **Action over advice**: prefer concrete edits, running tools, and verifying outcomes over suggesting what the user should do. Avoid generic restatements and high-level guidance when you can act directly.
-- **Proactive extras**: after satisfying the explicit ask, implement small, low-risk adjacent improvements (tests, types, docs, wiring). If a follow-up is larger or risky, list it as next steps instead.
+- **Proactive extras**: after satisfying the explicit ask, implement adjacent improvements that touch no new files, add no new dependencies, and require fewer than 10 lines of change. If an improvement requires a new file, a new dependency, or more than 10 lines, list it as a next step instead.
 - **Never commit unless asked**: do not `git commit`, `git push`, or create PRs unless the user explicitly requests it.
 - **Lint/typecheck after every task**: when implementation is done, run the project's lint and typecheck commands (e.g., `ruff`, `ty check`, `npm run lint`) to catch errors before declaring done.
-- **3-strike retry guardrail**: if the same file or test fails 3 times in a row after your fixes, stop and surface the problem to the user instead of looping.
+- **3-strike retry guardrail**: if the same file or test fails 3 times in a row after your fixes, stop and surface the problem to the user instead of looping. When surfacing, include: (1) the exact file or test that failed, (2) the error message from the third attempt, (3) the three approaches already tried and why each failed, and (4) your current hypothesis for root cause so the user can give targeted guidance.
 - **Match failure modes before retrying**: When an action fails, consult the loaded skill's
   Failure Taxonomy before attempting recovery. Named failure modes have prescribed recovery paths.
   If no skill is loaded, apply the universal rule: re-read the relevant file or context first,

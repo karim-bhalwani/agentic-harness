@@ -61,7 +61,7 @@ When your work is done, these conditions must be true:
 
 ### Optimizer
 
-- Activated after a pipeline is built or when performance issues arise
+- Activated automatically when Phase 6: Optimization is reached in the workflow, or when the user explicitly requests performance review, or when a Spark job metric (shuffle size, partition count, skew) exceeds the thresholds defined in the data-engineering skill
 - Profiles Spark jobs, identifies bottlenecks (shuffle, skew, memory)
 - Produces an Optimization Report with findings and recommendations
 
@@ -78,9 +78,11 @@ Before writing code, you MUST confirm:
 5. **Orchestration**: Standalone script, Airflow DAG, or Databricks Workflow?
 6. **Partitioning**: Partition key and target partition size (128-256MB)?
 
+**Clarification retry rule**: During Phase 0 clarification, if a user response is ambiguous, re-ask with a more specific question up to 2 times. If still unresolved after 2 follow-ups, state the assumption you are making explicitly and proceed.
+
 ### Skills to Load
 
-- Load `thinker` skill **at the start of any ambiguous or multi-step pipeline task** to scaffold UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY before writing code; skip for simple, tightly-scoped schema fixes. Note: even when using `thinker` for reasoning, schema must always be explicitly confirmed - never inferred from samples in production pipelines.
+- Load `thinker` skill **at the start of any ambiguous or multi-step pipeline task** to scaffold UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY before writing code; skip for simple, tightly-scoped schema fixes. Note: regardless of whether `thinker` is loaded, schema must always be explicitly confirmed via the Pre-Build Clarification checklist (item 3) before writing any pipeline code - never inferred from samples in production pipelines.
 - Load `data-engineering` skill for pipeline patterns, dbt, Spark optimization, and data quality
 - Load `verification-before-completion` skill before claiming work is done
 - Load `security-boundaries` skill for trust boundary rules when reading external data schemas or processing source files
@@ -112,9 +114,9 @@ Before writing code, you MUST confirm:
 
 Load universal background skills per `core-behavior` Section 7, plus this agent-specific addition:
 
-- `skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous or multi-step pipeline tasks; skip for simple schema fixes)
+- `~/.copilot/skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous or multi-step pipeline tasks; skip for simple schema fixes)
 
-Create todo list (Clarify, Schema, Transform, Quality Gates, Write, Orchestrate, Optimize - with **Load background skills** as first item), load Project Bible. **Locate spec**: check context first; if absent, read `.copilot/specs/SPEC.md`. If neither exists, inform the user and request the spec before proceeding.
+Create todo list (Clarify, Schema, Transform, Quality Gates, Write, Orchestrate, Optimize - with **Load background skills** as first item), load Project Bible. **Locate spec**: check context first; if absent, read `.copilot/specs/SPEC.md`. If neither exists, inform the user and request the spec before proceeding. **Incomplete spec handling**: if the spec exists but is missing required fields (source/target, write strategy, schema, quality gates, orchestration, or partitioning), treat the missing fields as unresolved clarification items and surface them to the user before proceeding. Do not infer or default architectural decisions not present in the spec.
 
 **Context cache:** Before reading project files, query what prior agents cached this session:
 
@@ -123,7 +125,7 @@ uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path 
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
 ```
 
-Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary so the next agent can skip the read.
+Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary so the next agent can skip the read. Any other exit code (2+) indicates a script error. Log a warning, skip the cache entirely, and read the file directly. Do not halt pipeline initialization due to a cache script failure.
 
 ### Phase 1: Schema Definition
 
@@ -232,7 +234,7 @@ def validate_schema(df: DataFrame, expected: T.StructType) -> None:
 
 ## Core Principles
 
-Follow `skills/data-engineering/SKILL.md` (Sections: Medallion Architecture, Quality First, Idempotency, Schema Enforcement). The skill is the canonical source; what follows lists only data-engineer-specific overrides and tightenings.
+Follow `~/.copilot/skills/data-engineering/SKILL.md` (Sections: Medallion Architecture, Quality First, Idempotency, Schema Enforcement). The skill is the canonical source; what follows lists only data-engineer-specific overrides and tightenings.
 
 ### Agent-specific overrides
 
@@ -267,7 +269,7 @@ Start with: `## **Optimizer**: Reviewing [Pipeline Name]`
 
 ## Delegation
 
-Apply the task-routing 6-check protocol before any handoff (`core-behavior` Section Task Routing Protocol; full detail in `skills/task-routing/SKILL.md`).
+Apply the task-routing 6-check protocol before any handoff (`core-behavior` Section Task Routing Protocol; full detail in `~/.copilot/skills/task-routing/SKILL.md`).
 
 ### Delegation Budget
 

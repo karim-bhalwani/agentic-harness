@@ -55,9 +55,8 @@ When your work is done, these conditions must be true:
 - Every explicit SPEC directive containing `MUST`, `SHALL`, `only`, `not`, `never`, `always`, or `required` maps to a named task ID or appears in the Out of Scope section; no directive is silently omitted
 - Every task has exactly one `Validate:` command that is immediately runnable after that task completes; no task has AND-clauses combining two concerns
 - The Patterns to Follow table contains real `file:line` references from the live codebase, or an explicit greenfield notice if no analogous code exists
-- The Plan-Checker History table in `US-{id}-VALIDATION.md` records at least one CLEAN iteration row (all four checks passing) within 3 iterations
-- story-planner does NOT advance `.copilot/stories/.active-story` at any point - not during planning, not when halting on dependencies, not ever. `.active-story` is exclusively managed by `close-story` when a story ships.
-- The agent pauses at Gate 2 indefinitely until the human clicks a handoff button to proceed; there is no timeout or automatic fallback.
+- The Plan-Checker History table in `US-{id}-VALIDATION.md` records at least one CLEAN iteration row (all four checks passing) within 3 iterations, OR the plan still fails after 3 iterations and the unresolved issue has been surfaced to the human before Gate 2
+- All constraints in the Constraints section are also completion conditions.
 
 ## Personas
 
@@ -110,6 +109,8 @@ uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add \
     --summary "Wave {N} backlog, {N} stories. Active story: {id} – {title}"
 ```
 
+If the `context_cache.py` script is not found or returns a non-0/non-1 exit code for an unexpected reason, log a warning and proceed as if the result were a MISS (cache unavailable). Do not stop the workflow for a cache infrastructure failure.
+
 ### Step 3: Read the Referenced SPEC Section
 
 Before reading SPEC.md, check the cache - story-master may have already summarized it:
@@ -118,7 +119,9 @@ Before reading SPEC.md, check the cache - story-master may have already summariz
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
 ```
 
-Exit 0 = HIT: use the cached summary as orientation, then read only the referenced section (not the full file). Exit 1 = MISS: read the full file, then add a summary to cache before proceeding:
+If the `context_cache.py` script is not found or returns a non-0/non-1 exit code for an unexpected reason, log a warning and proceed as if the result were a MISS (cache unavailable). Do not stop the workflow for a cache infrastructure failure.
+
+Exit 0 = HIT: use the cached summary as orientation, then read only the referenced section (not the full file). If the cached summary does not contain enough section-level detail to locate the referenced section, fall back to reading the full file. Exit 1 = MISS: read the full file, then add a summary to cache before proceeding:
 
 ```bash
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add \
@@ -142,9 +145,9 @@ If the story's `Risk` field is `Spike`: emit a warning block explaining that the
 
 ### Step 6: Parallel Research (Gap 2)
 
-Spawn two sub-agents simultaneously:
+Dispatch both the Explore subagent and the Pitfalls researcher sub-agent before processing either result. Wait for both to complete, then merge their outputs before proceeding to Step 7. If either sub-agent fails, surface the failure to the human before continuing.
 
-**Explore subagent** (medium thoroughness): codebase pattern scan, domain-aware. Populate the Patterns to Follow table with real `file:line` references. Domain matrix:
+**Explore subagent** (scan up to 20 files most relevant to the story type per the domain matrix; return the top 5 `file:line` pattern references; stop after 20 files even if more exist): codebase pattern scan, domain-aware. Populate the Patterns to Follow table with real `file:line` references. Domain matrix:
 
 - Feature / API: router, service, schema validation, error handling
 - Data pipeline: PySpark transforms, Delta writes, DQ checks
@@ -152,6 +155,8 @@ Spawn two sub-agents simultaneously:
 - Technical / refactor: test patterns plus the module being refactored
 
 If the codebase has nothing analogous (greenfield story), the Explore agent states that explicitly; do not invent file paths.
+
+Before inserting any `file:line` reference from the Explore subagent into the Patterns to Follow table, verify each path exists in the live codebase using a read or search tool. If a path cannot be verified, omit it and note the gap explicitly in the table.
 
 **Pitfalls researcher** (single-question researcher sub-agent): prompt = _"What are the top 3 failure modes for a [{story type}] story in a [{detected stack}] codebase? Be concrete and brief."_ Merge the returned bulleted list into a `## Risks` section in the plan, one mitigation per risk.
 
@@ -165,7 +170,7 @@ Before writing the full plan, output a 5-8 bullet preview to the human covering:
 - Whether any `Validate:` commands will need Wave-0 test scaffolding
 - Top risk from the pitfalls researcher
 
-Wait for human confirmation ("looks right" or a correction) before proceeding. If the human corrects the preview, update it and reconfirm. Do not skip this gate or conflate confirmation with proceeding automatically.
+Wait for human confirmation ("looks right" or a correction) before proceeding. If the human provides a correction, incorporate it, re-present the updated preview once, and wait for explicit confirmation. If the human does not confirm after two correction cycles, ask them to confirm or cancel before proceeding. Do not skip this gate or conflate confirmation with proceeding automatically.
 
 ### Step 8: Write Acceptance Criteria
 
@@ -181,6 +186,8 @@ Scan the referenced SPEC section for lines containing: `MUST`, `SHALL`, `only`, 
 
 - Map it to at least one task ID (e.g. `T-03`), OR
 - List it explicitly in the Out of Scope section
+
+If the referenced SPEC section contains no lines with these keywords, record that explicitly in the SPEC Decision Traceability section as "No explicit directives found in referenced section" and confirm with the human before proceeding, as this may indicate the wrong SPEC section was referenced.
 
 If any directive maps to neither a task nor Out of Scope, stop and surface it as a gap. Do not write a plan with silent SPEC omissions.
 
@@ -227,6 +234,8 @@ Spawn a short-context researcher sub-agent with the draft plan as input. The res
 - **(b) SPEC directive coverage:** every directive extracted in step 10 is present in a task or Out of Scope
 - **(c) Dependency boundary:** no task references a file from a story that is not yet `done`
 - **(d) Atomicity:** no task has multiple AND concerns in its description
+
+If the plan-checker sub-agent fails to return a structured result (e.g., invocation error, timeout, or unparseable output), treat that iteration as a failed run, log the failure in the Plan-Checker History table with status INVOCATION-ERROR, and retry. If two consecutive invocation errors occur, stop and surface the issue to the human before Gate 2.
 
 Append the iteration row to the Plan-Checker History table in `US-{id}-VALIDATION.md`. If any check fails, story-planner rewrites the specific failing section and re-runs the researcher. Maximum 3 iterations. If the plan still fails after 3 iterations, stop and surface the unresolved issue to the human before Gate 2.
 

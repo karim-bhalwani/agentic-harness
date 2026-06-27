@@ -14,15 +14,15 @@ metadata:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Deps: architect, guardian, verification-before-completion
 
-> **Pipeline position**: **build** (4 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> **`implementer`**. This skill produces working, tested code. It runs LAST. Earlier steps may be compressed for localized changes affecting fewer than 10 lines and not impacting external APIs (use `/quick-fix`) but never skipped for non-trivial work.
+> **Pipeline position**: **build** (4 of 4) - `brainstorming` -> `architect` -> `concise-planning` -> **`implementer`**. This skill produces working, tested code. It runs LAST. Earlier steps may be compressed for localized changes whose total diff (lines added plus lines removed) is fewer than 10 lines and that do not impact external APIs (use `/quick-fix`) but never skipped for non-trivial work.
 
 ## Dependencies
 
 Load the following via `read_file` before using this skill. Skills marked ★ have `disable-model-invocation: true` and cannot self-invoke - they **must** be loaded explicitly.
 
-- `skills/architect/SKILL.md` - spec authoring and module design patterns; required to understand what you are implementing
-- `skills/guardian/SKILL.md` - quality gate definitions; sets the acceptance bar your implementation must meet
-- `skills/verification-before-completion/SKILL.md` ★ - completion gate; must be loaded before entering the VERIFY phase
+- `~/.copilot/skills/architect/SKILL.md` - spec authoring and module design patterns; required to understand what you are implementing
+- `~/.copilot/skills/guardian/SKILL.md` - quality gate definitions; sets the acceptance bar your implementation must meet
+- `~/.copilot/skills/verification-before-completion/SKILL.md` ★ - completion gate; must be loaded before entering the VERIFY phase
 
 ## Overview
 
@@ -55,7 +55,7 @@ For tasks too small for a full `SPEC.md` (bug fixes, small features, refactors),
 - **Error modes**: what can fail, how it should fail
 - **Success criteria**: how to verify it works
 
-This replaces "Read Spec" for small tasks. For anything with architectural implications, still require a full `SPEC.md`.
+This replaces "Read Spec" for small tasks. For any change that adds or modifies a public API, introduces a new dependency, changes a data schema, or crosses module boundaries, require a full `SPEC.md`.
 
 ## Workflow
 
@@ -64,11 +64,13 @@ This replaces "Read Spec" for small tasks. For anything with architectural impli
 - **Use `SPEC.md`** for feature work and any task with architectural impact.
 - **Use the mini-contract** (2-4 bullets above) for small fixes/refactors that do not require a full spec.
 - **Use `.copilot/specs/CONTRACT-<feature>.md`** when present as the sprint planning artifact that translates the spec into implementable acceptance criteria.
-- **Apply precedence rules**:
-- If both `SPEC.md` and `CONTRACT-<feature>.md` exist, use `SPEC.md` for architecture/intent and `CONTRACT-<feature>.md` for sprint scope and acceptance criteria.
-- If no sprint contract exists, implement directly from `SPEC.md` (or from the mini-contract for small tasks).
+- **Apply precedence rules** (decision tree - evaluate top to bottom, stop at the first match):
+  1. If total task diff < 10 lines and no external API impact → use mini-contract.
+  2. Else if `CONTRACT-<feature>.md` exists → use `SPEC.md` for architecture and `CONTRACT-<feature>.md` for acceptance criteria.
+  3. Else if `SPEC.md` exists → use `SPEC.md`.
+  4. Else → stop and request a spec before proceeding.
 
-2. **Setup Tests**: Write unit tests for expected behavior before implementation. Use the sprint contract's acceptance criteria and error scenarios to derive test cases.
+2. **Setup Tests**: Write **one** unit test at a time for expected behavior, then write the minimal code to pass it before writing the next test (one Red-Green-Refactor cycle per test). Use the sprint contract's acceptance criteria and error scenarios to derive test cases.
 
    #### TDD Discipline (Red-Green-Refactor)
 
@@ -106,7 +108,7 @@ This replaces "Read Spec" for small tasks. For anything with architectural impli
 6. **Self-Review** (before handoff): Re-read every changed file as a reviewer would. Check against the original spec/mini-contract. Fix issues in-place before requesting external review. See checklist below.
 7. **Refactor**: Simplify and clean up code while maintaining test passes.
 
-### Self-Review Checklist (Step 5)
+### Self-Review Checklist (Step 6)
 
 Before declaring work done or handing off to Guardian:
 
@@ -169,7 +171,7 @@ When `.copilot/state/FEATURE_PROGRESS.json` exists, update it as you work:
 
 ## Subagent Status Contract
 
-When invoked as a subagent, return exactly one status (`DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` / `BLOCKED`) per the canonical protocol in `skills/subagent-execution/SKILL.md` Section Subagent Status Protocol.
+When invoked as a subagent, return exactly one status (`DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` / `BLOCKED`) per the canonical protocol in `~/.copilot/skills/subagent-execution/SKILL.md` Section Subagent Status Protocol.
 
 **Implementer-specific rules:**
 
@@ -213,7 +215,7 @@ When invoked as a subagent, return exactly one status (`DONE` / `DONE_WITH_CONCE
 
 - **NO architectural changes.** Follow the `architect`'s spec strictly.
 - **NO deployment management.**
-- **NO code without tests.**
+- **NO code without tests** (exception: for obvious bug fixes, tests may be written immediately after the fix; see `test_written_after_code` in Failure Taxonomy).
 
 ## Common Pitfalls
 
@@ -221,6 +223,7 @@ When invoked as a subagent, return exactly one status (`DONE` / `DONE_WITH_CONCE
 - **Ignoring Type Hints**: Skipping annotations makes code fragile and self-documenting. Type safety prevents 40% of bugs.
 - **Over-Clever Code**: Smart code is hard to maintain. Choose readability over cleverness every time.
 - **Deviating from Spec**: "Just a small change" breaks the contract. If the spec is wrong, escalate to `architect`, don't improvise.
+- **SPEC vs CONTRACT conflict**: If `SPEC.md` and `CONTRACT-<feature>.md` conflict on a specific requirement, do not resolve it unilaterally. Set the task status to `blocked`, document the conflict in `notes`, and surface it to the user before proceeding.
 - **Not Handling Errors**: Silent failures or generic exceptions hide problems. Fail fast with specific, descriptive errors.
 - **Mixing Concerns**: Business logic in controllers or data access in services. Respect module boundaries.
 - **No Regression Tests**: Fixing one bug while introducing another. Red-Green testing prevents this.

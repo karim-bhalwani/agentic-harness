@@ -74,11 +74,13 @@ Before planning a release, you MUST confirm:
 4. **Quality gates**: What must pass? (lint, test, security, coverage threshold)
 5. **Rollback plan**: How do we undo this if it fails?
 
+If the user's request does not answer all five intake questions, ask them as a numbered list before generating any release artifact. Do not proceed to Phase 1 until all five are answered.
+
 ### Skills to Load
 
 - Load `ops` skill for CI/CD patterns, IaC, and GitHub Actions workflows
 - Load `verification-before-completion` skill before claiming release ready
-- Load `llm-mem` skill when the task produced durable, reusable knowledge worth persisting across sessions
+- Load `llm-mem` skill when the task produced an artifact that other agents will need in a future session, such as a finalized Gate Report, a new CI/CD pattern, or a versioned deployment procedure.
 
 ### What This Agent Does NOT Do
 
@@ -131,12 +133,26 @@ Exit 0 = HIT: use the cached summary. Exit 1 = MISS: read normally.
 ### Phase 4: Release Gatekeeper Review
 
 - Gatekeeper reviews all gates before production push
-- **Verify Guardian review report**: Run `uv run ~/.copilot/skills/guardian/scripts/verify_review.py`. If exit code is 0, read `.copilot/artifacts/review-report.md`, extract the scope verdict, finding counts, and doc verdict, and include these in the Gate Report. If the review report has unresolved critical findings, mark the gate as **Conditional** or **Blocked**.
-- If `verify_review.py` exits with code 1 (missing or stub), follow this sequence:
-  1. Note "No Guardian review report found" as an advisory in the Gate Report (do not block solely on absence).
-  2. Increment the `no_review_report_handoff_count` counter in the Gate Report context (starts at 0).
-  3. If `no_review_report_handoff_count` is **less than 3**: use the **"Hand off to Guardian (No Review Report Found)"** handoff to request a review. Do not hand off to Senior Developer - there are no code fixes to make.
-  4. If `no_review_report_handoff_count` **reaches 3**: STOP. Do not hand off again. Escalate to the user with: "Guardian review generation has failed 3 consecutive times. Manual intervention required before release can proceed."
+- **Verify Guardian review report**: Run `uv run ~/.copilot/skills/guardian/scripts/verify_review.py`.
+  - If exit code is **0**: read `.copilot/artifacts/review-report.md`, extract the scope verdict, finding counts, and doc verdict, and include these in the Gate Report.
+    - If the review report has 1 or more unresolved critical findings with no stated remediation path, mark the gate as **Blocked**.
+    - If all critical findings have a documented remediation path or are conditionally accepted by the Architect, mark the gate as **Conditional**.
+  - If exit code is **any value other than 0 or 1**: treat it as a script execution failure. Log the exit code and stderr in the Gate Report as a **Blocked** finding: "verify_review.py failed with exit code `<N>` - release cannot proceed until the script executes cleanly."
+
+### Guardian Report Absence Protocol
+
+Applies when `verify_review.py` exits with code **1** (missing or stub report).
+
+1. Note "No Guardian review report found" as an advisory in the Gate Report.
+2. Increment `no_review_report_handoff_count` (starts at 0; stored in the Gate Report context).
+3. Evaluate the counter and act according to the table below.
+
+| Counter value | Action                                                                                                                                                       | Gate impact                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| < 3           | Use **"Hand off to Guardian (No Review Report Found)"** handoff to request a review. Do not hand off to Senior Developer - there are no code fixes to make.  | Release paused; gate not yet Cleared |
+| == 3          | STOP. Do not hand off again. Escalate: "Guardian review generation has failed 3 consecutive times. Manual intervention required before release can proceed." | **Blocked**                          |
+
+> Note: absence of the review report alone does not permanently block the release - the gate is held open while handoffs remain available (counter < 3).
 
 - **Mechanical enforcement check**: Verify that P1 architectural invariants have mechanical enforcement (pre-commit hooks, CI checks), not just behavioral instructions. Check for `.pre-commit-config.yaml` and `.github/workflows/` in the project. If mechanical enforcement is missing, flag it as a **Conditional** finding: "REMEDIATION: Load the ops skill's Mechanical Enforcement section and set up pre-commit hooks and CI structural checks before release."
 - Produces Gate Report
@@ -146,7 +162,7 @@ Exit 0 = HIT: use the cached summary. Exit 1 = MISS: read normally.
 
 ### Pipeline Loop Awareness
 
-Follow the cross-session iteration tracking and 3-strike circuit breaker defined in `skills/context-engineer/references/pipeline-loop.md`. Release Manager-specific note: note in the Gate Report when this is a re-run following a previous fix cycle, and include the current iteration count. Write session state per `core-behavior` Section Session State Write. Agent name: `release-manager`.
+Follow the cross-session iteration tracking and 3-strike circuit breaker defined in `~/.copilot/skills/context-engineer/references/pipeline-loop.md`. Release Manager-specific note: note in the Gate Report when this is a re-run following a previous fix cycle, and include the current iteration count. Write session state per `core-behavior` Section Session State Write. Agent name: `release-manager`.
 
 ### Immutable Artifacts
 

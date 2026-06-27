@@ -13,9 +13,8 @@ updated: "01-July-2026"
 ## SQL Style
 
 - Uppercase all SQL keywords (`SELECT`, `FROM`, `WHERE`, `JOIN`, `GROUP BY`, `ORDER BY`, etc.).
-- Prefer CTEs (`WITH` clauses) over nested subqueries for readability and debuggability.
-- Alias all tables and columns in multi-table queries, and use schema prefixes to fully qualify ambiguous column references.
-- Always include schema prefix: write `dbo.TableName`, never bare `TableName`. Prevents ambiguity when multiple schemas exist.
+- Prefer CTEs (`WITH` clauses) over nested subqueries for readability and debuggability. This preference applies to subqueries in `FROM` clauses. Correlated subqueries in `SELECT` lists or `WHERE EXISTS`/`IN` clauses are acceptable when a CTE rewrite would not improve clarity.
+- Alias all tables and columns in multi-table queries. Always qualify table references with schema prefix (e.g., `dbo.TableName`). Always qualify column references with their table alias to eliminate ambiguity.
 
 ---
 
