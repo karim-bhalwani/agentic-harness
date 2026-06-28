@@ -11,6 +11,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- All public functions, classes, and modules have accurate docstrings matching their signatures
+- Documentation is consistent with the actual implementation (no drift)
+- A new team member can understand the codebase from the documentation alone
+
 Audit the documentation in this repository for:
 
 - **Freshness**: Documentation reflects current product versions, features, and API behaviors; outdated timestamps or deprecated references.

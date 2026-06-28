@@ -11,27 +11,28 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- The analysis or model is reproducible from the documented steps and data references
+- Every statistical claim includes its confidence interval or p-value
+- A peer can verify the findings without access to the original analyst's context
+
 Data science task: **${input:task}**
 
-## Skill Load
+## Startup Sequence
 
-Load `~/.copilot/skills/data-science/SKILL.md` via `read_file` before taking any other action. If `~/.copilot/skills/data-science/SKILL.md` cannot be read, stop and respond: "Skill file not found at ~/.copilot/skills/data-science/SKILL.md. Please ensure the file exists before continuing." Do not proceed without it.
+Execute these steps in order - do not interleave or reorder:
 
-## Pre-task Validation
-
-If the task description is ambiguous or missing critical context, ask only for the following before proceeding. Do not ask persona-specific questions (e.g., AUC vs. RMSE tradeoffs) until after the skill is loaded:
-
-- **Dataset location**: where the data lives (file path, database table, or API endpoint).
-- **Business question**: what decision this analysis will inform.
-- **Success metric**: what a good outcome looks like (e.g., AUC, RMSE, Precision at K, or minimum detectable effect for experiments).
-
-## Context to Load
-
-Before starting:
-
-- Check `.copilot/context/PROJECT_CONTEXT.md` for project constraints, data ownership, and previously agreed conventions.
-- Check `.copilot/specs/SPEC.md` if a spec exists (use it as the source of truth for feature definitions, target variable, and acceptance criteria).
-- Check `.copilot/artifacts/` for prior EDA reports, experiment logs, or model evaluation reports on the same dataset. If a prior artifact covers the same dataset and question, summarize what was found and explicitly state which steps you are skipping and why. If the prior artifact is more than 30 days old or the dataset has changed, treat it as stale and redo the relevant steps.
+1. **Load skill file.** Load `~/.copilot/skills/data-science/SKILL.md` via `read_file`. If it cannot be read, stop and respond: "Skill file not found at ~/.copilot/skills/data-science/SKILL.md. Please ensure the file exists before continuing." If the file is readable but does not contain a persona selection decision tree and leakage prevention rules, stop and respond: "Skill file at ~/.copilot/skills/data-science/SKILL.md appears incomplete or malformed. Please verify its contents before continuing."
+2. **Validate task.** If the task description is ambiguous or missing critical context, ask only for the following before proceeding. Do not ask persona-specific questions (e.g., AUC vs. RMSE tradeoffs) until after the skill is loaded:
+   - **Dataset location**: where the data lives (file path, database table, or API endpoint).
+   - **Business question**: what decision this analysis will inform.
+   - **Success metric**: what a good outcome looks like (e.g., AUC, RMSE, Precision at K, or minimum detectable effect for experiments).
+3. **Load project context.** Check `.copilot/context/PROJECT_CONTEXT.md` for project constraints, data ownership, and previously agreed conventions. Check `.copilot/specs/SPEC.md` if a spec exists (use it as the source of truth for feature definitions, target variable, and acceptance criteria). If SPEC.md or PROJECT_CONTEXT.md conflicts with the user-supplied task description, surface the conflict explicitly and ask the user to confirm which source of truth to follow before proceeding.
+4. **Check prior artifacts.** Check `.copilot/artifacts/` for prior EDA reports, experiment logs, or model evaluation reports on the same dataset. If a prior artifact covers the same dataset and question, summarize what was found and explicitly state which steps you are skipping and why. If the prior artifact is more than 30 days old or the dataset has changed, treat it as stale and redo all steps from data profiling onward, documenting which prior findings were invalidated.
+5. **Select persona** using the skill's decision tree, then begin work.
 
 ## Workflow
 

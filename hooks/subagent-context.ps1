@@ -18,8 +18,11 @@
 # Env vars:
 #   SKIP_SUBAGENT_CONTEXT=true  - bypass entirely (emergency circuit breaker)
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

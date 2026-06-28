@@ -23,8 +23,11 @@
 #                                      (e.g. SUBAGENT_BUDGET_GUARDIAN=5)
 #   GOVERNANCE_LEVEL=open            - warn instead of block
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 . (Join-Path $PSScriptRoot '_lib.ps1')
 
@@ -119,28 +122,28 @@ $writtenJson = Invoke-MMLockedFileOp -Path $counterPath -ScriptBlock {
         $counters.total = $projectedTotal
         $counters.by_agent[$subAgentName] = $projectedAgent
         $envelope = [ordered]@{
-            counters      = $counters
-            decision      = 'allow'
-            currentTotal  = $counters.total
-            currentAgent  = $projectedAgent
-            agentCap      = $agentCap
-            totalCap      = $totalCap
-            overTotal     = $false
-            overAgent     = $false
+            counters     = $counters
+            decision     = 'allow'
+            currentTotal = $counters.total
+            currentAgent = $projectedAgent
+            agentCap     = $agentCap
+            totalCap     = $totalCap
+            overTotal    = $false
+            overAgent    = $false
         }
         return ($envelope | ConvertTo-Json -Depth 5)
     }
     # Over budget - do NOT commit the increment (deny path). Persist the
     # unchanged counters so the file stays consistent for the next caller.
     $envelope = [ordered]@{
-        counters      = $counters
-        decision      = 'deny'
-        currentTotal  = $counters.total
-        currentAgent  = $currentForAgent
-        agentCap      = $agentCap
-        totalCap      = $totalCap
-        overTotal     = $overTotal
-        overAgent     = $overAgent
+        counters     = $counters
+        decision     = 'deny'
+        currentTotal = $counters.total
+        currentAgent = $currentForAgent
+        agentCap     = $agentCap
+        totalCap     = $totalCap
+        overTotal    = $overTotal
+        overAgent    = $overAgent
     }
     return ($envelope | ConvertTo-Json -Depth 5)
 }

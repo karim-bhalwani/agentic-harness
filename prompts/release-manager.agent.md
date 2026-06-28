@@ -104,7 +104,7 @@ uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path 
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
 ```
 
-Exit 0 = HIT: use the cached summary. Exit 1 = MISS: read normally.
+Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary to cache. Any other exit code or execution error: log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures.
 
 ### Phase 1: Changelog
 

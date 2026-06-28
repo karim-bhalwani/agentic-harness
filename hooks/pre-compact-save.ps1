@@ -13,8 +13,11 @@
 #
 # Output: JSON with systemMessage so the model sees a confirmation in chat.
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

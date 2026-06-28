@@ -15,8 +15,11 @@
 # Lifecycle: fires on Stop event. Always checks stop_hook_active to avoid
 # infinite loops (required — see HOOKS-GUIDE.md anti-patterns).
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

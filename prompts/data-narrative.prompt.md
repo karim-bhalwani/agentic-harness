@@ -11,6 +11,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- A `report.md` exists where every claim traces back to the code or source that produced it
+- An `inspector.json` provenance file binds each claim to its evidence
+- A stakeholder can act on the report without opening the source dataset
+
 Dataset: **${input:dataset}**
 
 ## What This Prompt Does

@@ -9,8 +9,11 @@
 #   GOVERNANCE_LEVEL=open|standard|strict|locked (default: standard)
 #   HOOK_LOG_DIR=<path>      - override structured hook log directory
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 . (Join-Path $PSScriptRoot '_lib.ps1')
 

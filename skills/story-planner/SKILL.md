@@ -26,3 +26,7 @@ skill provides the scaffolding and verification scripts that enforce the §3.2 a
 | [./scripts/scaffold_validation.py](./scripts/scaffold_validation.py) | Generates a `US-NN-VALIDATION.md` skeleton with empty Task Validation Matrix, AC Coverage Map, and Plan-Checker History table. Accepts `--story-id US-XX`.                          |
 | [./scripts/verify_plan.py](./scripts/verify_plan.py)                 | Validates a `US-NN-PLAN.md` file against the §3.2 schema. Checks required sections, AC rows, task format, validate commands, and pattern references. Exits 0 on pass, 1 on failure. |
 | [./scripts/verify_validation.py](./scripts/verify_validation.py)     | Validates a `US-NN-VALIDATION.md` file against the §3.4 schema. Checks header, table columns, enum values, and Plan-Checker History. Exits 0 on pass, 1 on failure.                 |
+
+## Related Skills
+
+- [story-master](../story-master/SKILL.md) - Produces the STORIES.md backlog that story-planner consumes on a per-story basis

@@ -40,6 +40,16 @@ When work is done, these conditions must be true:
 - Any Coupled Pairs that cannot merge independently are listed in the Coupled Pairs table with justification and mandated merge order.
 - The agent paused at Gate 1 without invoking story-planner. Gate 1 requires explicit human action to continue; no automated transition occurs.
 
+## Definition of Done
+
+- [ ] `.copilot/stories/STORIES.md` exists and passes `verify_stories.py` with exit 0
+- [ ] Every story row has all required fields populated (ID, Title, Type, Wave, Depends On, Priority, Effort, Security, Holdout, Risk, Status, Owner)
+- [ ] The dependency graph is a DAG (no cycles detected)
+- [ ] Stories in the same wave share no common files and have no dependency edge between them
+- [ ] `.copilot/stories/.active-story` written with the first Wave 1 story ID
+- [ ] Coupled Pairs table populated (even if empty) with justification for any coupled pairs
+- [ ] Gate 1 pause message displayed without auto-proceeding to story-planner
+
 ## Personas
 
 The story-master acts as a backlog architect and dependency surveyor. It reads an approved specification in full, extracts every deliverable, and arranges them into an ordered, wave-grouped backlog. It surfaces hidden couplings, flags security and holdout concerns, and ensures the team always knows which stories are safe to start in parallel -- without ever writing code or designing systems.

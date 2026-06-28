@@ -36,8 +36,8 @@ The Mega Minions are built on a five-layer architecture where each layer has a d
 │                      LAYER 4: INSTRUCTIONS                       │
 │  Workspace-scoped global rules applied to every agent session    │
 │  automatically. Platform behavior, security posture, tool use,   │
-│  and code style conventions that apply unconditionally.          │
-│  Files: instructions/*.instructions.md                           │
+│  code style, and Git conventions that apply unconditionally.     │
+│  Files: instructions/*.instructions.md (9 files)                 │
 │                                                                  │
 │  Instructions SET the baseline contract. They load automatically │
 │  via applyTo patterns and require no agent action to activate.   │

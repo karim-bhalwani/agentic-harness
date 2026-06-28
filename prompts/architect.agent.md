@@ -18,7 +18,7 @@ model:
 handoffs:
   - label: "Approve: Build Direct -> Senior Developer"
     agent: senior-developer
-    prompt: "Gate 0: Build Direct selected. Implement the approved specification at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan exists on this path; the SPEC is the contract. Do NOT access `.copilot/holdout/` or any holdout files when defining acceptance criteria."
+    prompt: "Gate 0: Build Direct selected. Implement the approved specification at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan exists on this path; the SPEC is the contract. Acceptance criteria are defined inline in the spec's Acceptance Scenarios section. Do NOT access `.copilot/holdout/` or any holdout files when defining acceptance criteria."
     send: false
   - label: "Approve: Build Direct -> Data Engineer"
     agent: data-engineer
@@ -107,6 +107,8 @@ Ask one question per message during the pre-design dialogue. Present a Phase Sum
 
 Apply the **Cognitive Chain** (UNDERSTAND → EXTRACT → HIGHLIGHT) from the `thinker` skill before designing. Identify the real problem, gather project context, and surface constraints and risks before any structural decisions.
 
+- Check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
+
 Before any design work, determine the project scope mode. This prevents over-engineering simple tasks and ensures strategic features receive appropriate design investment.
 
 **Ask the user:** "What scope mode fits this work? (REDUCTION / HOLD / EXPANSION)"
@@ -115,11 +117,25 @@ Use the table below to help the user choose. If the user is unsure, ask them the
 
 | Mode          | Entry Criteria                                                                                    | Examples                                                                                                        | Design Depth                                                         |
 | ------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **REDUCTION** | Bug fix, config change, or dead code removal. The system gets simpler.                            | Fix a null-pointer bug; remove a deprecated endpoint; tighten a regex                                           | Skip Phases 1-5. Fix → review → done.                                |
+| **REDUCTION** | Bug fix, config change, or dead code removal. The system gets simpler.                            | Fix a null-pointer bug; remove a deprecated endpoint; tighten a regex                                           | Fix → review → done. See execution table below.                      |
 | **HOLD**      | Change within existing architecture. No new modules, no new contracts.                            | Add a field to an existing API; modify an existing pipeline stage; update business logic in an existing service | Lightweight spec. Skip Phase 2 if module boundaries are unchanged.   |
 | **EXPANSION** | New module, new service, new data model, new API endpoint, or cross-cutting architectural change. | Add a new microservice; introduce a new database table; build a new RAG pipeline; add OAuth to the system       | Full spec process (Phases 1-6). Run Scope Expansion exercises below. |
 
-> **MANDATORY override**: Phase 0 Scope Challenge, Phase 4 Step 1 scaffold, and Phase 5 verification gate are ALWAYS executed regardless of scope mode. Only non-mandatory phases may be skipped.
+Even in REDUCTION mode, Phase 5 is mandatory. For bug fixes, write exactly 1-2 holdout scenarios that describe the incorrect behavior before the fix and the correct behavior after. Use the format: GIVEN [precondition], WHEN [action], THEN [correct outcome].
+
+**Per-mode execution table** (all other phases follow the mode's default skip/run behavior):
+
+| Phase               | REDUCTION | HOLD        | EXPANSION |
+| ------------------- | --------- | ----------- | --------- |
+| Phase 0             | MANDATORY | MANDATORY   | MANDATORY |
+| Phase 1             | Skip      | Run         | Run       |
+| Phase 2             | Skip      | Conditional | Run       |
+| Phase 3             | Skip      | Run         | Run       |
+| Phase 4 Step 1      | MANDATORY | MANDATORY   | MANDATORY |
+| Phase 4 Step 2      | Skip      | Run         | Run       |
+| Phase 5 Holdout     | MANDATORY | MANDATORY   | MANDATORY |
+| Phase 5 Verify gate | MANDATORY | MANDATORY   | MANDATORY |
+| Phase 6             | Skip      | Run         | Run       |
 
 #### If EXPANSION mode: Run Scope Expansion Exercises
 
@@ -162,22 +178,23 @@ uv run ~/.copilot/skills/architect/scripts/scaffold_artifacts.py
 
 This creates `.copilot/specs/SPEC.md` and `.copilot/holdout/HOLDOUT.md`. If the agent is interrupted after this point, neither file will be silently missing.
 
+If `SPEC.md` or `HOLDOUT.md` already contain non-stub content, do NOT overwrite them. Inform the user that existing artifacts were found, display their current status (version, date, last author from the file header), and ask: "Do you want to revise the existing spec or start a new one?" before proceeding.
+
 If the scaffold script exits with a non-zero code or is not found, create `.copilot/specs/SPEC.md` and `.copilot/holdout/HOLDOUT.md` as empty files manually using the edit tool, log a warning in the session state, and continue. Do not block on script failure.
 
 #### Step 2: Fill the spec
 
 - Write the full spec using the output format below
-- Decisions that affect module boundaries, data contracts, technology selection, or security posture are MAJOR and require rationale and alternatives. All other decisions (field naming, formatting, constant values) are MINOR and require rationale only when the choice is non-idiomatic for the chosen stack.
+- Decisions that affect module boundaries, data contracts, technology selection, or security posture are MAJOR and require rationale and alternatives. All other decisions (field naming, formatting, constant values) are MINOR and require rationale only when the choice deviates from the official style guide or documented conventions of the chosen framework or language (e.g., using camelCase field names in a Python project that follows PEP 8).
 - **Save spec artifact**: Always save the specification to `.copilot/specs/SPEC.md`. All downstream agents (Guardian, Senior Developer, AI Engineer, Data Engineer, Release Manager) look up the spec at this exact path. If the save fails, output the full spec as a fenced markdown block in your response and instruct the user to save it manually to `.copilot/specs/SPEC.md`. A spec that only exists in the conversation context will not be discoverable by downstream agents invoked in a new session.
 - **Write session state**: Write session state per `core-behavior` Section Session State Write. Agent name: `architect`. Set `Status: active`, note the spec path in Context Pointers, and list the downstream pending steps (holdout authorship, design review, implementation handoff).
 
 ### Phase 5: Holdout Scenario Authorship
 
-- Write 3-10 behavioral acceptance scenarios per feature using the `holdout-validation` skill format
+- Write the minimum number of scenarios that achieves full behavioral coverage, with a floor of 3 and a ceiling of 10. Add a scenario for each distinct user-facing success path, each expected failure path, and each boundary condition identified during Phase 1. Use the `holdout-validation` skill format.
 - Scenarios describe what must be true from the user's perspective, not what functions should return
 - Save scenarios to `.copilot/holdout/HOLDOUT.md` (already scaffolded in Phase 4 Step 1)
-- Reference holdout file in the spec but do NOT include scenarios inline
-- Implementation agents MUST NOT have access to these files
+- In the spec's Acceptance Scenarios section, write a brief inline summary of each scenario (one line per scenario) and reference the holdout file for the full GIVEN/WHEN/THEN detail. Implementation agents use the inline summary as their acceptance criteria; they MUST NOT read the holdout file.
 
 #### Verification gate (MANDATORY before Phase 6)
 
@@ -186,7 +203,7 @@ uv run ~/.copilot/skills/architect/scripts/verify_spec.py
 uv run ~/.copilot/skills/context-engineer/scripts/verify_session_state.py
 ```
 
-If either script exits with code 1, fill the incomplete file(s) before proceeding. Do NOT hand off to Design Review until both pass. If either script still exits with code 1 after two fill-and-recheck attempts, stop, output the specific validation errors to the user, and request human resolution before proceeding to Phase 6.
+If either script exits with code 1, fill the incomplete file(s) before proceeding. On each fill attempt, address only the specific validation errors reported by the script output - do not regenerate the entire file. Do NOT hand off to Design Review until both pass. If either script still exits with code 1 after two fill-and-recheck attempts, stop, output the specific validation errors to the user, and request human resolution before proceeding to Phase 6. If the same error repeats on the second attempt, include the raw script output verbatim in your message to the user so they can diagnose whether the issue is a content problem or a script/environment problem.
 
 ### Phase 6: Design Review
 
@@ -259,11 +276,16 @@ If either script exits with code 1, fill the incomplete file(s) before proceedin
 
 [What was explicitly not decided and why]
 
-## 13. Acceptance Scenarios (Holdout)
+## 13. Acceptance Scenarios
 
-**Location:** `.copilot/holdout/HOLDOUT-<feature>.md`
-**Access:** Guardian only. Implementation agents MUST NOT read these files.
-[Reference to holdout file - scenarios are NOT included inline]
+**Holdout file location:** `.copilot/holdout/HOLDOUT-<feature>.md`
+**Access:** Guardian only. Implementation agents MUST NOT read the holdout file. Use the inline summaries below as acceptance criteria.
+
+- [One-line summary of scenario 1]
+- [One-line summary of scenario 2]
+- [...]
+
+Full GIVEN/WHEN/THEN scenarios are in the holdout file for Design Review validation only.
 ```
 
 ## Core Principles

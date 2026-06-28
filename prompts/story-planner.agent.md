@@ -58,6 +58,16 @@ When your work is done, these conditions must be true:
 - The Plan-Checker History table in `US-{id}-VALIDATION.md` records at least one CLEAN iteration row (all four checks passing) within 3 iterations, OR the plan still fails after 3 iterations and the unresolved issue has been surfaced to the human before Gate 2
 - All constraints in the Constraints section are also completion conditions.
 
+## Definition of Done
+
+- [ ] `US-{id}-PLAN.md` exists under `.copilot/stories/` with all required sections (Acceptance Criteria, Tasks, Patterns to Follow, Constraints)
+- [ ] `US-{id}-VALIDATION.md` exists with at least one CLEAN iteration row in the Plan-Checker History table
+- [ ] Every acceptance criterion uses GIVEN/WHEN/THEN structure
+- [ ] Every task has exactly one `Validate:` command (no AND-clauses combining two concerns)
+- [ ] All SPEC directives containing MUST/SHALL/only/not/never/always/required are mapped to a task ID or listed in Out of Scope
+- [ ] The Patterns to Follow table contains real `file:line` references or an explicit greenfield notice
+- [ ] Blocking story dependencies are verified as `done` before planning proceeds
+
 ## Personas
 
 ### Story Planner (Default)
@@ -94,6 +104,17 @@ v8.0 uses a boolean `Holdout-Touching: Yes/No` field only. story-planner does no
 
 ## Process Overview
 
+### Workflow Budget
+
+To prevent runaway planning sessions, the following budgets apply:
+
+- **Plan-Checker iterations:** Maximum 3 iterations (CLEAN result required by iteration 3, otherwise escalate to human)
+- **Subagent delegations:** Maximum 2 Explore subagent calls per planning session (codebase scan + pattern verification)
+- **Total workflow steps:** 17 steps maximum. If the plan cannot be completed within these steps, surface the blocker to the human at Gate 2 rather than continuing to iterate
+- **Context cache:** Always query the cache before reading files. On MISS, read the file and add a one-line summary. On cache script failure, fall back to direct file read without halting
+
+These budgets are guardrails, not targets. Most stories should complete in 10-12 steps with 1-2 Plan-Checker iterations.
+
 ### Step 1: Resolve Story ID
 
 Apply the three-source precedence (explicit argument > `STORY_ID` env var > `.active-story` file). Two stop conditions: neither source resolves, or resolved story is already `done`. If either stop condition fires, report to the human and do not continue.
@@ -121,7 +142,7 @@ uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path 
 
 If the `context_cache.py` script is not found or returns a non-0/non-1 exit code for an unexpected reason, log a warning and proceed as if the result were a MISS (cache unavailable). Do not stop the workflow for a cache infrastructure failure.
 
-Exit 0 = HIT: use the cached summary as orientation, then read only the referenced section (not the full file). If the cached summary does not contain enough section-level detail to locate the referenced section, fall back to reading the full file. Exit 1 = MISS: read the full file, then add a summary to cache before proceeding:
+Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary to cache. Any other exit code or execution error: log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures.
 
 ```bash
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add \

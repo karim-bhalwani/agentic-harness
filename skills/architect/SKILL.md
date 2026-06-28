@@ -24,6 +24,7 @@ Load the following via `read_file` before using this skill. Skills marked ★ ha
 
 - `~/.copilot/skills/thinker/SKILL.md` ★ - structured reasoning scaffold (UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY)
 - `~/.copilot/skills/brainstorming/SKILL.md` - requirement exploration and idea-to-design dialogue
+- `~/.copilot/skills/holdout-validation/SKILL.md` - load when writing acceptance scenarios that will become holdout test criteria (ensures scenario format compatibility)
 
 ## Overview
 

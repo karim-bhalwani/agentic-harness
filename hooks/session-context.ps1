@@ -17,8 +17,11 @@
 # Output: JSON on stdout with hookSpecificOutput.additionalContext
 # Exit 0 always - SessionStart hooks cannot block, only inject context.
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

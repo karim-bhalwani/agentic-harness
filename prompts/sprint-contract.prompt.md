@@ -19,7 +19,7 @@ Negotiate a sprint contract for: **${input:feature}**
 
 **Before starting**, read the following files in order:
 
-1. **Spec file**: Read `.copilot/specs/SPEC-${input:feature}.md` if it exists; otherwise read `.copilot/specs/SPEC.md`. If neither exists, stop and ask the user to provide the spec file path before proceeding.
+1. **Spec file**: Read `.copilot/specs/SPEC.md`. If it does not exist, stop and ask the user to provide the spec file path before proceeding.
 2. **Project context**: Read `.copilot/context/PROJECT_CONTEXT.md` for project constraints and non-negotiables. If this file does not exist, proceed but explicitly note in the contract that no project-level constraints were available and the contract should be reviewed against them before use.
 3. **Workflow template**: Load `~/.copilot/skills/architect/references/sprint-contract-template.md` via `read_file`. If this file cannot be read, stop immediately and respond: "Sprint contract template not found at `~/.copilot/skills/architect/references/sprint-contract-template.md`. Please ensure the file exists before running this prompt." Do not attempt to infer or reconstruct the template.
 

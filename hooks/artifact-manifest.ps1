@@ -32,8 +32,11 @@
 #   ARTIFACT_MANIFEST_PATH=<path>   - override manifest location (used by tests so
 #                                     they never pollute the real manifest)
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

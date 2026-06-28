@@ -10,6 +10,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- All broken links, orphaned references, and stale entries are identified
+- The lint report distinguishes between critical issues and nice-to-fixes
+- The mem health score is updated and accurate
+
 Lint the project mem. Scope: **${input:scope}** (valid values: `all`, `links`, `index`, or a specific topic directory path, e.g., `topics/AI/`). If the directory does not exist in the project, respond with: "Directory not found. Please provide a valid topic directory path."
 
 **Pre-flight checks (run in order, stop on first failure):**

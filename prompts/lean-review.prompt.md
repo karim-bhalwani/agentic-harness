@@ -11,6 +11,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- The review is scoped to the specific change (no scope creep into unrelated files)
+- Findings are ranked by severity with clear remediation steps
+- The review completes in under 5 minutes of human reading time
+
 {% if input:target %}
 Lean-review target: **${input:target}**
 {% else %}

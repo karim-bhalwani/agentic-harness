@@ -17,8 +17,11 @@
 # Output: JSON with hookSpecificOutput.additionalContext (warn) or exit 2 (block)
 # Exit 0 in warn mode regardless of detections (warning only).
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

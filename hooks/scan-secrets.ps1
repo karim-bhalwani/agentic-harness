@@ -17,8 +17,11 @@
 # Lifecycle: fires on Stop event. Checks stop_hook_active to avoid infinite loops.
 # Requires git — skips gracefully if not in a git repository.
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')
@@ -66,6 +69,8 @@ if ($allFiles.Count -eq 0) {
 
 Write-Host "Secrets scan: scanning $($allFiles.Count) file(s)..."
 $findingCount = 0
+# Build combined regex once for single-pass pre-filter (avoids 14 per-line match calls when no pattern matches)
+$combinedPattern = ($patterns.Regex -join '|')
 # Skip files larger than 10MB to avoid OOM / 30s timeout on huge generated
 # files (e.g. lockfiles, minified bundles). 10MB is well above any reasonable
 # source file and keeps the scan deterministic.
@@ -91,6 +96,8 @@ foreach ($file in $allFiles) {
     $lineNum = 0
     foreach ($line in $lines) {
         $lineNum++
+        # Fast pre-filter: single combined regex check before per-pattern matching
+        if ($line -notmatch $combinedPattern) { continue }
         foreach ($pat in $patterns) {
             if ($line -match $pat.Regex) {
                 $match = [regex]::Match($line, $pat.Regex).Value

@@ -14,8 +14,11 @@
 # Outputs hookSpecificOutput.permissionDecision = "deny" with exit 0 to block
 # individual tool calls while letting the agent session continue.
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

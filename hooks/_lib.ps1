@@ -20,6 +20,9 @@
 #     swallowed and converted to safe defaults.
 #   * Helpers never call exit; the caller decides how to terminate.
 
+#Requires -Version 7.0
+Set-StrictMode -Version Latest
+
 # ---------- Governance --------------------------------------------------------
 
 function Get-MMGovernanceLevel {

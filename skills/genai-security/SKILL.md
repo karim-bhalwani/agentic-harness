@@ -22,6 +22,7 @@ Specialized security reference for GenAI applications. Extends Guardian with AI-
 
 - `~/.copilot/skills/guardian/SKILL.md` - baseline code review and OWASP Top 10
 - `~/.copilot/skills/llm-app-patterns/SKILL.md` - production LLM architecture patterns
+- `~/.copilot/skills/security-boundaries/SKILL.md` - trust boundary rules for runtime prompt handling and input validation
 
 ## When to Load
 

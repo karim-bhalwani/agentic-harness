@@ -10,6 +10,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- At least 5 failure modes are identified with probability and impact assessments
+- Each failure mode has a corresponding mitigation strategy
+- The development team can act on the mitigations without further analysis
+
 Analyze the following file, folder, or module for **fragility against future edits**: **${input:target}**
 
 This is a pre-mortem, not a bug hunt. The code may be correct today. You are looking for places where a developer who lacks full context could make a seemingly reasonable change that breaks something non-obviously.

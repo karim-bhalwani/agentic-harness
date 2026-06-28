@@ -9,6 +9,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- The SQL query is syntactically correct and executes without errors
+- The query is parameterized (no string concatenation for user inputs)
+- The output schema matches what the downstream consumer expects
+
 Answer this data question in T-SQL: **${input:question}** (e.g., "What is the total sales for last month?")
 
 **Decision gate (follow in order - stop at the first matching condition)**:

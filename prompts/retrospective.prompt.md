@@ -9,6 +9,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- The retrospective captures what worked, what did not, and what to change
+- Every lesson is tied to a specific workflow phase (discovery, design, build, review, ship)
+- Actionable improvements are identified with clear ownership
+
 Run a retrospective for the cycle: **${input:cycle}**
 
 **Workflow** (execute in strict sequence):

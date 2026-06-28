@@ -18,11 +18,37 @@
 # Lifecycle: fires on every PostToolUse event. Silently exits 0 for non-file
 # tool calls (no file path available).
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
 
+Set-StrictMode -Version Latest
+
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')
+
+# Cache formatter availability for the session (avoid repeated Get-Command calls on every PostToolUse)
+$script:ruffAvailable = $null
+$script:prettierAvailable = $null
+
+function Test-FormatterAvailable {
+    param([string]$Name)
+    switch ($Name) {
+        'ruff' {
+            if ($null -eq $script:ruffAvailable) {
+                $script:ruffAvailable = [bool](Get-Command ruff -ErrorAction SilentlyContinue)
+            }
+            return $script:ruffAvailable
+        }
+        'prettier' {
+            if ($null -eq $script:prettierAvailable) {
+                $script:prettierAvailable = [bool](Get-Command npx -ErrorAction SilentlyContinue)
+            }
+            return $script:prettierAvailable
+        }
+    }
+    return $false
+}
 
 # --- Circuit breaker ---
 if (Test-MMCircuitBreaker -EnvVar 'SKIP_AUTO_FORMAT') { exit 0 }
@@ -53,7 +79,7 @@ if (-not (Test-Path $filePath -PathType Leaf)) { exit 0 }
 
 # --- Python: ruff format ---
 if ($filePath -match '\.py$') {
-    if (Get-Command ruff -ErrorAction SilentlyContinue) {
+    if (Test-FormatterAvailable 'ruff') {
         $null = & ruff format $filePath 2>&1
         Write-MMHookLog -HookName 'auto-format' -Event 'formatted' -Decision 'allow' `
             -Extra @{ file = $filePath; formatter = 'ruff' }
@@ -61,7 +87,7 @@ if ($filePath -match '\.py$') {
 }
 # --- JS / TS / JSON / CSS / Markdown: prettier ---
 elseif ($filePath -match '\.(js|ts|jsx|tsx|json|css|md)$') {
-    if (Get-Command npx -ErrorAction SilentlyContinue) {
+    if (Test-FormatterAvailable 'prettier') {
         # --yes prevents npx from interactively prompting to install prettier
         # on first run (violates the non-interactive hook contract).
         $null = & npx --yes prettier --write $filePath 2>&1

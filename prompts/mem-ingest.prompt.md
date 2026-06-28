@@ -11,6 +11,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- The source material is compiled into the project mem with accurate citations
+- The mem entry passes lint verification (no broken links, no orphaned references)
+- Future queries on this topic will surface the ingested knowledge
+
 Ingest this source into the project LLM-maintained knowledge memory (mem): **${input:source}**
 
 If ${input:source} is empty or not provided, respond with: "Error: No source provided. Please supply a URL, file path, or use 'paste' to provide text directly." and halt.

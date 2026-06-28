@@ -21,8 +21,11 @@
 #
 # Output: Write-Host banner on threshold crossing. Exit 0 always (non-blocking).
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

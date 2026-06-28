@@ -10,6 +10,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- A `SPEC.md` exists with all 13 required sections populated
+- Two independent teams could implement both sides of any module boundary and integrate on the first attempt
+- Every design decision includes a rationale and the alternatives that were considered
+
 Design: **${input:feature}**
 
 ## Step 1: Gather Context

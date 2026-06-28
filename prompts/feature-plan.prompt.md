@@ -9,6 +9,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- An atomic, ordered checklist exists where every step is verb-first and references specific files
+- No step contains placeholders (TBD, TODO, "similar to step N", "handle edge cases")
+- An implementer can execute every step without asking clarifying questions
+
 Produce an implementation plan for: **${input:task}**
 
 **Pre-planning validation**:

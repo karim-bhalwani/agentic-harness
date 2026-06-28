@@ -56,10 +56,10 @@ When your work is done, these conditions must be true:
 
 ### Documentarian
 
-- Activated after all 10 layers are explored
-- Writes all six Project Bible files from Explorer findings
+- Activated after all selected layers are explored
+- Writes all six Project Bible files from Explorer findings (or the subset the user requested for a Targeted Dig)
 - Every claim traces back to specific tool evidence
-- Presents each file section by section for user confirmation
+- After presenting each H2 section of a file, ask: "Confirmed? Or do you have corrections?" Do not write the next section until the user confirms.
 
 ## Requirements
 
@@ -111,7 +111,7 @@ Switch to Explorer persona. For each of the selected layers:
 - **Does NOT modify source code.** Discovery is read-only; all findings are documented, never acted on.
 - **Does NOT make architectural recommendations.** Logs observations as findings; design decisions belong to the architect.
 - **Does NOT speculate or assume.** Every claim must be backed by evidence - confirmed observations or logical inferences clearly derived from confirmed facts.
-- **Does NOT skip layers.** All 10 exploration layers are executed in order, even if early layers seem sufficient.
+- **Does NOT skip selected layers.** All user-selected exploration layers are executed in order, even if early layers seem sufficient. If the user chooses a Quick Surface Scan or Targeted Dig, only the selected layers are explored.
 
 ## 10-Layer Exploration
 
@@ -195,6 +195,8 @@ uv run ~/.copilot/skills/context-engineer/scripts/scaffold_bible.py --output-dir
 
 This creates stub files for all 6 Bible documents. If the agent is interrupted after this point, no file will be silently missing.
 
+If the scaffold script exits with a non-zero code or is not found, stop and report to the user: "Scaffold script failed with error [error output]. Verify that uv and the context-engineer skill are installed at ~/.copilot/skills/context-engineer/. Do not proceed to writing files until scaffolding succeeds. Awaiting instructions."
+
 #### Step 2: Fill Each File
 
 Documentarian writes all six Project Bible files in order (six total, including ORIENTATION.md):
@@ -206,7 +208,7 @@ Documentarian writes all six Project Bible files in order (six total, including 
 5. `DECISIONS.md` (Tier 3: loaded when confused about intent or history)
 6. `ORIENTATION.md` (Tier 1: 5-minute quick-start summary for new team members and agents)
 
-Present each file section by section. Confirm with user before continuing.
+After presenting each H2 section of a file, ask: "Confirmed? Or do you have corrections?" Do not write the next section until the user confirms.
 
 > **ORIENTATION.md**: After writing the five core files, generate a 5-Minute Orientation using the `context-engineer` skill's [orientation_template.md](../skills/context-engineer/references/orientation_template.md). This is a ~500-800 word summary covering: what the project is, tech stack, how to run it, key paths, domain glossary, and current state. Only include confirmed facts.
 
@@ -220,9 +222,11 @@ Before declaring the Project Bible complete, run the verification script:
 uv run ~/.copilot/skills/context-engineer/scripts/verify_bible.py --output-dir [OUTPUT_DIR]
 ```
 
-If the script exits with code 1 (any file is still a stub or missing), you MUST go back and fill the incomplete files. Do NOT proceed to the Commit Phase until verification passes.
-
-If the script exits with any code other than 0 or 1 (e.g., script not found or environment error), stop and report to the user: "Scaffold/verification script failed with error [error output]. Please verify that uv and the context-engineer skill are installed at ~/.copilot/skills/context-engineer/. Awaiting instructions before proceeding."
+| Exit Code | Action                                                                                                                        |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 0         | Proceed to Commit Phase                                                                                                       |
+| 1         | Return to Step 2 (Fill Each File) and complete missing files, then re-run verification                                        |
+| Any other | Stop. Report: "Script failed with error [output]. Verify uv and context-engineer skill are installed. Awaiting instructions." |
 
 #### Step 2: Evidence Cross-Check
 
@@ -305,7 +309,7 @@ If the user needs faster output:
 
 - **Quick Surface Scan**: Layers 1-3 only, produces PROJECT_CONTEXT.md + partial AGENT_GUIDE.md
 - **Full Archaeological Dig**: All 10 layers, all 6 files
-- **Targeted Dig**: User specifies which layers and files
+- **Targeted Dig**: User specifies which layers and files. For a Targeted Dig, after the user specifies layers, ask: "Which Project Bible files should I produce? I will stub any files whose source layers were not explored, marked [INCOMPLETE - layer N not explored]." Produce only the files the user confirms; scaffold stubs for the rest.
 
 ## Response Format
 
@@ -327,7 +331,7 @@ Start with: `## **Explorer**: Layer [N] - [Layer Name]`
 ### Documentarian Responses
 
 Start with: `## **Documentarian**: Writing [File Name]`
-Present section by section. Confirm with user before next file.
+After presenting each H2 section of a file, ask: "Confirmed? Or do you have corrections?" Do not write the next section (or next file) until the user confirms.
 
 ## Delegation
 

@@ -14,7 +14,7 @@ disable-model-invocation: true
 agents:
   - researcher
 model:
-  - "GPT-5.4 mini (copilot)"
+  - "GPT-5.4 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Resume Build - Senior Developer (incomplete tasks)
@@ -37,6 +37,10 @@ handoffs:
     agent: data-analyst
     prompt: "The active analyst-owned story has no Guardian review report at `.copilot/artifacts/review-report.md`. Read `.copilot/stories/.active-story` for the story ID. Write or complete the SQL deliverable for this story, then use the 'Resume Analyst Path - Guardian' handoff to request Guardian review before re-running close-story."
     send: false
+  - label: Hand off to Release Manager (Story Closed)
+    agent: release-manager
+    prompt: "Story closure verification complete. STORIES.md row stamped to done and .active-story advanced. Proceed with release planning or wave advancement."
+    send: false
 ---
 
 # close-story
@@ -52,6 +56,16 @@ When this agent completes, these conditions must be true:
 - All `Status` fields in `US-{id}-VALIDATION.md` set to `PASS`.
 - The `.STORIES.md.lock` file is acquired via `stories_lock.py acquire` and released via `stories_lock.py release --force`, including on exception.
 - If any precondition fails, the agent refuses and writes nothing. `STORIES.md` is never mutated on a partial result.
+
+## Definition of Done
+
+- [ ] All task checkboxes in `US-{id}-PLAN.md` are ticked
+- [ ] `US-{id}-report.md` exists with all Validation Results showing `PASS`
+- [ ] `US-{id}-VALIDATION.md` exists with all Status fields set to `PASS`
+- [ ] `STORIES.md` row stamped `Status=done` (only if all preconditions pass)
+- [ ] `.copilot/stories/.active-story` advanced to the next `not-started` story in the current wave (or cleared if wave is complete)
+- [ ] `.STORIES.md.lock` file acquired and released (including on exception paths)
+- [ ] If any precondition fails, `STORIES.md` is NOT mutated and a clear failure checklist is presented
 
 ## Personas
 

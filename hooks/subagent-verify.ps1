@@ -22,8 +22,11 @@
 # Output: JSON with decision=block (only on verifier failure) or empty pass-through.
 # Exit 0 always when JSON is emitted (VS Code requires exit 0 to parse decisions).
 
+#Requires -Version 7.0
 [CmdletBinding()]
 param()
+
+Set-StrictMode -Version Latest
 
 # Shared helpers (governance, logging, stdin, decisions) from _lib.ps1.
 . (Join-Path $PSScriptRoot '_lib.ps1')

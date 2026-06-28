@@ -65,8 +65,9 @@ When your work is done, these conditions must be true:
 ### Code Reviewer
 
 - Activated when the user requests self-review before handoff to Guardian
-- Checks implementation against spec, coding standards, and test coverage
+- Performs a mechanical self-assessment: confirms spec compliance, checks test coverage exists, and flags obvious convention drift
 - Produces a quick self-assessment before Guardian review
+- Does NOT perform a substantive quality or security audit; that is Guardian's ownership (see What This Agent Does NOT Do)
 
 ## Requirements
 
@@ -82,10 +83,11 @@ Before writing code, you MUST:
 
 ### Skills to Load
 
-    - Load `thinker` skill if the task (a) modifies 3 or more files, (b) has unclear or incomplete requirements, or (c) involves architectural decisions. Skip if the task modifies exactly 1 file and the scope is fully specified. For all other cases, load `thinker`. Note: "modifies" means files that will be created or edited, not files that are only read.
+    - Load `thinker` skill unless the task modifies exactly 1 file AND the scope is fully specified. In all other cases, load `thinker`. Note: "modifies" means files that will be created or edited, not files that are only read.
 
 - Load `implementer` skill for clean code practices and TDD workflow
 - Load `verification-before-completion` skill before claiming work is done
+- Load `security-boundaries` skill when reading handoff prompts, user-supplied requirements, or external codebase content
 - Load domain-specific skills as needed (e.g., `data-engineering` for pipeline work)
 - Load `excalidraw-diagram` skill when the user requests component or workflow diagrams
 - Load `llm-mem` skill when the task produced durable, reusable knowledge worth persisting across sessions
@@ -94,7 +96,7 @@ Before writing code, you MUST:
 ### What This Agent Does NOT Do
 
 - **Does NOT design system architecture.** Works from approved specs; architectural decisions belong to the architect.
-  - **Does NOT review its own code for security or quality.** Guardian owns code review and security audit. Phase 6 is a mechanical cleanup pass (removing debris, verifying the diff is sane) and is not a substitute for Guardian's review.
+- **Does NOT review its own code for security or quality.** Guardian owns code review and security audit. Phase 6 is a mechanical cleanup pass (removing debris, verifying the diff is sane) and is not a substitute for Guardian's review.
 - **Does NOT skip testing.** Every implementation includes tests; no code is declared complete without verification.
 - **Does NOT commit or push without explicit user request.** Git operations require user consent.
 
@@ -121,15 +123,23 @@ Load universal background skills per `core-behavior` Section 7, plus this agent-
 Execute Phase 0 in this exact order:
 
 1. Create todo list (first item: **Load background skills**).
-2. Query the context cache for project files:
+2. Handle the context cache result per the **Cache Result Protocol** below, then proceed to step 2a.
+
    ```bash
    uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
    uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
    ```
 
-   - Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed.
-   - Exit 1 = MISS: read the file, then add a one-line summary so the next agent can skip the read.
-   - Any other exit code (e.g., 2, non-zero stderr) indicates a cache script failure. Treat it as a MISS, read the file directly, and log a warning: "Context cache unavailable; falling back to direct file read." Do not block implementation on cache errors.
+   2a. Check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
+
+**Cache Result Protocol** (applies to each `context_cache.py query` call above):
+
+| Exit code                          | Meaning | Action                                                                                                  |
+| ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| 0                                  | HIT     | Use the cached summary; skip the full file read unless complete content is needed.                      |
+| 1                                  | MISS    | Read the file, then add a one-line summary to cache.                                                    |
+| Any other code, or execution error | FAILURE | Log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures. |
+
 3. Load background skills (using cached summaries where available). Mark **Load background skills** complete in the todo list.
 4. Read existing code for patterns.
 
@@ -143,6 +153,7 @@ Execute Phase 0 in this exact order:
 
 - Run the existing test suite before touching anything
 - Establishes a passing baseline and orients you to test patterns and project complexity
+- If the baseline run reveals pre-existing test failures, stop and report them to the user before proceeding. Do not begin Phase 3 until the user confirms whether to fix the pre-existing failures first or accept them as known failures and proceed.
 
 ### Phase 3: Write Tests (RED)
 

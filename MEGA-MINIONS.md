@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**16 Agents • 26 Skills • 16 Prompts • 14 Hooks • 6-Phase Pipeline**
+**16 Agents • 26 Skills • 31 Prompts (16 agent definitions + 15 invocation templates) • 14 Hooks • 6-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -35,6 +35,17 @@ Think of them as a squad of specialists, not a single jack-of-all-trades. The Ar
 > - **They are tools, not replacements.** They amplify your expertise; they do not substitute for it.
 >
 > The Mega Minions get better the more we use them. Your conventions, your patterns, your standards, these are the things they learn to follow when you teach them through project context and feedback.
+
+---
+
+## Prompt File Types
+
+The prompts directory contains two file types that work together:
+
+- **`.agent.md` files (16)** — Full agent definitions with complete frontmatter (tools, model, handoffs), intent contracts, personas, and process workflows. These are the canonical agent definitions.
+- **`.prompt.md` files (15)** — Lightweight invocation templates that route to a specific agent via the `agent:` frontmatter field. These provide parameterized entry points (slash commands) for common tasks like `/quick-fix`, `/code-review`, `/sql-query`, and `/design`.
+
+Both types count toward the "31 Prompts" total. The `.agent.md` files define *who* the agent is; the `.prompt.md` files define *how* users invoke it.
 
 ---
 

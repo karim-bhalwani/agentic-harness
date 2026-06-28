@@ -10,6 +10,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- Every finding is backed by specific evidence (file, line, tool output), not speculation
+- The review distinguishes between "tests pass" (mechanism) and "software works for the user" (outcome)
+- A team lead can make a ship/no-ship decision from this review in under 5 minutes
+
 {% if input:target %}
 Review the following code: **${input:target}**
 

@@ -8,7 +8,15 @@ metadata:
   version: "9.0"
   updated: "01-July-2026"
   dependencies:
-    ["data-science", "security-boundaries", "verification-before-completion"]
+    [
+      "data-science",
+      "security-boundaries",
+      "verification-before-completion",
+      "data-narrative/detective",
+      "data-narrative/analyst",
+      "data-narrative/editor",
+      "data-narrative/inspector",
+    ]
 ---
 
 # data-narrative Skill

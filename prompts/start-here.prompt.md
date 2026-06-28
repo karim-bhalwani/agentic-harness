@@ -38,7 +38,7 @@ You are routing the developer to the next pipeline step. Do not write code or sp
 
    4d. Plan exists. Check the plan's task checkboxes. If any tasks are unchecked: recommend the BUILD agent listed in the plan's `**Builder:**` field (default: Senior Developer). Tell the developer to set the story's `Status` to `in-progress` in STORIES.md if not already. STOP.
 
-   4e. All tasks are checked. Check `.copilot/stories/reports/$storyId-report.md`. If the report is missing: recommend the same BUILD agent to write the report (US-{id}-report.md per the schema defined in `.copilot/guides/enhancement.md`, section 3.3). STOP.
+   4e. All tasks are checked. Check `.copilot/stories/reports/$storyId-report.md`. If the report is missing: recommend the same BUILD agent to write the report (US-{id}-report.md per the schema defined in the story-planner skill documentation). STOP.
 
    4f. Report exists. Check the report's validation result. If validation FAIL: tell the developer which tasks or checks failed (per the report) and recommend re-running the BUILD agent to address the failures before proceeding. STOP.
 
@@ -50,7 +50,7 @@ Single short message with three parts:
 
 1. **Where you are:** one line summarising current pipeline state (e.g. "PLAN phase, US-03 has a plan, all tasks checked, no report yet").
 2. **Next step:** one bold action (e.g. "**Run `@senior-developer` and ask it to write the implementation report for US-03**").
-3. **Why:** one sentence linking back to a section of `enhancement.md` or the relevant guide.
+3. **Why:** one sentence linking back to the relevant agent or skill documentation.
 
 If multiple paths are valid, list at most two and recommend the more conservative.
 

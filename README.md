@@ -30,7 +30,7 @@ Each agent has a defined role, knows its limits, and hands work off to the next 
 | ----------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Agents** (`.agent.md`) & **Prompts** (`.prompt.md`) | 16+16 | Specialized personas (architect, senior-developer, guardian, etc.) + slash commands (/design, /code-review, /quick-fix, etc.) |
 | **Skills** (`SKILL.md`)                               | 26    | Domain knowledge packs loaded on demand: data-engineering, genai-security, implementer, etc.                                  |
-| **Instructions** (`.instructions.md`)                 | 8     | Global rules auto-applied to every session (core behavior, Python, SQL, YAML, PowerShell, TypeScript, Markdown, JSON standards)                                       |
+| **Instructions** (`.instructions.md`)                 | 9     | Global rules auto-applied to every session (core behavior, Python, SQL, YAML, PowerShell, TypeScript, Markdown, JSON, Git commit standards)                          |
 | **Hooks** (`.ps1`)                                    | 14    | Platform-level enforcement: quality gates, secrets scan, destructive command blocking, etc.                                   |
 
 ---

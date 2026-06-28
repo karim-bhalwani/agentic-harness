@@ -9,6 +9,14 @@ tools:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |
 
+## Intent Contract
+
+When this prompt completes, these conditions must be true:
+
+- The response cites the specific mem entries that support each claim
+- If no relevant knowledge exists, the gap is explicitly identified
+- The answer is actionable without requiring the user to re-query
+
 Load `~/.copilot/skills/llm-mem/SKILL.md` via `read_file` before proceeding. If `~/.copilot/skills/llm-mem/SKILL.md` cannot be read, stop and inform the user: "Unable to load the required skill file at ~/.copilot/skills/llm-mem/SKILL.md. Please verify the file exists before retrying." Do not proceed with the workflow.
 
 Answer this question from the project mem: **${input:question}**
