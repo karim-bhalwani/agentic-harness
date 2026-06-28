@@ -124,17 +124,12 @@ def main() -> None:
     incomplete = [p for p, (s, _) in results.items() if s != "passed"]
     print("=" * 60)
     if not incomplete:
-        print(
-            "PASSED: SPEC.md and HOLDOUT.md are complete and at a supported schema version."
-        )
+        print("PASSED: SPEC.md and HOLDOUT.md are complete and at a supported schema version.")
         sys.exit(0)
     else:
+        print(f"FAILED: {len(incomplete)} of 2 files are incomplete, missing, or at an unsupported schema version.")
         print(
-            f"FAILED: {len(incomplete)} of 2 files are incomplete, missing, or at an unsupported schema version."
-        )
-        print(
-            "   The architect MUST fill all files (including spec_schema_version)"
-            " before handing off to implementation."
+            "   The architect MUST fill all files (including spec_schema_version) before handing off to implementation."
         )
         sys.exit(1)
 

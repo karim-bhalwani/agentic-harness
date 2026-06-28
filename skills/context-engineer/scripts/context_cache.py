@@ -67,8 +67,7 @@ def _parse_lines_arg(lines: str | None) -> tuple[int, int]:
 def _load_state(state_path: Path) -> str:
     if not state_path.exists():
         print(
-            f"[x] SESSION_STATE.md not found at {state_path}. "
-            "Run scaffold_session_state.py first.",
+            f"[x] SESSION_STATE.md not found at {state_path}. Run scaffold_session_state.py first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -119,9 +118,7 @@ def _parse_entries(section_body: str) -> list[dict]:
 def _render_section(entries: list[dict]) -> str:
     lines = [_SECTION_PREAMBLE]
     for e in entries:
-        lines.append(
-            f"- [{e['hash']}]: {e['path']} | L{e['line_start']}-{e['line_end']} | {e['summary']}"
-        )
+        lines.append(f"- [{e['hash']}]: {e['path']} | L{e['line_start']}-{e['line_end']} | {e['summary']}")
     return "\n".join(lines) + "\n"
 
 
@@ -188,9 +185,7 @@ def cmd_list(state_path: Path) -> None:
     label = "entry" if len(entries) == 1 else "entries"
     print(f"Context Cache ({len(entries)} {label}):")
     for e in entries:
-        print(
-            f"  [{e['hash']}] {e['path']} L{e['line_start']}-{e['line_end']}: {e['summary']}"
-        )
+        print(f"  [{e['hash']}] {e['path']} L{e['line_start']}-{e['line_end']}: {e['summary']}")
 
 
 def cmd_clear(state_path: Path) -> None:
@@ -205,9 +200,7 @@ def cmd_clear(state_path: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Manage the ## Context Cache section in SESSION_STATE.md"
-    )
+    parser = argparse.ArgumentParser(description="Manage the ## Context Cache section in SESSION_STATE.md")
     parser.add_argument(
         "--state-path",
         type=Path,
@@ -217,15 +210,9 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     add_p = sub.add_parser("add", help="Add or update a cache entry")
-    add_p.add_argument(
-        "--path", required=True, help="File path (relative to project root)"
-    )
-    add_p.add_argument(
-        "--lines", help="Line range, e.g. 1-80. Omit to cache whole file."
-    )
-    add_p.add_argument(
-        "--summary", required=True, help="One-line summary of the content"
-    )
+    add_p.add_argument("--path", required=True, help="File path (relative to project root)")
+    add_p.add_argument("--lines", help="Line range, e.g. 1-80. Omit to cache whole file.")
+    add_p.add_argument("--summary", required=True, help="One-line summary of the content")
 
     q_p = sub.add_parser("query", help="Check if cached; exit 0=hit, 1=miss")
     q_p.add_argument("--path", required=True, help="File path to look up")

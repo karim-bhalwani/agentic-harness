@@ -55,12 +55,8 @@ def main() -> None:
 
     content = path.read_text(encoding="utf-8")
     if len(content) < MIN_CONTENT_LENGTH:
-        print(
-            f"[o] FAILED: review-report.md is too short (<{MIN_CONTENT_LENGTH} bytes)."
-        )
-        print(
-            "   Likely a stub or truncated paste. Re-run Guardian or persist the full report."
-        )
+        print(f"[o] FAILED: review-report.md is too short (<{MIN_CONTENT_LENGTH} bytes).")
+        print("   Likely a stub or truncated paste. Re-run Guardian or persist the full report.")
         sys.exit(1)
 
     matched = [t for t in REQUIRED_TOKENS if t.lower() in content.lower()]
@@ -69,9 +65,7 @@ def main() -> None:
         print(f"   Expected at least one of: {REQUIRED_TOKENS}")
         sys.exit(1)
 
-    print(
-        f"[+] PASSED: review report present ({len(content)} bytes, matched tokens: {matched})."
-    )
+    print(f"[+] PASSED: review report present ({len(content)} bytes, matched tokens: {matched}).")
     sys.exit(0)
 
 

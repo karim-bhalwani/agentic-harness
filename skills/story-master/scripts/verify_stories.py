@@ -39,12 +39,8 @@ EXPECTED_COLUMNS: list[str] = [
     "Owner",
 ]
 
-VALID_STATUSES: frozenset[str] = frozenset(
-    {"not-started", "in-progress", "in-review", "done", "blocked"}
-)
-VALID_TYPES: frozenset[str] = frozenset(
-    {"Feature", "Enhancement", "Technical", "Spike"}
-)
+VALID_STATUSES: frozenset[str] = frozenset({"not-started", "in-progress", "in-review", "done", "blocked"})
+VALID_TYPES: frozenset[str] = frozenset({"Feature", "Enhancement", "Technical", "Spike"})
 VALID_PRIORITIES: frozenset[str] = frozenset({"High", "Medium", "Low"})
 VALID_EFFORTS: frozenset[str] = frozenset({"S", "M", "L"})
 VALID_RISKS: frozenset[str] = frozenset({"Low", "Medium", "High", "Spike"})
@@ -178,10 +174,7 @@ def verify_stories(path: Path) -> list[Problem]:
                 problems.append(
                     Problem(
                         problem=f"Story {sid}: '{field_name}' has invalid value '{val}'.",
-                        fix=(
-                            f"Set '{field_name}' to one of: "
-                            f"{', '.join(sorted(valid_set))}."
-                        ),
+                        fix=(f"Set '{field_name}' to one of: {', '.join(sorted(valid_set))}."),
                     )
                 )
 
@@ -212,10 +205,7 @@ def verify_stories(path: Path) -> list[Problem]:
                             f"Story {story_id}: Depends On references '{dep}' "
                             "which does not exist in the Summary Table."
                         ),
-                        fix=(
-                            f"Add a '{dep}' row to the Summary Table, "
-                            "or correct the dependency value."
-                        ),
+                        fix=(f"Add a '{dep}' row to the Summary Table, or correct the dependency value."),
                     )
                 )
 
@@ -230,14 +220,8 @@ def verify_stories(path: Path) -> list[Problem]:
         if story_id not in h3_story_ids:
             problems.append(
                 Problem(
-                    problem=(
-                        f"Story {story_id}: No H3 detail section found "
-                        f"(expected '### {story_id}')."
-                    ),
-                    fix=(
-                        f"Add a '### {story_id} · <title> · Wave N' section "
-                        "under '## User Stories'."
-                    ),
+                    problem=(f"Story {story_id}: No H3 detail section found (expected '### {story_id}')."),
+                    fix=(f"Add a '### {story_id} · <title> · Wave N' section under '## User Stories'."),
                 )
             )
 
@@ -283,10 +267,7 @@ def verify_stories(path: Path) -> list[Problem]:
                         "but the story is not listed under any Wave heading "
                         "in 'Execution Waves'."
                     ),
-                    fix=(
-                        f"Add '{story_id}' to the '### Wave {expected_wave}' "
-                        "section under '## Execution Waves'."
-                    ),
+                    fix=(f"Add '{story_id}' to the '### Wave {expected_wave}' section under '## Execution Waves'."),
                 )
             )
         elif listed_wave != expected_wave:
@@ -313,9 +294,7 @@ def _TODO_marker() -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Validate a STORIES.md file against the §3.1 schema"
-    )
+    parser = argparse.ArgumentParser(description="Validate a STORIES.md file against the §3.1 schema")
     parser.add_argument(
         "--file",
         default=".copilot/stories/STORIES.md",

@@ -550,7 +550,7 @@ Not immediately. Start with this guide and `mega-minions.md` for the agent roste
 
 **Q: Can I just use Copilot normally without invoking agents?**
 
-Yes. The team's standards are defined in the `instructions/` folder (`core-behavior.instructions.md`, `python-standards.instructions.md`, `sql-standards.instructions.md`, and `yaml-standards.instructions.md`). Once you have copied these files to `.copilot\instructions\` (as described in Step 4), they apply automatically to **all** Copilot interactions in your editor, even if you don't explicitly switch to a Mega Minion agent. However, using the specific agents will provide much deeper reasoning and specialized tools for their respective tasks.
+Yes. The team's standards are defined in the `instructions/` folder (`core-behavior.instructions.md`, `python-standards.instructions.md`, `sql-standards.instructions.md`, `yaml-standards.instructions.md`, `powershell-standards.instructions.md`, `typescript-standards.instructions.md`, `markdown-standards.instructions.md`, and `json-standards.instructions.md`). Once you have copied these files to `.copilot\instructions\` (as described in Step 4), they apply automatically to **all** Copilot interactions in your editor, even if you don't explicitly switch to a Mega Minion agent. However, using the specific agents will provide much deeper reasoning and specialized tools for their respective tasks.
 
 ---
 

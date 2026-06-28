@@ -203,9 +203,7 @@ graph LR
 }
 
 
-def scaffold_bible(
-    output_dir: Path, mode: str = "brownfield"
-) -> tuple[list[str], list[str]]:
+def scaffold_bible(output_dir: Path, mode: str = "brownfield") -> tuple[list[str], list[str]]:
     """Create all 6 Project Bible stub files. Returns tuple of (created, skipped) files."""
     output_dir.mkdir(parents=True, exist_ok=True)
     created: list[str] = []

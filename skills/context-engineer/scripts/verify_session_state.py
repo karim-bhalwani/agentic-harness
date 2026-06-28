@@ -60,10 +60,7 @@ def main() -> None:
 
     if not missing_sections and not missing_headers:
         # Check status is set to a valid value
-        ok = any(
-            f"**Status:** {s}" in content
-            for s in ("active", "paused", "completed", "blocked")
-        )
+        ok = any(f"**Status:** {s}" in content for s in ("active", "paused", "completed", "blocked"))
         if not ok:
             print("[o] FAILED: Status header is unset or invalid.")
             print("   Set Status to: active | paused | completed | blocked.")

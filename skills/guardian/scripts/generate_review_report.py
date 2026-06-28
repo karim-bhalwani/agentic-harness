@@ -118,9 +118,7 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate a Guardian review report")
-    parser.add_argument(
-        "--target", required=True, help="File, module, or PR being reviewed"
-    )
+    parser.add_argument("--target", required=True, help="File, module, or PR being reviewed")
     parser.add_argument(
         "--findings",
         type=str,

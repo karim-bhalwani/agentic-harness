@@ -138,9 +138,7 @@ def scaffold(specs_dir: Path, holdout_dir: Path) -> tuple[list[str], list[str]]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Scaffold architect on-disk artifacts (SPEC.md + HOLDOUT.md)"
-    )
+    parser = argparse.ArgumentParser(description="Scaffold architect on-disk artifacts (SPEC.md + HOLDOUT.md)")
     parser.add_argument(
         "--specs-dir",
         type=Path,

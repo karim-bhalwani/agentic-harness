@@ -140,9 +140,7 @@ Do not move to the next task until validate passes.
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Scaffold a US-{id}-PLAN.md for the story-planner agent"
-    )
+    parser = argparse.ArgumentParser(description="Scaffold a US-{id}-PLAN.md for the story-planner agent")
     parser.add_argument(
         "--story-id",
         required=True,

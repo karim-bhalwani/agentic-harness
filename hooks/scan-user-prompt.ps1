@@ -37,41 +37,17 @@ if (-not $inputData) { exit 0 }
 $prompt = $inputData.prompt
 if ([string]::IsNullOrWhiteSpace($prompt)) { exit 0 }
 
-# --- Detection patterns ---
+# --- Detection patterns (shared catalogues from _lib.ps1) ---
 # Prompt injection markers (case-insensitive substring match)
-$injectionPatterns = @(
-    'ignore previous instructions',
-    'ignore all previous',
-    'disregard the above',
-    'disregard previous',
-    'forget what you were told',
-    'forget your instructions',
-    'system prompt',
-    'reveal your instructions',
-    'print your system prompt',
-    'you are now',
-    'act as if you have no restrictions',
-    'jailbreak',
-    'developer mode enabled'
-)
+$injectionPatterns = Get-MMInjectionPatterns
 
-# Credential / secret regex patterns (kept symmetric with scan-secrets.ps1)
-$secretPatterns = @(
-    @{ Name = 'AWS Access Key'; Pattern = 'AKIA[0-9A-Z]{16}' },
-    @{ Name = 'AWS Secret Key'; Pattern = 'aws_secret_access_key\s*[:=]\s*[''"]?[A-Za-z0-9/+=]{40}' },
-    @{ Name = 'GCP API Key'; Pattern = 'AIza[0-9A-Za-z_\-]{35}' },
-    @{ Name = 'Azure Client Secret'; Pattern = 'azure[_\-]?client[_\-]?secret\s*[:=]\s*[''"]?[A-Za-z0-9_~.\-]{34,}' },
-    @{ Name = 'GitHub PAT'; Pattern = 'ghp_[A-Za-z0-9]{36}' },
-    @{ Name = 'GitHub fine-grained PAT'; Pattern = 'github_pat_[A-Za-z0-9_]{82}' },
-    @{ Name = 'OpenAI API key'; Pattern = 'sk-[A-Za-z0-9]{20,}' },
-    @{ Name = 'Stripe secret key'; Pattern = 'sk_live_[0-9A-Za-z]{24,}' },
-    @{ Name = 'Slack token'; Pattern = 'xox[baprs]-[A-Za-z0-9-]{10,}' },
-    @{ Name = 'NPM token'; Pattern = 'npm_[A-Za-z0-9]{36}' },
-    @{ Name = 'Generic private key'; Pattern = '-----BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----' },
-    @{ Name = 'JWT'; Pattern = 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' },
-    @{ Name = 'DB connection string'; Pattern = '(mongodb|postgres|mysql|redis|mssql)://[^\s''"]{10,}' },
-    @{ Name = 'Generic secret'; Pattern = '(secret|token|password|api[_\-]?key)\s*[:=]\s*[''"]?[A-Za-z0-9_/+=~.\-]{16,}' }
-)
+# Credential / secret regex patterns (kept symmetric with scan-secrets.ps1
+# via the shared Get-MMSecretPatterns catalogue in _lib.ps1).
+$secretPatterns = Get-MMSecretPatterns
+
+# Placeholder filter — symmetric with scan-secrets.ps1 to suppress false
+# positives on obvious example / test values (e.g. sk-test_123, AKIAEXAMPLE...).
+$placeholderPattern = Get-MMSecretPlaceholderPattern
 
 $findings = [System.Collections.Generic.List[string]]::new()
 
@@ -85,7 +61,11 @@ foreach ($p in $injectionPatterns) {
 
 # Credential / secret scan (regex match against original prompt)
 foreach ($s in $secretPatterns) {
-    if ($prompt -match $s.Pattern) {
+    if ($prompt -match $s.Regex) {
+        $matched = [regex]::Match($prompt, $s.Regex).Value
+        if (-not $matched) { continue }
+        # Skip placeholders (consistent with scan-secrets.ps1)
+        if ($matched -imatch $placeholderPattern) { continue }
         $findings.Add("possible $($s.Name) in prompt - redact before sending")
     }
 }

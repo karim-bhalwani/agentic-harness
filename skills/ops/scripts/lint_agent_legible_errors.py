@@ -20,9 +20,7 @@ from pathlib import Path
 _KEYWORD_PATTERNS = [
     re.compile(r"(run|execute)\s+\S+", re.IGNORECASE),
     re.compile(r"(set|update|change)\s+\S+\s+to\b", re.IGNORECASE),
-    re.compile(
-        r"(install|add|remove|delete|configure|enable|disable)\s+\S+", re.IGNORECASE
-    ),
+    re.compile(r"(install|add|remove|delete|configure|enable|disable)\s+\S+", re.IGNORECASE),
     re.compile(r"(ensure|verify|check)\s+that\b", re.IGNORECASE),
     re.compile(r"remediat", re.IGNORECASE),
     re.compile(r"fix\s+\S+", re.IGNORECASE),
@@ -43,12 +41,7 @@ def check_file(filepath: Path) -> list[str]:
 
     for node in ast.walk(tree):
         # Check raise statements
-        if (
-            isinstance(node, ast.Raise)
-            and node.exc
-            and isinstance(node.exc, ast.Call)
-            and node.exc.args
-        ):
+        if isinstance(node, ast.Raise) and node.exc and isinstance(node.exc, ast.Call) and node.exc.args:
             if not _has_actionable_hint_in_args(node.exc.args):
                 violations.append(
                     f"{filepath}:{node.lineno}: Error message lacks remediation hint. "

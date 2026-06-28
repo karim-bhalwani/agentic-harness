@@ -202,9 +202,7 @@ def _check_file(path: Path) -> Iterator[PipelineIssue]:
         # Deprecated runner images (GitHub Actions)
         if path.suffix in {".yml", ".yaml"}:
             for runner in _DEPRECATED_RUNNERS:
-                runner_value_pattern = re.compile(
-                    r"(?<![a-zA-Z0-9_\-])" + re.escape(runner) + r"(?![a-zA-Z0-9_\-])"
-                )
+                runner_value_pattern = re.compile(r"(?<![a-zA-Z0-9_\-])" + re.escape(runner) + r"(?![a-zA-Z0-9_\-])")
                 if runner_value_pattern.search(line):
                     yield PipelineIssue(
                         severity=IssueSeverity.WARNING,
@@ -276,10 +274,7 @@ def _check_file(path: Path) -> Iterator[PipelineIssue]:
                 job_match = re.match(r"^(\s+)([a-zA-Z0-9][a-zA-Z0-9_-]*)\s*:", line)
                 if job_match:
                     candidate_indent = len(job_match.group(1))
-                    if (
-                        current_job_indent is None
-                        or candidate_indent == current_job_indent
-                    ):
+                    if current_job_indent is None or candidate_indent == current_job_indent:
                         # New job found — flush previous
                         if current_job_name and not current_job_has_timeout:
                             yield PipelineIssue(
@@ -307,8 +302,7 @@ def _check_file(path: Path) -> Iterator[PipelineIssue]:
                 if (
                     timeout_match
                     and current_job_indent is not None
-                    and len(timeout_match.group(1))
-                    == (current_job_indent + _JOB_INDENT_OFFSET)
+                    and len(timeout_match.group(1)) == (current_job_indent + _JOB_INDENT_OFFSET)
                 ):
                     current_job_has_timeout = True
 
@@ -318,11 +312,7 @@ def _check_file(path: Path) -> Iterator[PipelineIssue]:
             severity=IssueSeverity.INFO,
             file=str(path),
             line=current_job_line or len(lines),
-            message=(
-                f"Job '{current_job_name}' has no "
-                "'timeout-minutes' — runaway jobs will block your "
-                "queue"
-            ),
+            message=(f"Job '{current_job_name}' has no 'timeout-minutes' — runaway jobs will block your queue"),
             remediation=(
                 "Add `timeout-minutes: 15` (or appropriate "
                 "value) under each job definition. "
@@ -352,9 +342,7 @@ def check_pipeline_health(target: Path) -> list[PipelineIssue]:
         paths = [target]
     elif target.is_dir():
         paths = [
-            p
-            for p in target.rglob("*")
-            if p.is_file() and (p.suffix in {".yml", ".yaml"} or p.name == "Dockerfile")
+            p for p in target.rglob("*") if p.is_file() and (p.suffix in {".yml", ".yaml"} or p.name == "Dockerfile")
         ]
     else:
         raise FileNotFoundError(f"Path not found: {target}")
@@ -369,9 +357,7 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="Check CI/CD pipeline health")
-    parser.add_argument(
-        "--path", required=True, type=Path, help="File or directory to scan"
-    )
+    parser.add_argument("--path", required=True, type=Path, help="File or directory to scan")
     parser.add_argument("--fail-on-warning", action="store_true", default=False)
     args = parser.parse_args()
 
@@ -391,11 +377,7 @@ def main() -> None:
         IssueSeverity.INFO: 2,
     }
 
-    print(
-        f"Found {len(issues)} issue(s): "
-        f"{len(criticals)} critical, {len(warnings)} warnings, "
-        f"{len(infos)} info\n"
-    )
+    print(f"Found {len(issues)} issue(s): {len(criticals)} critical, {len(warnings)} warnings, {len(infos)} info\n")
 
     for issue in sorted(issues, key=lambda item: severity_order[item.severity]):
         print(issue)

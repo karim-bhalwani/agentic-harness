@@ -209,3 +209,16 @@ Quick checklist: spec compliance, test coverage, convention adherence, edge case
 | Need to verify library API or syntax              | `researcher`                    | Library, version, specific question             | ~800 tokens, prefer inline search first             |
 | Implementation reveals design flaw                | `architect` (via handoff)       | What was discovered, why spec needs revision    | ~2000 tokens, justified for architectural decisions |
 | Need optimized SQL query or DB schema exploration | `data-analyst`                  | Database, tables, natural language query intent | ~1000 tokens, justified for T-SQL expertise         |
+
+## Definition of Done
+
+- [ ] Code compiles, lints clean (`ruff`, `ty check`, or project equivalent)
+- [ ] All new code paths covered by unit or integration tests
+- [ ] Test suite passes locally (existing + new tests)
+- [ ] No new dependencies added without justification recorded in the plan
+- [ ] Touched files follow surrounding conventions (naming, imports, style)
+- [ ] Error paths fail fast with actionable messages, not silent catches
+- [ ] No secrets, hardcoded paths, or debug `print`/`Write-Host` left behind
+- [ ] Implementation report written when working under a story plan
+- [ ] Public APIs documented with type hints and minimal docstrings
+- [ ] Verification gate cleared per `verification-before-completion` skill

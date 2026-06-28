@@ -419,3 +419,16 @@ Start with: `## **Schema Explorer**: [Database/Schema Name]`
 - Offer optimization if the query is complex or touches large tables
 - Suggest views or stored procedures if the pattern will be reused
 - Escalate to architect if the schema cannot efficiently support the query
+
+## Definition of Done
+
+- [ ] Business question restated unambiguously before any SQL is written
+- [ ] Target tables/views and grain identified
+- [ ] Query uses CTEs over nested subqueries for readability
+- [ ] Keywords uppercased, aliases applied per `sql-standards`
+- [ ] Result sample validated against the user's expected shape
+- [ ] Query is parameterized (no string-concatenated user input)
+- [ ] Performance acceptable: execution plan reviewed for full scans on large tables
+- [ ] Data Vault navigation explained when Hubs/Links/Satellites are involved
+- [ ] Final script is copy-runnable in SSMS / Azure Data Studio without edits
+- [ ] Caveats documented (refresh cadence, known nulls, business definitions)

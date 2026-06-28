@@ -115,9 +115,7 @@ class ChecklistItem:
             )
 
         if self.is_too_broad():
-            warnings.append(
-                f"Item {index}: task appears too broad. Split into smaller atomic steps."
-            )
+            warnings.append(f"Item {index}: task appears too broad. Split into smaller atomic steps.")
 
         ref = f" `{self.file_ref}`" if self.file_ref else ""
         notes_str = f"\n   _{self.notes}_" if self.notes else ""
@@ -162,9 +160,7 @@ def format_checklist(
 
     lines.append("# Implementation Plan\n")
     lines.append(f"**Goal**: {goal}\n")
-    lines.append(
-        f"**Date**: {date.today()} | **Steps**: {len(items)} | **Estimate**: {_effort_estimate(len(items))}\n"
-    )
+    lines.append(f"**Date**: {date.today()} | **Steps**: {len(items)} | **Estimate**: {_effort_estimate(len(items))}\n")
     lines.append("---\n")
 
     if assumptions:
@@ -188,9 +184,7 @@ def format_checklist(
 
     if all_warnings:
         lines.append("## Planning Warnings\n")
-        lines.append(
-            "> The following items need attention before this plan is ready:\n"
-        )
+        lines.append("> The following items need attention before this plan is ready:\n")
         for w in all_warnings:
             lines.append(f"- {w}")
         lines.append("")
@@ -217,16 +211,10 @@ def main() -> None:
     import argparse
     from pathlib import Path
 
-    parser = argparse.ArgumentParser(
-        description="Format a task list into a structured checklist"
-    )
+    parser = argparse.ArgumentParser(description="Format a task list into a structured checklist")
     parser.add_argument("--goal", required=True, help="One-sentence goal statement")
-    parser.add_argument(
-        "--input", type=Path, default=None, help="Text file with one task per line"
-    )
-    parser.add_argument(
-        "--output", type=Path, default=None, help="Write to file (default: stdout)"
-    )
+    parser.add_argument("--input", type=Path, default=None, help="Text file with one task per line")
+    parser.add_argument("--output", type=Path, default=None, help="Write to file (default: stdout)")
     args = parser.parse_args()
 
     if args.input:

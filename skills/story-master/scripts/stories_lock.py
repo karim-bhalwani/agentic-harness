@@ -148,9 +148,7 @@ def release(lock_path: Path, *, force: bool = False) -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="File-lock helper for STORIES.md mutations"
-    )
+    parser = argparse.ArgumentParser(description="File-lock helper for STORIES.md mutations")
     sub = parser.add_subparsers(dest="command", required=True)
 
     acq = sub.add_parser("acquire", help="Acquire the STORIES.md lock")

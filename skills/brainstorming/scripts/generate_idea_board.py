@@ -99,9 +99,7 @@ def generate_idea_board(
         Markdown idea board ready to save as idea_board.md.
     """
     if len(options) < 3:
-        raise ValueError(
-            "An idea board requires at least 3 options for meaningful comparison."
-        )
+        raise ValueError("An idea board requires at least 3 options for meaningful comparison.")
 
     sorted_options = sorted(options, key=lambda o: o.score(), reverse=True)
     recommended = preferred or sorted_options[0].name
@@ -109,18 +107,14 @@ def generate_idea_board(
     sections: list[str] = []
 
     sections.append(f"# Idea Board: {problem}\n")
-    sections.append(
-        f"> {date.today()} | Status: DIVERGING — not committed to any direction\n"
-    )
+    sections.append(f"> {date.today()} | Status: DIVERGING — not committed to any direction\n")
     sections.append("---\n")
 
     sections.append("## Context\n")
     sections.append(f"{context}\n")
 
     sections.append("## Problem Reframe\n")
-    sections.append(
-        "_Exploring the problem from 3 angles before jumping to solutions:_\n"
-    )
+    sections.append("_Exploring the problem from 3 angles before jumping to solutions:_\n")
     sections.append(_reframe_problem(problem))
     sections.append("")
 
@@ -136,9 +130,7 @@ def generate_idea_board(
     sections.append("|--------|-------------|--------|--------|-------|")
     for opt in sorted_options:
         sections.append(opt.matrix_row())
-    sections.append(
-        "\n_Feasibility: 5=easy. Impact: 5=high value. Safety: 5=low risk. Score = weighted composite._\n"
-    )
+    sections.append("\n_Feasibility: 5=easy. Impact: 5=high value. Safety: 5=low risk. Score = weighted composite._\n")
 
     sections.append("## Preferred Direction\n")
     sections.append(f"**Recommendation**: {recommended}\n")
@@ -171,19 +163,11 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate a structured idea board")
-    parser.add_argument(
-        "--problem", required=True, help="Problem or opportunity to explore"
-    )
+    parser.add_argument("--problem", required=True, help="Problem or opportunity to explore")
     parser.add_argument("--context", default=_TODO, help="Background context")
-    parser.add_argument(
-        "--ideas", nargs="+", required=True, help="2-6 option names to evaluate"
-    )
-    parser.add_argument(
-        "--questions", nargs="*", default=None, help="Open questions before committing"
-    )
-    parser.add_argument(
-        "--output", default=None, help="Write to file (default: stdout)"
-    )
+    parser.add_argument("--ideas", nargs="+", required=True, help="2-6 option names to evaluate")
+    parser.add_argument("--questions", nargs="*", default=None, help="Open questions before committing")
+    parser.add_argument("--output", default=None, help="Write to file (default: stdout)")
     args = parser.parse_args()
 
     if len(args.ideas) < 3:

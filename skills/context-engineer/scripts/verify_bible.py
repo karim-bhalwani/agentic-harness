@@ -93,9 +93,7 @@ def main() -> None:
     if stubs:
         print(f"\n⚠️  Still stubs ({len(stubs)}/{len(REQUIRED_FILES)}):")
         for f in stubs:
-            print(
-                f"   ⊘ {f} - contains stub marker or insufficient content (<{MIN_CONTENT_LENGTH} bytes)"
-            )
+            print(f"   ⊘ {f} - contains stub marker or insufficient content (<{MIN_CONTENT_LENGTH} bytes)")
 
     if missing:
         print(f"\n❌ Missing ({len(missing)}/{len(REQUIRED_FILES)}):")
@@ -110,9 +108,7 @@ def main() -> None:
     else:
         incomplete = len(stubs) + len(missing)
         print(f"❌ FAILED: {incomplete} of {total} files are incomplete or missing.")
-        print(
-            "   The agent MUST fill all files before declaring the Project Bible complete."
-        )
+        print("   The agent MUST fill all files before declaring the Project Bible complete.")
         sys.exit(1)
 
 

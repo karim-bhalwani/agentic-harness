@@ -199,7 +199,7 @@ These three agents form the optional PLAN phase, activated when the human choose
 
 ### The Build Crew
 
-These four do the heavy lifting. Each one is a domain specialist who implements from the Architect's specs.
+These five do the heavy lifting. Each one is a domain specialist who implements from the Architect's specs.
 
 ---
 
@@ -429,6 +429,31 @@ Prompt files are **slash-command shortcuts** that wire a structured template dir
 | **Agent directly** (agents dropdown) | You need a conversation, have a complex multi-step task, or want to guide the agent interactively  |
 
 Both routes use the same underlying Minions. Prompt files are just pre-wired, opinionated entry points.
+
+### Prompt → Agent Cross-Reference
+
+Use this matrix to find the prompt file that maps to a given agent (or vice versa). Prompts not listed are workflow-only (no single owning agent).
+
+| Prompt File          | Primary Agent       | Use Case                                                    |
+| -------------------- | ------------------- | ----------------------------------------------------------- |
+| `/start-here`        | (orientation)       | First-time setup; routes to the right agent                 |
+| `/design`            | `architect`         | Produce a SPEC for new functionality                        |
+| `/feature-plan`      | `story-planner`     | Decompose an approved spec into a task checklist            |
+| `/quick-fix`         | `senior-developer`  | Small, low-risk change; skips full pipeline                 |
+| `/code-review`       | `guardian`          | Read-only review of a PR / branch / file set                |
+| `/lean-review`       | `guardian`          | Lightweight review for trivial diffs                        |
+| `/pre-mortem`        | `architect`         | Surface failure modes before implementation                 |
+| `/retrospective`     | `release-manager`   | Post-ship retro and lessons-learned capture                 |
+| `/sprint-contract`   | `story-master`      | Negotiate the scope and DoD for an upcoming wave            |
+| `/sql-query`         | `data-analyst`      | Natural language → optimized T-SQL                          |
+| `/data-science`      | `data-scientist`    | EDA, modeling, forecasting, experiment design               |
+| `/data-narrative`    | `data-scientist`    | Turn an analysis into a stakeholder-ready narrative         |
+| `/doc-garden`        | (any)               | Documentation cleanup and link hygiene pass                 |
+| `/mem-ingest`        | (any)               | Add durable knowledge to the project mem                    |
+| `/mem-query`         | (any)               | Query the project mem before acting                         |
+| `/mem-lint`          | (any)               | Audit mem health and surface stale entries                  |
+
+Agents without a dedicated prompt file (`brownfield-discovery`, `greenfield-interview`, `close-story`, `debug-detective`, `ai-engineer`, `data-engineer`, `prompt-builder`, `researcher`) are invoked directly from the agent dropdown or via `@agent-name` mentions.
 
 ---
 

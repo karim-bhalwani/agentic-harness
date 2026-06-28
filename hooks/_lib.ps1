@@ -211,6 +211,74 @@ function Test-MMCircuitBreaker {
     return ([Environment]::GetEnvironmentVariable($EnvVar)) -eq 'true'
 }
 
+# ---------- Credential / injection pattern catalogues ------------------------
+#
+# Single source of truth for the patterns consumed by both scan-secrets.ps1
+# (file-level Stop scan) and scan-user-prompt.ps1 (prompt-level
+# UserPromptSubmit scan). Adding a new credential type only needs an edit
+# here; both hooks pick it up automatically.
+
+function Get-MMSecretPatterns {
+    <#
+    .SYNOPSIS Canonical list of credential / secret regex patterns.
+    .OUTPUTS Array of @{ Name; Severity; Regex } hashtables.
+    .NOTES Severity is one of: critical | high | medium.
+    #>
+    return @(
+        @{ Name = 'AWS_ACCESS_KEY'; Severity = 'critical'; Regex = 'AKIA[0-9A-Z]{16}' }
+        @{ Name = 'AWS_SECRET_KEY'; Severity = 'critical'; Regex = 'aws_secret_access_key\s*[:=]\s*[''"]?[A-Za-z0-9/+=]{40}' }
+        @{ Name = 'GCP_API_KEY'; Severity = 'high'; Regex = 'AIza[0-9A-Za-z_\-]{35}' }
+        @{ Name = 'AZURE_CLIENT_SECRET'; Severity = 'critical'; Regex = 'azure[_\-]?client[_\-]?secret\s*[:=]\s*[''"]?[A-Za-z0-9_~.\-]{34,}' }
+        @{ Name = 'GITHUB_PAT'; Severity = 'critical'; Regex = 'ghp_[0-9A-Za-z]{36}' }
+        @{ Name = 'GITHUB_FINE_GRAINED'; Severity = 'critical'; Regex = 'github_pat_[0-9A-Za-z_]{82}' }
+        @{ Name = 'OPENAI_API_KEY'; Severity = 'critical'; Regex = 'sk-[A-Za-z0-9]{20,}' }
+        @{ Name = 'PRIVATE_KEY'; Severity = 'critical'; Regex = '\-\-\-\-\-BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY\-\-\-\-\-' }
+        @{ Name = 'STRIPE_SECRET'; Severity = 'critical'; Regex = 'sk_live_[0-9A-Za-z]{24,}' }
+        @{ Name = 'SLACK_TOKEN'; Severity = 'high'; Regex = 'xox[baprs]-[0-9]{10,}-[0-9A-Za-z\-]+' }
+        @{ Name = 'NPM_TOKEN'; Severity = 'high'; Regex = 'npm_[0-9A-Za-z]{36}' }
+        @{ Name = 'JWT_TOKEN'; Severity = 'medium'; Regex = 'eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}' }
+        @{ Name = 'CONNECTION_STRING'; Severity = 'high'; Regex = '(mongodb|postgres|mysql|redis|mssql)://[^\s''\"]{10,}' }
+        @{ Name = 'GENERIC_SECRET'; Severity = 'high'; Regex = '(secret|token|password|api[_\-]?key)\s*[:=]\s*[''"]?[A-Za-z0-9_/+=~.\-]{16,}' }
+    )
+}
+
+function Get-MMSecretPlaceholderPattern {
+    <#
+    .SYNOPSIS Single regex that matches obvious placeholder / example values
+             so both secret scanners can suppress false positives uniformly.
+    .NOTES The bare word 'example' is deliberately NOT included: many real
+           credential-shaped strings contain it as a substring (AWS's canonical
+           'AKIAIOSFODNN7EXAMPLE' key, the 'example.com' reserved TLD inside a
+           connection string), and silently suppressing those produces a false
+           negative on the security corpus. Placeholder markers must be
+           deliberate sentinels (brackets, your_/YOUR_ prefix, xxxx runs,
+           changeme, TODO/FIXME, replace_me, dummy, fake, sample, placeholder).
+    #>
+    return '<[^>]+>|\{[^}]+\}|placeholder|your[_\-]|YOUR_[A-Z]|x{4,}|changeme|TODO|FIXME|replace[_\-]?me|dummy|fake|sample'
+}
+
+function Get-MMInjectionPatterns {
+    <#
+    .SYNOPSIS Canonical list of prompt-injection marker phrases.
+    .OUTPUTS Array of lowercase substrings to match case-insensitively.
+    #>
+    return @(
+        'ignore previous instructions',
+        'ignore all previous',
+        'disregard the above',
+        'disregard previous',
+        'forget what you were told',
+        'forget your instructions',
+        'system prompt',
+        'reveal your instructions',
+        'print your system prompt',
+        'you are now',
+        'act as if you have no restrictions',
+        'jailbreak',
+        'developer mode enabled'
+    )
+}
+
 # ---------- Repo helpers ------------------------------------------------------
 
 function Get-MMRepoRoot {

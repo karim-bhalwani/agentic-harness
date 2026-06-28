@@ -21,11 +21,29 @@ $inputData = Read-MMHookInput
 if (-not $inputData) { exit 0 }
 
 $agentType = Get-MMAgentType -InputData $inputData
-if (-not $agentType) { exit 0 }
 
-# BUILD agents are denied; all others pass through.
+# Identity policy: when the caller does not declare an agent_type/agent_name,
+# default to deny on holdout paths unless governance=open. This closes the
+# residual instruction-only gap noted in CORE_PRINCIPLES.md.
+# Trusted non-BUILD agents that MAY access holdout files.
+$holdoutReaders = @('guardian', 'architect', 'holdout-validation', 'release-manager')
 $buildAgents = @('senior-developer', 'data-engineer', 'ai-engineer', 'data-scientist')
-if ($buildAgents -notcontains $agentType) { exit 0 }
+
+if (-not $agentType) {
+    # Unknown caller: only allowed when governance is fully open.
+    if ($governanceLevel -eq 'open') { exit 0 }
+    # Otherwise continue into path inspection so we can deny holdout access.
+    $agentType = 'unknown'
+}
+elseif ($holdoutReaders -contains $agentType) {
+    # Trusted readers always pass through.
+    exit 0
+}
+elseif ($buildAgents -notcontains $agentType -and $agentType -ne 'unknown') {
+    # Any other identified agent is not a BUILD agent and not in the reader
+    # allowlist; pass through (e.g. debug-detective, prompt-builder).
+    exit 0
+}
 
 function Test-HoldoutPath {
     param([string]$Value)

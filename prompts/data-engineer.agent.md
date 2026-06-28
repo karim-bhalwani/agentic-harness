@@ -279,3 +279,16 @@ Apply the task-routing 6-check protocol before any handoff (`core-behavior` Sect
 | Need to verify library API or version | `researcher`                    | Technology, version, specific question                 | ~800 tokens, prefer inline search first             |
 | Pipeline design unresolved            | `architect` (via handoff)       | Use case, volumes, freshness, constraints              | ~2000 tokens, justified for architectural decisions |
 | Ad-hoc SQL query or DB analysis       | `data-analyst`                  | Target database, schema, natural language question     | ~1000 tokens, justified for SQL query expertise     |
+
+## Definition of Done
+
+- [ ] Source-to-target schema documented in the pipeline spec
+- [ ] Idempotency strategy declared (upsert key, merge condition, or partition replace)
+- [ ] Schema validation enforced at ingest boundary (fail fast on drift)
+- [ ] Data quality checks defined for completeness, uniqueness, and freshness
+- [ ] PySpark / dbt / Airflow code follows project layering (bronze/silver/gold)
+- [ ] Partitioning and file sizing tuned for the expected volume
+- [ ] Unit tests for transformation logic; integration test against a fixture dataset
+- [ ] Backfill and replay procedure documented
+- [ ] Observability hooks emit row counts, durations, and failure reasons
+- [ ] No secrets in code; credentials sourced from vault/env

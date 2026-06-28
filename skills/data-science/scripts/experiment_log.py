@@ -165,10 +165,7 @@ def log_experiment(
     should be started instead of appending here.
     """
     if not description or len(description.strip()) < 10:
-        raise ValueError(
-            "description must be at least 10 characters; "
-            "describe WHAT changed and WHY in plain English"
-        )
+        raise ValueError("description must be at least 10 characters; describe WHAT changed and WHY in plain English")
 
     # Metric-mismatch guard: warn if the new entry's metric differs from
     # the most recent entry in the same ledger.
@@ -220,23 +217,18 @@ def read_experiments(ledger_path: str | Path) -> list[ExperimentEntry]:
                 entries.append(ExperimentEntry(**data))
             except (json.JSONDecodeError, TypeError) as e:
                 raise ValueError(
-                    f"Corrupt ledger at line {i} of {path}: {e}. "
-                    "Investigate before logging more entries."
+                    f"Corrupt ledger at line {i} of {path}: {e}. Investigate before logging more entries."
                 ) from e
     return entries
 
 
-def get_baseline(
-    ledger_path: str | Path, primary_metric: str
-) -> ExperimentEntry | None:
+def get_baseline(ledger_path: str | Path, primary_metric: str) -> ExperimentEntry | None:
     """Return the best Kept entry for the given metric, or None."""
     entries = read_experiments(ledger_path)
     kept = [
         e
         for e in entries
-        if e.decision == Decision.KEEP.value
-        and e.primary_metric == primary_metric
-        and e.test_score is not None
+        if e.decision == Decision.KEEP.value and e.primary_metric == primary_metric and e.test_score is not None
     ]
     if not kept:
         return None
@@ -277,8 +269,7 @@ def decide_keep_discard(
     if candidate_is_simpler:
         return (
             Decision.KEEP,
-            "Score equal within tolerance and candidate is simpler "
-            "(simplification win).",
+            "Score equal within tolerance and candidate is simpler (simplification win).",
         )
     return (
         Decision.DISCARD,
@@ -325,9 +316,7 @@ def main() -> int:
     p_log = sub.add_parser("log", help="Append an experiment entry")
     p_log.add_argument("--ledger", type=Path, required=True)
     p_log.add_argument("--algo", required=True)
-    p_log.add_argument(
-        "--metric", required=True, help="primary metric name (e.g. roc_auc)"
-    )
+    p_log.add_argument("--metric", required=True, help="primary metric name (e.g. roc_auc)")
     p_log.add_argument("--cv-mean", type=float, default=None)
     p_log.add_argument("--cv-std", type=float, default=None)
     p_log.add_argument("--test", type=float, default=None, dest="test_score")

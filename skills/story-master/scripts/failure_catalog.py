@@ -107,9 +107,7 @@ def _render_catalog(patterns: list[FailurePattern]) -> str:
     for p in patterns:
         last_story = p.stories[-1] if p.stories else "—"
         last_date = p.last_seen.split(" ")[0]
-        lines.append(
-            f"| {p.fc_id} | {p.error_type} | {p.count} | {last_story} | {last_date} |"
-        )
+        lines.append(f"| {p.fc_id} | {p.error_type} | {p.count} | {last_story} | {last_date} |")
 
     lines.append("\n---\n")
 
@@ -139,11 +137,7 @@ def _extract_recurring_failures(state_path: Path) -> list[str]:
     raw = m.group(1).strip()
     if raw.lower() in ("none", ""):
         return []
-    items = [
-        line.lstrip("- ").strip()
-        for line in raw.splitlines()
-        if line.strip() and line.strip().lower() != "none"
-    ]
+    items = [line.lstrip("- ").strip() for line in raw.splitlines() if line.strip() and line.strip().lower() != "none"]
     return [i for i in items if i]
 
 
@@ -170,9 +164,7 @@ def _extract_plan_checker_failures(validation_path: Path) -> list[str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Update .copilot/context/failure-catalog.md from story artifacts"
-    )
+    parser = argparse.ArgumentParser(description="Update .copilot/context/failure-catalog.md from story artifacts")
     parser.add_argument("--story-id", required=True, help="Story ID, e.g. US-01")
     parser.add_argument(
         "--stories-dir",
@@ -249,10 +241,7 @@ def main() -> None:
             added += 1
 
     args.catalog_path.write_text(_render_catalog(patterns), encoding="utf-8")
-    print(
-        f"[+] Failure catalog updated: {added} new pattern(s), {updated} incremented. "
-        f"Path: {args.catalog_path}"
-    )
+    print(f"[+] Failure catalog updated: {added} new pattern(s), {updated} incremented. Path: {args.catalog_path}")
 
 
 if __name__ == "__main__":

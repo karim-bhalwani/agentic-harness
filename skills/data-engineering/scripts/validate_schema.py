@@ -161,9 +161,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Validate a DataFrame schema contract")
     parser.add_argument("--actual", required=True, type=Path)
     parser.add_argument("--expected", required=True, type=Path)
-    parser.add_argument(
-        "--no-strict", dest="strict", action="store_false", default=True
-    )
+    parser.add_argument("--no-strict", dest="strict", action="store_false", default=True)
     args = parser.parse_args()
 
     actual_fields = _load_fields(args.actual)

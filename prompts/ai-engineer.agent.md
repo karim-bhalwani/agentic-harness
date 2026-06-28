@@ -233,3 +233,16 @@ Apply the task-routing 6-check protocol before any handoff (`core-behavior` Sect
 | LLM pipeline failure or unexpected outputs       | `debug-detective` (via handoff) | Error, pipeline stage, model version, retrieval logs | ~1500 tokens, justified for complex failures        |
 | Need to verify library API or model capabilities | `researcher`                    | Model name, version, specific capability question    | ~800 tokens, prefer inline search first             |
 | System design unresolved before implementation   | `architect` (via handoff)       | Use case, constraints, quality attributes            | ~2000 tokens, justified for architectural decisions |
+
+## Definition of Done
+
+- [ ] Use case, success metric, and acceptable failure modes documented
+- [ ] Eval set (golden + adversarial) defined before any prompt iteration
+- [ ] Baseline score recorded before optimization changes
+- [ ] Retrieval pipeline (if RAG): chunking, embedding model, and index strategy declared
+- [ ] Prompt templates versioned; no inline string concatenation of user input
+- [ ] Prompt-injection defenses applied per `security-boundaries` skill
+- [ ] Cost and latency budget per request measured against target
+- [ ] Guardrails (output validation, refusal, PII redaction) tested
+- [ ] Observability captures prompt, response, latency, token usage, and trace IDs
+- [ ] Rollback path exists for prompt/model swaps

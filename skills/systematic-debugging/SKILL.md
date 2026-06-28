@@ -7,6 +7,7 @@ compatibility: "VS Code"
 metadata:
   version: "9.0"
   updated: "01-July-2026"
+  dependencies: ["verification-before-completion"]
 ---
 
 # Systematic Debugging Skill

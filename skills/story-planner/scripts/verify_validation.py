@@ -111,10 +111,7 @@ def verify_validation(path: Path) -> list[Problem]:
         problems.append(
             Problem(
                 problem=f"File not found: {path}",
-                fix=(
-                    "Run scaffold_validation.py --story-id <ID> to generate "
-                    "a validation skeleton."
-                ),
+                fix=("Run scaffold_validation.py --story-id <ID> to generate a validation skeleton."),
             )
         )
         return problems
@@ -133,16 +130,12 @@ def verify_validation(path: Path) -> list[Problem]:
     lines = text.splitlines()
 
     # --- Check 2: Header contains story ID ---
-    has_story_header = any(
-        _STORY_HEADER_RE.search(line) or _VALIDATION_TITLE_RE.match(line.strip())
-        for line in lines
-    )
+    has_story_header = any(_STORY_HEADER_RE.search(line) or _VALIDATION_TITLE_RE.match(line.strip()) for line in lines)
     if not has_story_header:
         problems.append(
             Problem(
                 problem=(
-                    "File header does not contain a story ID. "
-                    "Expected '**Story:** US-NN' or '# Validation Map:' title."
+                    "File header does not contain a story ID. Expected '**Story:** US-NN' or '# Validation Map:' title."
                 ),
                 fix="Add '**Story:** US-XX' to the file header.",
             )
@@ -167,11 +160,7 @@ def verify_validation(path: Path) -> list[Problem]:
             if col not in header_cells:
                 problems.append(
                     Problem(
-                        problem=(
-                            "Task Validation Matrix is missing column: '{}'.".format(
-                                col
-                            )
-                        ),
+                        problem=("Task Validation Matrix is missing column: '{}'.".format(col)),
                         fix=f"Add '{col}' to the Task Validation Matrix header row.",
                     )
                 )
@@ -191,14 +180,8 @@ def verify_validation(path: Path) -> list[Problem]:
                 if val and val not in VALID_STATUSES and "TODO" not in val:
                     problems.append(
                         Problem(
-                            problem=(
-                                f"Task Validation Matrix has invalid Status "
-                                f"value: '{val}'."
-                            ),
-                            fix=(
-                                f"Set Status to one of: "
-                                f"{', '.join(sorted(VALID_STATUSES))}."
-                            ),
+                            problem=(f"Task Validation Matrix has invalid Status value: '{val}'."),
+                            fix=(f"Set Status to one of: {', '.join(sorted(VALID_STATUSES))}."),
                         )
                     )
 
@@ -207,14 +190,8 @@ def verify_validation(path: Path) -> list[Problem]:
                 if val and val not in VALID_INFRASTRUCTURE and "TODO" not in val:
                     problems.append(
                         Problem(
-                            problem=(
-                                f"Task Validation Matrix has invalid "
-                                f"Infrastructure value: '{val}'."
-                            ),
-                            fix=(
-                                f"Set Infrastructure to one of: "
-                                f"{', '.join(sorted(VALID_INFRASTRUCTURE))}."
-                            ),
+                            problem=(f"Task Validation Matrix has invalid Infrastructure value: '{val}'."),
+                            fix=(f"Set Infrastructure to one of: {', '.join(sorted(VALID_INFRASTRUCTURE))}."),
                         )
                     )
 
@@ -224,10 +201,7 @@ def verify_validation(path: Path) -> list[Problem]:
         problems.append(
             Problem(
                 problem="AC Coverage Map section not found.",
-                fix=(
-                    "Add a '## AC Coverage Map' section with columns: "
-                    "AC, Covered By Task(s), Validate Command."
-                ),
+                fix=("Add a '## AC Coverage Map' section with columns: AC, Covered By Task(s), Validate Command."),
             )
         )
 
@@ -251,9 +225,7 @@ def verify_validation(path: Path) -> list[Problem]:
             if col not in header_cells:
                 problems.append(
                     Problem(
-                        problem=(
-                            f"Plan-Checker History table is missing column: '{col}'."
-                        ),
+                        problem=(f"Plan-Checker History table is missing column: '{col}'."),
                         fix=f"Add '{col}' to the Plan-Checker History header row.",
                     )
                 )
@@ -262,9 +234,7 @@ def verify_validation(path: Path) -> list[Problem]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Validate a US-{id}-VALIDATION.md file against the §3.4 schema"
-    )
+    parser = argparse.ArgumentParser(description="Validate a US-{id}-VALIDATION.md file against the §3.4 schema")
     parser.add_argument(
         "--file",
         required=True,

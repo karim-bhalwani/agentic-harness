@@ -93,9 +93,7 @@ def scaffold_validation(config: ValidationConfig) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Scaffold a US-{id}-VALIDATION.md for the story-planner agent"
-    )
+    parser = argparse.ArgumentParser(description="Scaffold a US-{id}-VALIDATION.md for the story-planner agent")
     parser.add_argument(
         "--story-id",
         required=True,

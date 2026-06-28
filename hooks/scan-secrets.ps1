@@ -44,26 +44,11 @@ if ($LASTEXITCODE -ne 0) {
     exit 0
 }
 
-# --- Credential patterns: Name | Severity | Regex ---
-$patterns = @(
-    @{ Name = 'AWS_ACCESS_KEY'; Severity = 'critical'; Regex = 'AKIA[0-9A-Z]{16}' }
-    @{ Name = 'AWS_SECRET_KEY'; Severity = 'critical'; Regex = 'aws_secret_access_key\s*[:=]\s*[''"]?[A-Za-z0-9/+=]{40}' }
-    @{ Name = 'GCP_API_KEY'; Severity = 'high'; Regex = 'AIza[0-9A-Za-z_\-]{35}' }
-    @{ Name = 'AZURE_CLIENT_SECRET'; Severity = 'critical'; Regex = 'azure[_\-]?client[_\-]?secret\s*[:=]\s*[''"]?[A-Za-z0-9_~.\-]{34,}' }
-    @{ Name = 'GITHUB_PAT'; Severity = 'critical'; Regex = 'ghp_[0-9A-Za-z]{36}' }
-    @{ Name = 'GITHUB_FINE_GRAINED'; Severity = 'critical'; Regex = 'github_pat_[0-9A-Za-z_]{82}' }
-    @{ Name = 'OPENAI_API_KEY'; Severity = 'critical'; Regex = 'sk-[A-Za-z0-9]{20,}' }
-    @{ Name = 'PRIVATE_KEY'; Severity = 'critical'; Regex = '\-\-\-\-\-BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY\-\-\-\-\-' }
-    @{ Name = 'STRIPE_SECRET'; Severity = 'critical'; Regex = 'sk_live_[0-9A-Za-z]{24,}' }
-    @{ Name = 'SLACK_TOKEN'; Severity = 'high'; Regex = 'xox[baprs]-[0-9]{10,}-[0-9A-Za-z\-]+' }
-    @{ Name = 'NPM_TOKEN'; Severity = 'high'; Regex = 'npm_[0-9A-Za-z]{36}' }
-    @{ Name = 'JWT_TOKEN'; Severity = 'medium'; Regex = 'eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}' }
-    @{ Name = 'CONNECTION_STRING'; Severity = 'high'; Regex = '(mongodb|postgres|mysql|redis|mssql)://[^\s''\"]{10,}' }
-    @{ Name = 'GENERIC_SECRET'; Severity = 'high'; Regex = '(secret|token|password|api[_\-]?key)\s*[:=]\s*[''"]?[A-Za-z0-9_/+=~.\-]{16,}' }
-)
+# --- Credential patterns: shared catalogue from _lib.ps1 ---
+$patterns = Get-MMSecretPatterns
 
 # Placeholder filter — skip obvious example / test values
-$placeholderPattern = 'example|placeholder|your[_\-]|xxx|changeme|TODO|FIXME|replace[_\-]?me|dummy|fake|test[_\-]?key|sample'
+$placeholderPattern = Get-MMSecretPlaceholderPattern
 
 # --- Collect modified + new (untracked) files ---
 $gitDiff = & git diff --name-only --diff-filter=ACMR HEAD 2>$null

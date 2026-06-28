@@ -116,28 +116,17 @@ def verify_plan(path: Path) -> list[Problem]:
         problems.append(
             Problem(
                 problem="Acceptance Criteria table has no AC-1 row.",
-                fix=(
-                    "Add at least one '| AC-1 | GIVEN ... WHEN ... THEN ... |' "
-                    "row to the Acceptance Criteria table."
-                ),
+                fix=("Add at least one '| AC-1 | GIVEN ... WHEN ... THEN ... |' row to the Acceptance Criteria table."),
             )
         )
 
     # --- Check 4: Implementation Tasks has at least one task line ---
-    task_line_indices: list[int] = [
-        i for i, line in enumerate(lines) if _TASK_LINE_RE.match(line.strip())
-    ]
+    task_line_indices: list[int] = [i for i, line in enumerate(lines) if _TASK_LINE_RE.match(line.strip())]
     if not task_line_indices:
         problems.append(
             Problem(
-                problem=(
-                    "Implementation Tasks section has no task lines matching "
-                    "'- [ ] T-NN' or '- [x] T-NN'."
-                ),
-                fix=(
-                    "Add at least one task using the format: "
-                    "'- [ ] T-01 · <description>'."
-                ),
+                problem=("Implementation Tasks section has no task lines matching '- [ ] T-NN' or '- [x] T-NN'."),
+                fix=("Add at least one task using the format: '- [ ] T-01 · <description>'."),
             )
         )
 
@@ -158,10 +147,7 @@ def verify_plan(path: Path) -> list[Problem]:
             problems.append(
                 Problem(
                     problem=f"Task has no '**Validate:**' sub-item: '{snippet}'.",
-                    fix=(
-                        "Add '  - **Validate:** <command>' immediately below "
-                        "the task line."
-                    ),
+                    fix=("Add '  - **Validate:** <command>' immediately below the task line."),
                 )
             )
 
@@ -211,9 +197,7 @@ def verify_plan(path: Path) -> list[Problem]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Validate a US-{id}-PLAN.md file against the §3.2 schema"
-    )
+    parser = argparse.ArgumentParser(description="Validate a US-{id}-PLAN.md file against the §3.2 schema")
     parser.add_argument(
         "--file",
         required=True,

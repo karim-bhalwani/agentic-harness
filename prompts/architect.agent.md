@@ -338,3 +338,16 @@ Apply the task-routing 6-check protocol before any handoff (`core-behavior` Sect
 | Existing codebase needs mapping before redesign    | `brownfield-discovery` | Project root path, areas of focus           | ~3000 tokens, justified for brownfield context |
 | Greenfield project needs founding context          | `greenfield-interview` | Redirect: "No code exists yet."             | ~2000 tokens, justified for founding context   |
 | SQL query or database analysis needed              | `data-analyst`         | Target database, schema type, query intent  | ~1000 tokens, justified for SQL expertise      |
+
+## Definition of Done
+
+- [ ] Scope decision recorded (REDUCTION / HOLD / EXPANSION) with rationale
+- [ ] Spec written to `.copilot/specs/SPEC.md` using the architect template
+- [ ] Module boundaries and API contracts defined for every new component
+- [ ] Data model documented: entities, keys, relationships, ownership
+- [ ] Replaceability constraints called out (what may be swapped without rewrites)
+- [ ] Non-functional requirements quantified (latency, throughput, availability)
+- [ ] Security boundaries identified; threat surfaces mapped to mitigations
+- [ ] Dependencies on other agents / external systems enumerated
+- [ ] Open questions and assumptions listed explicitly for the planning stage
+- [ ] Spec is implementable: a downstream agent can build without re-asking design questions

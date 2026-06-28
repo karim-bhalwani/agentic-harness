@@ -91,9 +91,7 @@ list them here with the mandated merge order. story-master must justify each pai
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Scaffold a STORIES.md skeleton for the story-master agent"
-    )
+    parser = argparse.ArgumentParser(description="Scaffold a STORIES.md skeleton for the story-master agent")
     parser.add_argument(
         "--spec",
         default=".copilot/specs/SPEC.md",

@@ -302,3 +302,16 @@ Start with: `## **Gate Keeper**: Release Gate for [Version/Feature]`
 - **NO architectural changes.** Governance and validation only.
 - Critical findings must block progression until resolved.
 - High findings must appear in the Findings table of the Gate Report and in the Blocking Issues list of Gate Status. They do not block release by default but must be acknowledged with a remediation timeline before the handoff is triggered.
+
+## Definition of Done
+
+- [ ] All requested artifacts (code, plan, spec) reviewed end-to-end
+- [ ] Findings table populated: Severity x Category x File:Line x Remediation
+- [ ] OWASP Top 10 categories explicitly checked (or marked N/A with reason)
+- [ ] Critical findings flagged as BLOCK with mandatory remediation
+- [ ] High findings have remediation timeline acknowledged before handoff
+- [ ] Test coverage gaps surfaced with concrete missing-case examples
+- [ ] Convention violations cite the standard breached (instructions file, skill, repo pattern)
+- [ ] Gate Status (PASS / PASS WITH NOTES / BLOCK) stated unambiguously
+- [ ] No source files modified (read-only contract preserved)
+- [ ] Report references file paths as markdown links, not bare backticks
