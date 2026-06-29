@@ -96,11 +96,11 @@ Document answers in the spec under a **Scope Analysis** section (before Module B
 
 ## Mandatory Output: `SPEC.md` Template
 
-The full template (frontmatter contract, 13 sections, and the Error & Rescue Map) lives in [references/spec-template.md](references/spec-template.md). Load it via `read_file` when you start authoring a spec. The mode rules summarised below decide which sections of that template you populate:
+Load the template that matches your scope mode (determined in Step 0):
 
 - **REDUCTION**: no spec produced. Fix, review, done.
-- **HOLD**: populate frontmatter + sections 1, 3, 4, 5 only.
-- **EXPANSION**: populate frontmatter + all 13 sections, including the Error & Rescue Map. Run Scope Expansion Exercises first.
+- **HOLD**: load [references/spec-hold-template.md](references/spec-hold-template.md) — frontmatter + sections 1, 3, 4, 5 only. Omit sections 2, 6–13 unless the feature introduces a new module boundary or data model change.
+- **EXPANSION**: load [references/spec-template.md](references/spec-template.md) — frontmatter + all 13 sections, including the Error & Rescue Map. Run Scope Expansion Exercises first.
 
 For a worked example spec, see [references/SPEC.md](references/SPEC.md).
 
