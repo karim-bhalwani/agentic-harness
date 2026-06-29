@@ -1,6 +1,6 @@
 ---
 name: llm-app-patterns
-description: "Production LLM application patterns, architectures, and best practices. Covers RAG pipelines, agent architectures, prompt engineering, LLMOps, and production deployment patterns. DO NOT USE FOR: LLM security auditing (use genai-security), non-LLM data pipelines such as ETL without LLM components (use data-engineering), reusable prompt template libraries (use prompt-library), or wiki knowledge management systems (use llm-mem)."
+description: "Production LLM application patterns, architectures, and best practices. Covers RAG pipelines, agent architectures, prompt engineering, LLMOps, and production deployment patterns. Triggers: building RAG, implementing AI agents, designing prompt strategies, setting up LLMOps, deploying LLM apps with caching/rate-limiting/fallbacks."
 argument-hint: "[LLM pattern to apply]"
 license: MIT
 compatibility: "VS Code"

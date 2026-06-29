@@ -1,6 +1,6 @@
 ---
 name: architect
-description: "PIPELINE POSITION: specify (step 2 of 4: brainstorming → architect → concise-planning → implementer). Produce the formal SPEC.md after brainstorming has aligned intent. Defines module boundaries, API contracts, data models, and replaceability constraints. Output is a specification artifact at .copilot/specs/SPEC.md. DO NOT USE FOR: unstructured requirement exploration (use brainstorming FIRST for alignment), atomic task checklists for an already-approved design (use concise-planning), writing implementation code (use implementer), code review or security audit (use guardian), debugging errors (use systematic-debugging), or CI/CD pipeline design (use ops). NOTE: Scope determination (REDUCTION/HOLD/EXPANSION) is part of the Architect role and comes first."
+description: "Produce the formal SPEC.md after brainstorming has aligned intent. Defines module boundaries, API contracts, data models, and replaceability constraints. Output is a specification artifact at .copilot/specs/SPEC.md. Triggers: new feature, major refactor, database schema or API contract definition, system risk isolation. Reached by: brainstorming (handoff), concise-planning (upstream dependency)."
 argument-hint: "[system component to design]"
 license: MIT
 compatibility: "VS Code"

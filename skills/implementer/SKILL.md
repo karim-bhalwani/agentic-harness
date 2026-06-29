@@ -70,21 +70,9 @@ This replaces "Read Spec" for small tasks. For any change that adds or modifies 
   3. Else if `SPEC.md` exists → use `SPEC.md`.
   4. Else → stop and request a spec before proceeding.
 
-2. **Setup Tests**: Write **one** unit test at a time for expected behavior, then write the minimal code to pass it before writing the next test (one Red-Green-Refactor cycle per test). Use the sprint contract's acceptance criteria and error scenarios to derive test cases.
+2. **Setup Tests**: Write one unit test at a time (Red-Green-Refactor). Load [tdd-discipline.md](./references/tdd-discipline.md) for the full protocol including per-cycle checklist and anti-patterns.
 
-   #### TDD Discipline (Red-Green-Refactor)
-
-   Work in **vertical slices** (tracer bullets): one test → minimal code to pass → repeat. Each cycle teaches what the next test should cover.
-
-   > **Anti-pattern: horizontal slices**: Do NOT write all tests first, then all code. Tests written in bulk test _imagined_ behavior, not actual behavior. They become insensitive to real changes and break on refactors that don't change behavior.
-
-   **Per-cycle checklist:**
-   - [ ] Test describes behavior (WHAT), not implementation (HOW)
-   - [ ] Test uses the public interface only (no mocking of internal collaborators)
-   - [ ] Code is minimal to pass this test (no speculative features)
-   - [ ] Tests pass before any refactoring (**never refactor while RED**)
-
-3. **Pre-Write Gate (Simplicity Ladder)**: Before writing any code for a task, stop at the first rung that holds. Do not proceed past the rung that resolves the need:
+3. **Pre-Write Gate (Simplicity Ladder)**: Before writing code, stop at the first rung that holds:
 
    ```
    1. Does this need to exist at all?          → no: skip it (YAGNI)
@@ -95,30 +83,12 @@ This replaces "Read Spec" for small tasks. For any change that adds or modifies 
    6. Only then: write the minimum that works
    ```
 
-   **Not negotiable** regardless of rung: input validation at trust boundaries, error handling that prevents data loss, security checks, accessibility, and anything the spec explicitly requires. The ladder reduces volume, never correctness.
-
-   When you intentionally stop at an early rung and a known ceiling exists (e.g., O(n²) scan, global lock, naive heuristic), mark it with a `minion:` comment naming the ceiling and upgrade path:
-
-   ```python
-   # minion: linear scan sufficient for now; upgrade to binary search if list > 1000 items
-   ```
+   **Not negotiable** regardless of rung: input validation at trust boundaries, error handling that prevents data loss, security checks, accessibility, and anything the spec explicitly requires. When you stop at an early rung and a known ceiling exists, mark it with a `minion:` comment naming the ceiling and upgrade path.
 
 4. **Draft Code**: Implement business logic according to architecture boundaries.
 5. **Validate**: Run lints, type checks, and tests.
-6. **Self-Review** (before handoff): Re-read every changed file as a reviewer would. Check against the original spec/mini-contract. Fix issues in-place before requesting external review. See checklist below.
+6. **Self-Review**: Re-read every changed file as a reviewer would. Check against the spec/mini-contract. Fix in-place. Load [self-review-checklist.md](./references/self-review-checklist.md) for the full checklist.
 7. **Refactor**: Simplify and clean up code while maintaining test passes.
-
-### Self-Review Checklist (Step 6)
-
-Before declaring work done or handing off to Guardian:
-
-1. **Re-read changed files** - scan the actual diff, not just tool output
-2. **Intent check** - does the change solve the problem stated in the spec/mini-contract, not a different problem?
-3. **Debris sweep** - remove dead imports, commented-out code, debug prints, unresolved TODOs
-4. **Readability gut-check** - would a new team member understand this without asking the author?
-5. **Fix in-place** - if any issue is found, fix it now (don't log it for later)
-
-This is a semantic review ("did I do the right thing well?"), not a mechanical gate ("did the linter pass?"). It complements, not replaces, the verification-before-completion skill.
 
 ## Failure Taxonomy
 

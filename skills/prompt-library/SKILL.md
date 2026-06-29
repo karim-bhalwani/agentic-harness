@@ -16,18 +16,9 @@ metadata:
 
 Curated collection of high-quality prompts for various use cases, organized by task type.
 
-## When to Use This Reference
+## Router
 
-Use when:
-
-- Needing a role-based prompt template
-- Building analysis or brainstorming prompts
-- Creating prompts for code review or testing
-- Looking for prompt patterns and structures
-
-## Prompt Catalog
-
-The full copy-ready templates live in [references/prompt-templates.md](./references/prompt-templates.md). Load prompt-templates.md automatically whenever a user requests a specific prompt template from the catalog below; do not wait for the user to ask explicitly. If prompt-templates.md cannot be loaded, inform the user that the template file is unavailable and list the catalog categories below so the user can seek the template through another means. Index of available categories:
+Load [references/prompt-templates.md](./references/prompt-templates.md) automatically whenever a user requests a specific prompt template. If the file cannot be loaded, inform the user and list the categories below.
 
 ### Role-Based
 
@@ -57,25 +48,7 @@ The full copy-ready templates live in [references/prompt-templates.md](./referen
 - **Migrate Code** - Cross-language/framework migration
 - **Convert Format** - Format-to-format conversion
 
-If the requested category is not listed above, inform the user that no template exists for that category and suggest the closest available alternative from the catalog, or recommend using prompt-builder to create a new one.
-
-## Definition of Done
-
-- [ ] Prompt uses a clear role assignment ("Act as...")
-- [ ] Output format is specified with example structure
-- [ ] Constraints and success criteria are explicit
-- [ ] Prompt tested with at least one real input and output reviewed
-- [ ] Prompt is reusable (uses variables/placeholders, not hardcoded values)
-
-## Best Practices
-
-- ✅ **Be specific**: More specific prompts = better results
-- ✅ **Show format**: Include example output structure
-- ✅ **Use roles**: "Act as X" improves consistency
-- ✅ **Set constraints**: Specify what matters most
-- ✅ **Request reasoning**: Ask to explain thinking
-- ✅ **Include context**: Share relevant background
-- ✅ **Iterate**: Refine prompts based on results
+If the requested category is not listed above, suggest the closest alternative or recommend `prompt-builder` to create a new one.
 
 ## Constraints
 
@@ -84,19 +57,11 @@ If the requested category is not listed above, inform the user that no template 
 - Does NOT guarantee model behavior (outputs vary by model, temperature, and context)
 - Does NOT store sensitive data in prompt templates
 
-## Common Pitfalls
-
-- **Cargo-cult prompting**: Copying prompt patterns without understanding why they work
-- **Ignoring context window**: Long prompts waste tokens; be concise and specific
-- **Missing success criteria**: Every prompt should define what "good output" looks like
-- **Over-constraining**: Too many rules make prompts brittle and hard to maintain
-- **No iteration**: First-draft prompts rarely work well; plan for refinement cycles
-
 ## Integration Points
 
 - **prompt-builder**: Uses templates from this library as starting points for new prompts
 - **ai-engineer**: Consumes prompt patterns for RAG and agent system prompts
-- **brainstorming**: Supplies brainstorming-style prompt templates (e.g., 'Brainstorm Features') for use inside a brainstorming session; this library does not conduct brainstorming itself
+- **brainstorming**: Supplies brainstorming-style prompt templates for use inside a brainstorming session
 - **guardian**: Reviews prompts for security (injection resistance) and quality
 
 ## References

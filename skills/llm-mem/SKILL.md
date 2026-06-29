@@ -24,29 +24,15 @@ Core principles:
 
 ## Architecture
 
-Everything lives under a single `llmmem/` directory in the **project repo**, versioned with Git:
-
-```text
-<project-root>/
-└── llmmem/
-    ├── raw/             ← Immutable source material (human curates, LLM reads)
-    │   └── <topic>/
-    │       └── YYYY-MM-DD-descriptive-slug.md
-    └── mem/            ← Compiled knowledge (LLM owns entirely)
-        ├── index.md     ← One-page catalog of all articles
-        ├── log.md       ← Append-only operation log
-        ├── overview.md  ← High-level synthesis (optional)
-        └── <topic>/
-            └── concept-name.md
-```
-
-**Three layers**:
+Everything lives under a single `llmmem/` directory in the **project repo**, versioned with Git.
 
 | Layer       | Location      | Owner           | Rule                                                 |
 | ----------- | ------------- | --------------- | ---------------------------------------------------- |
 | Raw sources | `llmmem/raw/` | Human (curates) | Immutable. LLM reads, never modifies.                |
 | mem         | `llmmem/mem/` | LLM (compiles)  | LLM creates, updates, cross-references. Human reads. |
 | Schema      | This SKILL.md | Co-evolved      | Defines conventions, workflows, page formats.        |
+
+`llmmem/mem/` contains `index.md` (one-page catalog), `log.md` (append-only operation log), and topic subdirectories with concept-named articles.
 
 ### Initialization
 

@@ -62,14 +62,8 @@ Use when:
 
 1. Group access records by Database_Object
 2. Calculate Max_Access_Date (last access) for each object
-3. Assign tier based on access recency:
-   - **Ghost Tier**: No access in strictly >18 months
-   - **Cold Tier**: No access in strictly >12 months and up to and including 18 months
-   - **Cool Tier**: No access in strictly >6 months and up to and including 12 months
-   - **Active**: Accessed within the last 6 months (including exactly 6 months ago)
-   - **Unobserved**: Present in current catalog but no log entries in the analysis window - flag for manual review (see Analysis Standards)
-4. Boundary rule: Use strict greater-than for upper bounds. An object last accessed exactly 6 months ago is Active. An object last accessed exactly 12 months ago is Cold. An object last accessed exactly 18 months ago is Cold (not Ghost). Ghost requires strictly more than 18 months with no access.
-5. Prioritize false negatives: Any access in 6 months = Active
+3. Assign tier per the [Tiering Thresholds](./references/tiering-thresholds.md) table (Ghost/Cold/Cool/Active/Unobserved). Boundary rule: strict greater-than for upper bounds.
+4. Prioritize false negatives: Any access in 6 months = Active
 
 ### Phase 3: Legacy Pattern Recognition
 
@@ -101,15 +95,7 @@ Use when:
 
 ### Tiering Thresholds
 
-| Tier       | Last Access                            | Risk Level              | Action                                                                                        |
-| :--------- | :------------------------------------- | :---------------------- | :-------------------------------------------------------------------------------------------- |
-| Ghost      | Strictly >18 months                    | Low (safe to deprecate) | Archive and remove                                                                            |
-| Cold       | Strictly >12 months, ≤18 months        | Medium                  | Flag for review, contact owners                                                               |
-| Cool       | Strictly >6 months, ≤12 months         | Medium-High             | Monitor, investigate usage                                                                    |
-| Active     | ≤6 months (including exactly 6 months) | N/A                     | Keep, optimize if needed                                                                      |
-| Unobserved | No log entries in analysis window      | High (manual review)    | Flag for manual review; absence of logs may indicate log coverage gap, not genuine inactivity |
-
-> **Boundary rule**: Use strict greater-than for upper bounds. An object last accessed exactly 6 months ago is Active. An object last accessed exactly 12 months ago is Cold. An object last accessed exactly 18 months ago is Cold (not Ghost). Ghost requires strictly more than 18 months with no access.
+See [tiering-thresholds.md](./references/tiering-thresholds.md) for the full tier table and boundary rules.
 
 ### Legacy Application Indicators
 

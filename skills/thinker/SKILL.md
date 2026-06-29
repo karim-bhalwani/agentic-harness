@@ -111,15 +111,6 @@ Whenever a complex task is received:
 
 - **Governance Constraints:** Document assumptions and decisions in `decisions.md` when they change architecture or scope. If `decisions.md` does not exist, note in the action plan that it must be created before handoff, and include the decision log entry as a block in the thinker output so it is not lost.
 
-## Common Pitfalls
-
-- **Skipping UNDERSTAND**: Jumping straight to solutions misses the real problem. Always spend time understanding before planning.
-- **Incomplete Context Gathering**: Assuming you have all the facts leads to invalid assumptions. Always explicitly pull relevant context.
-- **Ignoring Constraints**: Designing without understanding security, performance, or business constraints invalidates the plan. Ask constraints early.
-- **Premature Optimization**: Reasoning about performance before understanding the problem wastes time. Optimize after measurement.
-- **Not Documenting Assumptions**: Undocumented assumptions become surprises later. Make assumptions explicit and validate them.
-- **Skipping Validation**: "It seems right" is not validation. Run the checklist; verify constraints before handing off.
-
 ## Integration Points
 
 | Phase         | Input From                | Output To                    | Context                                     |

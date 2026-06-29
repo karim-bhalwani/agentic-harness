@@ -82,14 +82,7 @@ Producers create directories if needed. Files always reflect "latest" (no versio
 
 ## Session State Management
 
-Agents persist pipeline progress to `.copilot/state/SESSION_STATE.md` for cross-session resume.
-
-1. **On startup**: check for `SESSION_STATE.md`:
-   - If `Status: active` or `Status: paused`: summarize and ask to resume
-   - If `Status: completed`: ignore and proceed normally
-   - If `SESSION_STATE.md` exists but `Status` is absent, empty, or not one of `active`, `paused`, `completed`: notify the user of the corrupt state, display the raw `Status` value found, and ask whether to reset the file using `scaffold_session_state.py` or to proceed without session state
-2. **At breakpoints**: write/update the state file
-3. **On completion**: mark status `completed`
+Agents persist pipeline progress to `.copilot/state/SESSION_STATE.md` for cross-session resume. Follow the Session Resume Protocol from `core-behavior.instructions.md` §9 for startup/checkpoint/completion procedures.
 
 Load [session_state_schema.md](./references/session_state_schema.md) for the full schema. Keep under 60 lines.
 
