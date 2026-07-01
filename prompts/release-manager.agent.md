@@ -12,10 +12,13 @@ tools:
   - web
   - todo
   - agent
+  - vscode
+  - ms-python.python
 agents:
   - researcher
 model:
   - "GPT-5.4 (copilot)"
+  - "GPT-5.5 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Hand off to Senior Developer

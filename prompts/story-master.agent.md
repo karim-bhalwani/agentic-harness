@@ -10,12 +10,15 @@ tools:
   - execute
   - todo
   - agent
+  - vscode
+  - ms-python.python
 disable-model-invocation: true
 agents:
   - researcher
   - Explore
 model:
   - "Claude Sonnet 4.6 (copilot)"
+  - "Claude Sonnet 5 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: "Gate 1: Review STORIES.md - then manually invoke @story-planner to begin"

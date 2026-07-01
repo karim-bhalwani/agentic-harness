@@ -9,6 +9,7 @@ tools:
 agents: []
 model:
   - "Claude Haiku 4.5 (copilot)"
+  - "MAI-Code-1-Flash (copilot)"
   - "Auto (copilot)"
 ---
 

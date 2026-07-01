@@ -11,11 +11,14 @@ tools:
   - web
   - todo
   - agent
+  - vscode
+  - ms-python.python
 disable-model-invocation: true
 agents:
   - researcher
 model:
   - "GPT-5.4 (copilot)"
+  - "MAI-Code-1-Flash (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Hand off to Architect

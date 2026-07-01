@@ -12,10 +12,12 @@ tools:
   - web
   - todo
   - vscode
+  - ms-python.python
 agents:
   - researcher
 model:
   - "GPT-5.4 (copilot)"
+  - "Claude Sonnet 5 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Hand off to Release Manager (PASS)

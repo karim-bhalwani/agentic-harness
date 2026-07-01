@@ -34,7 +34,13 @@ Load `~/.copilot/skills/guardian/references/doc-audit-checklist.md` via `read_fi
 For each category in the checklist (in order), scan the documentation and record findings with severity levels. Focus on one category completely before moving to the next.
 
 **Priority 3: Validate Cross-References**
-Execute `audit.py --lint` to check for broken links and version mismatches. If `audit.py --lint` is not found or exits with an error, record a Critical finding: "audit.py --lint failed: [error output]. Cross-reference validation incomplete." and continue to Priority 4.
+Scan documentation for broken links and version mismatches by checking:
+
+- All file references point to existing files (e.g., `~/.copilot/context/PROJECT_CONTEXT.md`)
+- All markdown internal links (`[text](path#section)`) resolve to valid headers or files
+- Version numbers referenced in docs match actual version strings in code, config, or version files
+- Cross-references between guides are consistent and not contradictory
+  Record any dead links or version mismatches as findings.
 
 **Priority 4: Generate Report**
 Create `.copilot/artifacts/doc-health-report.md` with all findings, organized by severity (Critical first, then High, Medium). If the target directory does not exist, create it before writing the report. If the write fails, output the full report content directly in the conversation and note the write failure.

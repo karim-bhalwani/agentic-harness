@@ -9,11 +9,14 @@ tools:
   - edit
   - todo
   - agent
+  - vscode
+  - ms-python.python
 disable-model-invocation: true
 agents:
   - researcher
 model:
   - "Claude Sonnet 4.6 (copilot)"
+  - "Claude Sonnet 5 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Hand off to Architect

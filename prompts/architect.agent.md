@@ -10,10 +10,13 @@ tools:
   - web
   - todo
   - agent
+  - vscode
+  - ms-python.python
 agents:
   - researcher
 model:
   - "Claude Sonnet 4.6 (copilot)"
+  - "Claude Sonnet 5 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: "Approve: Build Direct -> Senior Developer"

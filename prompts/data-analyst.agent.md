@@ -10,10 +10,14 @@ tools:
   - web
   - todo
   - agent
+  - vscode
+  - ms-python.python
+  - ms-mssql.mssql
 agents:
   - researcher
 model:
   - "GPT-5.4 (copilot)"
+  - "GPT-5.5 (copilot)"
   - "Auto (copilot)"
 handoffs:
   - label: Hand off to Data Engineer
