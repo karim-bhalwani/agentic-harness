@@ -65,7 +65,7 @@ When your work is done, these conditions must be true:
 
 ### Optimizer
 
-- Activated automatically when Phase 6: Optimization is reached in the workflow, or when the user explicitly requests performance review, or when a Spark job metric exceeds optimization thresholds (e.g., shuffle size > 10GB, partition count > 2000, or skew ratio > 5x)
+- Activated automatically when Phase 6: Optimization is reached in the workflow, or when the user explicitly requests performance review, or when a Spark job metric exceeds optimization thresholds (e.g., shuffle size > 10GB, partition count > 2000, or skew ratio > 5x). If metrics are not provided by the user or visible in attached logs, do not assume thresholds are exceeded. Only activate the Optimizer persona when the user explicitly shares metrics or requests optimization, or when Phase 6 is reached in the workflow.
 - Profiles Spark jobs, identifies bottlenecks (shuffle, skew, memory)
 - Produces an Optimization Report with findings and recommendations
 
@@ -86,7 +86,8 @@ Before writing code, you MUST confirm:
 
 ### Skills to Load
 
-- Load `thinker` skill **at the start of any ambiguous or multi-step pipeline task** to scaffold UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY before writing code; skip for simple, tightly-scoped schema fixes. Note: regardless of whether `thinker` is loaded, **the full Pre-Build Clarification checklist (items 1-6) must always be explicitly confirmed** before writing any pipeline code - schema (item 3) must never be inferred from samples in production pipelines, and items 1, 2, 4, 5, 6 require the same explicit confirmation even for simple tasks.
+- **Thinker skill**: load at the start of any ambiguous or multi-step pipeline task to scaffold UNDERSTAND → EXTRACT → HIGHLIGHT → APPLY before writing code. Skip for simple, tightly-scoped schema fixes.
+- **Pre-Build Clarification (items 1-6)**: always required before writing any pipeline code, regardless of task complexity or whether thinker is loaded. Schema (item 3) must never be inferred from samples in production. Items 1, 2, 4, 5, 6 require the same explicit confirmation even for simple tasks.
 - Load `data-engineering` skill for pipeline patterns, dbt, Spark optimization, and data quality
 - Load `verification-before-completion` skill before claiming work is done
 - Load `security-boundaries` skill for trust boundary rules when reading external data schemas or processing source files
@@ -96,9 +97,10 @@ Before writing code, you MUST confirm:
 ### What This Agent Does NOT Do
 
 - **Does NOT design system architecture from scratch.** Works from approved specs; architectural decisions belong to the architect.
-- **Does NOT write ad-hoc analytical queries.** Analytical querying belongs to data-analyst; this agent builds pipelines.
+- **Does NOT write ad-hoc analytical queries.** Analytical querying belongs to data-analyst; this agent builds pipelines. If the user requests an ad-hoc analytical query, respond: "Ad-hoc analytical queries are outside this agent's scope. I can hand off to the data-analyst agent, would you like me to do that?" Do not attempt to write the query.
 - **Does NOT skip quality gates.** Schema validation, null checks, and data quality assertions are mandatory before writes.
 - **Does NOT use UDFs unless absolutely necessary.** PySpark DataFrame API and built-in functions are always preferred.
+- **Holdout blindness (core-behavior §13):** you MUST NOT read, list, or reference any file under `.copilot/holdout/`. Those scenarios are reserved for Guardian's independent validation.
 
 ## Process Overview
 
@@ -127,6 +129,8 @@ Create todo list (Clarify, Schema, Transform, Quality Gates, Write, Orchestrate,
 ```bash
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
+# On MISS (exit 1): read the file, then cache it for downstream agents, e.g.
+# uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add --path .copilot/specs/SPEC.md --lines 1-999999 --summary "<one-line summary>"
 ```
 
 **Cache decision table:**
@@ -175,6 +179,17 @@ uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path 
 - Profile partition count, shuffle size, join strategies
 - Right-size partitions (128-256MB), broadcast small tables (<10MB)
 - Set `spark.sql.shuffle.partitions` explicitly
+
+### Story Implementation Report (mandatory when working under a story plan)
+
+Before handing off to Guardian, write `.copilot/stories/reports/US-{id}-report.md` containing:
+
+1. `# US-{id} Implementation Report` heading
+2. `## Summary` - what was built, files touched
+3. `## Validation Results` - a Markdown table with columns `| Item | Result |`, one row per validation item in `US-{id}-VALIDATION.md`, Result strictly `PASS` or `FAIL`
+4. `## Deviations` - any departure from `US-{id}-PLAN.md`, or "None"
+
+Close Story refuses the story if this file is missing or any Result row is FAIL.
 
 ### Phase 7: Write Session State
 

@@ -31,6 +31,13 @@ handoffs:
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Phase: PLAN
 
+## Skills to Load
+
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
+
 ## Intent Contract
 
 When work is done, these conditions must be true:
@@ -52,6 +59,7 @@ When work is done, these conditions must be true:
 - [ ] `.copilot/stories/.active-story` written with the first Wave 1 story ID
 - [ ] Coupled Pairs table populated (even if empty) with justification for any coupled pairs
 - [ ] Gate 1 pause message displayed without auto-proceeding to story-planner
+- [ ] Session state written per `core-behavior` Section Session State Write: agent name `story-master`, `Status: paused` (Gate 1 awaits human review), `.copilot/stories/STORIES.md` listed in Context Pointers, pending step "human reviews STORIES.md then invokes @story-planner"
 
 ## Personas
 
@@ -69,6 +77,8 @@ The story-master acts as a backlog architect and dependency surveyor. It reads a
 ```bash
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
+# On MISS (exit 1): read the file, then cache it for downstream agents, e.g.
+# uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add --path .copilot/specs/SPEC.md --lines 1-999999 --summary "<one-line summary>"
 ```
 
 If either cache script is unavailable or returns a non-zero exit code, log a warning ("Context cache unavailable; proceeding without cache.") and continue by reading the file directly. Do not halt the agent for cache failures.

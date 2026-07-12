@@ -63,7 +63,7 @@ The system is a strict pipeline, not a peer-to-peer mesh:
 Discovery → Design → Build → Review → Ship
 ```
 
-The **Architect** is the Planner. It owns the specification. It does not implement. The **Senior Developer**, **Data Engineer**, and **AI Engineer** are Workers. They receive specifications and execute them. They do not redesign. The **Guardian** is the Auditor. It reviews but never modifies. Each role is structurally prevented from doing the others' work.
+The **Architect** is the Planner. It owns the specification. It does not implement. The **Senior Developer**, **Data Engineer**, **AI Engineer**, and **Data Scientist** are Workers. They receive specifications and execute them. They do not redesign. The **Guardian** is the Auditor. It reviews but never modifies. Each role is structurally prevented from doing the others' work.
 
 This maps directly to DeepMind's finding: centralized coordination improved performance by over 80 percent on parallelizable tasks. The key word is _centralized_. One planner. Many workers. Clear scope per worker.
 
@@ -118,13 +118,13 @@ During specification, the Architect writes behavioral acceptance scenarios, not 
 | `assert response.status_code == 200`  | A logged-in user requesting their profile receives their data within 2 seconds                       |
 | `assert len(results) > 0`             | A compliance officer searching for "GDPR violations" finds all flagged records from the last 90 days |
 
-These scenarios are stored in `.copilot/holdout/`, separate from the codebase. The specification _references_ that holdout scenarios exist but never includes them inline. The implementation agents (Senior Developer, Data Engineer, AI Engineer) are structurally blind to them. They write their own tests based on the spec. They never see the criteria they will be evaluated against.
+These scenarios are stored in `.copilot/holdout/`, separate from the codebase. The specification _references_ that holdout scenarios exist but never includes them inline. The implementation agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist, Data Analyst) are structurally blind to them. They write their own tests based on the spec. They never see the criteria they will be evaluated against.
 
-During review, the Guardian loads the holdout scenarios and evaluates the implementation against them. The question shifts from "do the tests pass?" to "would a real user get what they came for?"
+During review, the Guardian loads the holdout scenarios and evaluates the implementation against them (the Release Manager is also permitted to read them when assembling release evidence). The question shifts from "do the tests pass?" to "would a real user get what they came for?"
 
 This is borrowed directly from machine learning practice. You do not evaluate a model on its training data. You use a holdout set. The principle is the same: a model that can see the answer key will use it. Design the system so it cannot.
 
-**The enforcement model:** Holdout blindness is enforced at two layers. The first is behavioral: every build agent's instructions state "you MUST NOT read holdout files." The second is structural: the `block-holdout.ps1` PreToolUse hook deterministically denies any `read_file`, `list_dir`, `grep_search`, `file_search`, or `run_in_terminal` call that targets `.copilot/holdout/` when the calling agent is one of the four identified build agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist). For those agents the constraint is a hard barrier the model cannot override, not merely an instruction. The residual gap is callers the hook cannot identify: when no `agent_type` is present the hook passes through, so instruction-level blindness remains the only layer for unidentified or ad-hoc agents. Closing that last gap requires VS Code to expose reliable agent identity (or file-level agent permissions) upstream.
+**The enforcement model:** Holdout blindness is enforced at two layers. The first is behavioral: every build agent's instructions state "you MUST NOT read holdout files." The second is structural: the `block-holdout.ps1` PreToolUse hook deterministically denies any `read_file`, `list_dir`, `grep_search`, `file_search`, or `run_in_terminal` call that targets `.copilot/holdout/` when the calling agent is one of the five identified build agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist, Data Analyst). For those agents the constraint is a hard barrier the model cannot override, not merely an instruction. The residual gap is callers the hook cannot identify: when no `agent_type` is present the hook defaults to deny on holdout paths under standard/strict governance (pass-through only under `GOVERNANCE_LEVEL=open`), so instruction-level blindness remains the only layer for unidentified or ad-hoc agents in open mode. Closing that last gap requires VS Code to expose reliable agent identity (or file-level agent permissions) upstream.
 
 ---
 
@@ -252,7 +252,7 @@ The tradeoff is explicit: we accept more agents (and more handoff points) in exc
 
 Honesty about limitations is more useful than confidence about strengths.
 
-**It does not fully enforce holdout blindness for every caller.** The holdout boundary is enforced structurally by the `block-holdout.ps1` hook for the four identified build agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist): those agents are hard-denied access to `.copilot/holdout/` before the tool runs. The gap is unidentified callers: when the hook cannot determine the agent type, it passes through and only instruction-level constraints apply. Full coverage requires reliable agent-identity signals (or file-level access controls) from VS Code upstream.
+**It does not fully enforce holdout blindness for every caller.** The holdout boundary is enforced structurally by the `block-holdout.ps1` hook for the five identified build agents (Senior Developer, Data Engineer, AI Engineer, Data Scientist, Data Analyst): those agents are hard-denied access to `.copilot/holdout/` before the tool runs. The gap is unidentified callers: when the hook cannot determine the agent type, it defaults to deny on holdout paths under standard/strict governance (pass-through only under `GOVERNANCE_LEVEL=open`), so instruction-level constraints remain the only layer in open mode. Full coverage requires reliable agent-identity signals (or file-level access controls) from VS Code upstream.
 
 **It does not automatically run retrospectives.** The self-measurement system provides templates and triggers, and the `retrospective-check.ps1` Stop hook now emits a reminder once a configurable number of story reports accumulate (default five). But the reminder still requires someone to act on it: the hook surfaces the prompt, it does not generate the retrospective itself. Discipline is still required to turn the signal into measurement.
 
@@ -329,4 +329,3 @@ This system is one attempt to operationalize that insight. It will evolve. The r
 ---
 
 _This document is a living artifact. It will be updated as the system evolves and as retrospective data reveals what works, what does not, and what needs to change._
-

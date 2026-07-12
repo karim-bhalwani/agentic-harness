@@ -50,8 +50,6 @@ Produce a comprehensive specification covering:
 
 ## Step 4: Produce and Review
 
-Write the specification to `.copilot/specs/<kebab-case-feature-name>-spec.md`, where the filename is derived from the feature input (e.g., `user-auth-spec.md`). If file writing is not available, output the full specification as a fenced Markdown code block in the chat for the user to save manually.
-
-If a spec file for this feature already exists, do NOT overwrite it silently. Inform the user of the conflict and ask whether to overwrite, append a versioned section, or create a new file with a disambiguated name.
+Write the specification to `.copilot/specs/SPEC.md`. If a SPEC.md already exists, ask the user whether to overwrite or archive it to `.copilot/specs/archive/SPEC-<date>.md` first. If file writing is not available, output the full specification as a fenced Markdown code block in the chat for the user to save manually.
 
 **Do NOT begin implementation.** The spec must be reviewed and approved before any code is written.

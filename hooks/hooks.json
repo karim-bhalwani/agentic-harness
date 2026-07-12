@@ -3,119 +3,107 @@
     "Stop": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/quality-gate.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\quality-gate.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/quality-gate.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\quality-gate.ps1\"",
         "timeout": 60
       },
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/scan-secrets.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\scan-secrets.ps1\"",
-        "timeout": 30,
-        "env": {
-          "GOVERNANCE_LEVEL": "standard"
-        }
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/scan-secrets.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\scan-secrets.ps1\"",
+        "timeout": 30
       },
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/retrospective-check.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\retrospective-check.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/retrospective-check.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\retrospective-check.ps1\"",
         "timeout": 15
       }
     ],
     "PreToolUse": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/block-holdout.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\block-holdout.ps1\"",
-        "timeout": 10,
-        "env": {
-          "GOVERNANCE_LEVEL": "standard"
-        }
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/block-holdout.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\block-holdout.ps1\"",
+        "timeout": 10
       },
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/block-destructive.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\block-destructive.ps1\"",
-        "timeout": 15,
-        "env": {
-          "GOVERNANCE_LEVEL": "standard"
-        }
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/block-destructive.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\block-destructive.ps1\"",
+        "timeout": 15
       },
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/lint-on-write.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\lint-on-write.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/lint-on-write.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\lint-on-write.ps1\"",
         "timeout": 20
       },
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/cap-subagent-budget.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\cap-subagent-budget.ps1\"",
-        "timeout": 10,
-        "env": {
-          "GOVERNANCE_LEVEL": "standard"
-        }
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/cap-subagent-budget.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\cap-subagent-budget.ps1\"",
+        "timeout": 10
       }
     ],
     "PostToolUse": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/auto-format.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\auto-format.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/auto-format.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\auto-format.ps1\"",
         "timeout": 30
       },
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/artifact-manifest.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\artifact-manifest.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/artifact-manifest.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\artifact-manifest.ps1\"",
         "timeout": 10
       }
     ],
     "SessionStart": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/session-context.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\session-context.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/verify-hook-integrity.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\verify-hook-integrity.ps1\"",
+        "timeout": 15
+      },
+      {
+        "type": "command",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/session-context.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\session-context.ps1\"",
         "timeout": 10
       }
     ],
     "SubagentStart": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/subagent-context.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\subagent-context.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/subagent-context.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\subagent-context.ps1\"",
         "timeout": 10
       }
     ],
     "PreCompact": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/pre-compact-save.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\pre-compact-save.ps1\"",
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/pre-compact-save.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\pre-compact-save.ps1\"",
         "timeout": 15
       }
     ],
     "UserPromptSubmit": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/scan-user-prompt.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\scan-user-prompt.ps1\"",
-        "timeout": 10,
-        "env": {
-          "GOVERNANCE_LEVEL": "standard"
-        }
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/scan-user-prompt.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\scan-user-prompt.ps1\"",
+        "timeout": 10
       }
     ],
     "SubagentStop": [
       {
         "type": "command",
-        "command": "pwsh -File ~/.copilot/hooks/subagent-verify.ps1",
-        "windows": "pwsh -Command \"& ~\\.copilot\\hooks\\subagent-verify.ps1\"",
-        "timeout": 30,
-        "env": {
-          "GOVERNANCE_LEVEL": "standard"
-        }
+        "command": "pwsh -NoProfile -File ~/.copilot/hooks/subagent-verify.ps1",
+        "windows": "pwsh -NoProfile -Command \"& ~\\.copilot\\hooks\\subagent-verify.ps1\"",
+        "timeout": 30
       }
     ]
   }

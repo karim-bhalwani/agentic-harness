@@ -32,6 +32,10 @@ handoffs:
     agent: ai-engineer
     prompt: "The active story cannot close due to incomplete items. Read `.copilot/stories/.active-story` for the story ID, then check `US-{id}-PLAN.md` for unchecked tasks and `.copilot/stories/reports/US-{id}-report.md` for any FAIL rows. Complete all incomplete items, then re-run Guardian and Release Manager before triggering close-story again."
     send: false
+  - label: Resume Build - Data Scientist (incomplete tasks)
+    agent: data-scientist
+    prompt: "The active story cannot close due to incomplete items. Read `.copilot/stories/.active-story` for the story ID, then check `US-{id}-PLAN.md` for unchecked tasks and `.copilot/stories/reports/US-{id}-report.md` for any FAIL rows. Complete all incomplete modeling/analysis items, then re-run Guardian and Release Manager before triggering close-story again."
+    send: false
   - label: "Resume Analyst Path - Guardian (SQL review needed)"
     agent: guardian
     prompt: "The active analyst-owned story cannot close without a Guardian SQL review. Read `.copilot/stories/.active-story` for the story ID. Review the Data Analyst output and write approval to `.copilot/artifacts/review-report.md`. Checklist: query correctness, injection risks (parameterised inputs, no string concatenation in dynamic SQL), performance (full-table scans, missing index hints), output format matches story acceptance criteria. Mark each item PASS or FAIL with a brief note."
@@ -49,6 +53,14 @@ handoffs:
 # close-story
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Phase: SHIP
+
+## Skills to Load
+
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
 
 ## Intent Contract
 
@@ -90,7 +102,7 @@ Before doing anything else, read the `Owner` field for `US-{id}` from `STORIES.m
 
 If no row matching `US-{id}` exists in `STORIES.md`, **STOP** with: "`US-{id}` not found in `STORIES.md`. Verify the story ID and ensure the backlog row exists before closing."
 
-If the `Owner` field is missing or contains an unexpected value, **STOP** with: "`Owner` field in `STORIES.md` for `US-{id}` is missing or unrecognized. Valid values: `data-analyst`, `senior-developer`, `data-engineer`, `ai-engineer`. Fix the backlog row before closing."
+If the `Owner` field is missing or contains an unexpected value, **STOP** with: "`Owner` field in `STORIES.md` for `US-{id}` is missing or unrecognized. Valid values: `data-analyst`, `senior-developer`, `data-engineer`, `ai-engineer`, `data-scientist`. Fix the backlog row before closing."
 
 ---
 
@@ -114,7 +126,7 @@ A2. Check the Guardian review report instead:
 
 ---
 
-## Path B: Standard Stories (Owner = `senior-developer` | `data-engineer` | `ai-engineer`)
+## Path B: Standard Stories (Owner = `senior-developer` | `data-engineer` | `ai-engineer` | `data-scientist`)
 
 **Reads (do not modify until Step B4):**
 
@@ -142,7 +154,7 @@ Do not proceed to Step B3. Do not mutate any file.
 
 ### Step B3: Evaluate Refusal Conditions
 
-Before touching any file, verify all of the following. If any condition fails, **STOP, list every issue, and present the matching Resume-Build handoff button** (match to the `Owner` field in `STORIES.md`: Senior Developer handoff for `senior-developer`, Data Engineer for `data-engineer`, AI Engineer for `ai-engineer`). Do NOT mutate `STORIES.md` or any other file.
+Before touching any file, verify all of the following. If any condition fails, **STOP, list every issue, and present the matching Resume-Build handoff button** (match to the `Owner` field in `STORIES.md`: Senior Developer handoff for `senior-developer`, Data Engineer for `data-engineer`, AI Engineer for `ai-engineer`, Data Scientist for `data-scientist`). Do NOT mutate `STORIES.md` or any other file.
 
 Refusal conditions (any one is sufficient to refuse):
 

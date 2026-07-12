@@ -21,7 +21,7 @@
 
 ## Why This Document Exists
 
-CORE_PRINCIPLES.md explains the *philosophy*. MEGA-MINIONS.md introduces the *team*. This document explains the *engineering*: how the five layers of the system (Hooks, Prompts, Skills, Agents, Instructions) are designed, why they compose the way they do, and what deliberate trade-offs were made along the way.
+CORE_PRINCIPLES.md explains the _philosophy_. MEGA-MINIONS.md introduces the _team_. This document explains the _engineering_: how the five layers of the system (Hooks, Prompts, Skills, Agents, Instructions) are designed, why they compose the way they do, and what deliberate trade-offs were made along the way.
 
 ---
 
@@ -179,10 +179,10 @@ Every `.prompt.md` file follows this structure:
 
 ```yaml
 ---
-agent: [target-agent]           # Routes to the right agent
-description: [when to use]      # Helps Copilot suggest the prompt
+agent: [target-agent] # Routes to the right agent
+description: [when to use] # Helps Copilot suggest the prompt
 argument-hint: "[what to provide]"
-tools: [read, search, edit, execute]  # Scoped tool access
+tools: [read, search, edit, execute] # Scoped tool access
 ---
 ```
 
@@ -201,13 +201,13 @@ This pattern enables reuse: the same agent (e.g., `senior-developer`) can be inv
 
 ### Anti-Patterns Intentionally Avoided
 
-| Anti-Pattern | Why It Fails | What This System Does Instead |
-|---|---|---|
-| **Open-ended prompts** ("Help me with this code") | Agent guesses intent, often wrong | Parameterized input with explicit eligibility gates |
-| **Tool overloading** (every prompt gets every tool) | Agent wastes tokens deciding which tool to use | Per-prompt `tools:` scoping restricts to what's relevant |
-| **Embedded domain knowledge** (PySpark patterns in the prompt) | Duplicated across prompts, stale quickly | Domain knowledge lives in Skills, loaded on demand |
-| **Missing output format** ("Just do the thing") | Unpredictable output structure | Every prompt specifies output format explicitly |
-| **No exit condition** (prompt always runs to completion) | Agent forces a square peg into a round hole | Eligibility checks let the prompt reject out-of-scope tasks |
+| Anti-Pattern                                                   | Why It Fails                                   | What This System Does Instead                               |
+| -------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------- |
+| **Open-ended prompts** ("Help me with this code")              | Agent guesses intent, often wrong              | Parameterized input with explicit eligibility gates         |
+| **Tool overloading** (every prompt gets every tool)            | Agent wastes tokens deciding which tool to use | Per-prompt `tools:` scoping restricts to what's relevant    |
+| **Embedded domain knowledge** (PySpark patterns in the prompt) | Duplicated across prompts, stale quickly       | Domain knowledge lives in Skills, loaded on demand          |
+| **Missing output format** ("Just do the thing")                | Unpredictable output structure                 | Every prompt specifies output format explicitly             |
+| **No exit condition** (prompt always runs to completion)       | Agent forces a square peg into a round hole    | Eligibility checks let the prompt reject out-of-scope tasks |
 
 ---
 
@@ -223,24 +223,24 @@ The system implements context management through three mechanisms: **tiered load
 
 All project context is organized into three tiers under `.copilot/context/`:
 
-| Tier | When Loaded | Content | Size Target |
-|---|---|---|---|
-| **Tier 1** | Always, at session start | `PROJECT_CONTEXT.md` (the Project Bible), `ORIENTATION.md` (5-min quick-start), global instructions | < 200 lines |
-| **Tier 2** | When task matches domain | `ARCHITECTURE.md`, `CODEBASE_PATTERNS.md`, `AGENT_GUIDE.md` | Per-file |
-| **Tier 3** | Only when referenced | `DECISIONS.md`, skill references, historical templates | Per-reference |
+| Tier       | When Loaded              | Content                                                                                             | Size Target   |
+| ---------- | ------------------------ | --------------------------------------------------------------------------------------------------- | ------------- |
+| **Tier 1** | Always, at session start | `PROJECT_CONTEXT.md` (the Project Bible), `ORIENTATION.md` (5-min quick-start), global instructions | < 200 lines   |
+| **Tier 2** | When task matches domain | `ARCHITECTURE.md`, `CODEBASE_PATTERNS.md`, `AGENT_GUIDE.md`                                         | Per-file      |
+| **Tier 3** | Only when referenced     | `DECISIONS.md`, skill references, historical templates                                              | Per-reference |
 
 The 200-line limit on Tier 1 is not arbitrary. It is a budget constraint. Every line loaded into Tier 1 is a line loaded into every agent, every session, every task. At scale, the difference between a 200-line and a 500-line Tier 1 is measurable in reasoning quality and token cost.
 
 ### PLAN-Phase Artifact Tier Classification
 
-v8.0 introduces four new artifacts under `.copilot/stories/`. Their tier assignments follow the same budget logic: only what the current phase needs is loaded.
+v9.0 introduced four new artifacts under `.copilot/stories/`. Their tier assignments follow the same budget logic: only what the current phase needs is loaded.
 
-| Artifact | Path | Tier | Loaded When |
-|---|---|---|---|
-| `STORIES.md` | `.copilot/stories/STORIES.md` | **Tier 2** | PLAN, SHIP, and retrospective phases only. **Not loaded during BUILD.** |
-| `US-{id}-PLAN.md` | `.copilot/stories/US-{id}-PLAN.md` | **Tier 1 (story-scoped)** | The sole BUILD-time anchor for that story's session. |
-| `US-{id}-VALIDATION.md` | `.copilot/stories/US-{id}-VALIDATION.md` | **Tier 2** | story-planner (write) and close-story (verify). **Not loaded during BUILD.** |
-| `reports/US-{id}-report.md` | `.copilot/stories/reports/US-{id}-report.md` | **Tier 3** | On demand only (close-story, retrospective). |
+| Artifact                    | Path                                         | Tier                      | Loaded When                                                                  |
+| --------------------------- | -------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------- |
+| `STORIES.md`                | `.copilot/stories/STORIES.md`                | **Tier 2**                | PLAN, SHIP, and retrospective phases only. **Not loaded during BUILD.**      |
+| `US-{id}-PLAN.md`           | `.copilot/stories/US-{id}-PLAN.md`           | **Tier 1 (story-scoped)** | The sole BUILD-time anchor for that story's session.                         |
+| `US-{id}-VALIDATION.md`     | `.copilot/stories/US-{id}-VALIDATION.md`     | **Tier 2**                | story-planner (write) and close-story (verify). **Not loaded during BUILD.** |
+| `reports/US-{id}-report.md` | `.copilot/stories/reports/US-{id}-report.md` | **Tier 3**                | On demand only (close-story, retrospective).                                 |
 
 `STORIES.md` is intentionally Tier 2 (excluded from BUILD context) so the BUILD agent's only story-anchor is `US-{id}-PLAN.md`. This prevents context bleeding from sibling stories in the same wave: each BUILD session sees exactly one story's scope.
 
@@ -291,22 +291,26 @@ Every agent in this system defines an **Intent Contract**, a set of conditions t
 From the actual agent files:
 
 **Architect:**
+
 > A developer who has never seen this project can read the spec and implement the system without asking clarifying questions. Every module boundary is defined precisely enough that two independent teams could implement both sides and integrate on the first attempt.
 
 **Guardian:**
+
 > A team lead reading this report can make a ship/no-ship decision in under 5 minutes without re-reading the code. The report distinguishes between "tests pass" (mechanism) and "software works for the user" (outcome).
 
 **Senior Developer:**
+
 > The feature works correctly for the end user, not just for the test suite. Edge cases a real user would encounter are handled gracefully.
 
 **Debug Detective:**
+
 > The root cause is identified with evidence, not just the proximate symptom. No hypotheses were left untested or undocumented.
 
 ### Why Behavioral Rules Are Insufficient
 
 The holdout validation system illustrates this precisely. Palisade Research (February 2025) documented that reasoning models, including o3 and Claude 3.7, engaged in test gaming even when explicitly told not to. They hardcoded return values. They rewrote tests to match buggy code. The behavioral instruction "do not look at the tests" is insufficient because reasoning models will use available information.
 
-The solution is structural: implementation agents are structurally blind to holdout files. The instruction is "you MUST NOT read files in `.copilot/holdout/`," but the design does not rely on the instruction alone. The `block-holdout.ps1` PreToolUse hook deterministically denies any read, list, search, or terminal command targeting `.copilot/holdout/` when the caller is one of the four build agents, turning the instruction into a hard barrier. The Architect writes holdout scenarios during specification and stores them in a separate directory. The spec references that scenarios exist but never includes them inline. The Guardian loads them during review. The entity writing the code never sees the criteria it will be evaluated against.
+The solution is structural: implementation agents are structurally blind to holdout files. The instruction is "you MUST NOT read files in `.copilot/holdout/`," but the design does not rely on the instruction alone. The `block-holdout.ps1` PreToolUse hook deterministically denies any read, list, search, or terminal command targeting `.copilot/holdout/` when the caller is one of the five build agents (senior-developer, data-engineer, ai-engineer, data-scientist, data-analyst), turning the instruction into a hard barrier. The Architect writes holdout scenarios during specification and stores them in a separate directory. The spec references that scenarios exist but never includes them inline. The Guardian loads them during review. The entity writing the code never sees the criteria it will be evaluated against.
 
 ### The Validation Chain
 
@@ -327,7 +331,7 @@ Each level depends on the one above it. Without an intent contract, the definiti
 
 ### Resolving Ambiguous Intent
 
-The system resolves ambiguity *before* implementation begins, not during it:
+The system resolves ambiguity _before_ implementation begins, not during it:
 
 1. **Architect's Pre-Design Dialogue**: The Architect must clarify five categories (problem scope, data characteristics, quality attributes, integration points, team context) before writing any spec. One question per message. No spec without answers.
 2. **Scope Challenge (Phase 0)**: Every task is classified as REDUCTION, HOLD, or EXPANSION before design effort is invested. This prevents over-engineering simple fixes and ensures strategic features receive full specification.
@@ -342,24 +346,24 @@ Harness engineering is the discipline of shaping the environment in which a mode
 
 ### The Agent Registry
 
-| Agent | Role | Pipeline Phase | Never Does |
-|---|---|---|---|
-| Greenfield Interview | Structured interview for new projects | Discovery | Assume decisions the user hasn't made |
-| Brownfield Discovery | Systematic codebase mapping | Discovery | Guess what undocumented code does |
-| Architect | System design and specification | Design | Implement code |
-| story-master | Decompose SPEC into story backlog (PLAN path) | Plan | Write implementation plans or code |
-| story-planner | Per-story implementation plan (PLAN path) | Plan | Implement code or review it |
-| Senior Developer | Feature implementation and bug fixes | Build | Redesign architecture |
-| Data Engineer | Data pipeline construction | Build | Build RAG pipelines |
-| AI Engineer | LLM/RAG system construction | Build | Design data schemas |
-| Data Analyst | Natural language to SQL | Build (utility) | Modify application code |
-| Data Scientist | EDA, modeling, forecasting, experiments | Build | Deploy models to production |
-| Guardian | Code review and security audit | Review | Modify code (strictly read-only) |
-| Release Manager | CI/CD pipelines and deployment | Ship | Write application code |
-| close-story | Verify story completion, stamp STORIES.md | Ship (PLAN path) | Advance active story without full validation |
-| Debug Detective | Root cause analysis | On-call | Apply fixes (hands off to developers) |
-| Prompt Builder | Prompt creation and improvement | On-call | Implement features |
-| Researcher | Fact-checking and documentation retrieval | Hidden | Generate code or modify files |
+| Agent                | Role                                          | Pipeline Phase   | Never Does                                   |
+| -------------------- | --------------------------------------------- | ---------------- | -------------------------------------------- |
+| Greenfield Interview | Structured interview for new projects         | Discovery        | Assume decisions the user hasn't made        |
+| Brownfield Discovery | Systematic codebase mapping                   | Discovery        | Guess what undocumented code does            |
+| Architect            | System design and specification               | Design           | Implement code                               |
+| story-master         | Decompose SPEC into story backlog (PLAN path) | Plan             | Write implementation plans or code           |
+| story-planner        | Per-story implementation plan (PLAN path)     | Plan             | Implement code or review it                  |
+| Senior Developer     | Feature implementation and bug fixes          | Build            | Redesign architecture                        |
+| Data Engineer        | Data pipeline construction                    | Build            | Build RAG pipelines                          |
+| AI Engineer          | LLM/RAG system construction                   | Build            | Design data schemas                          |
+| Data Analyst         | Natural language to SQL                       | Build (utility)  | Modify application code                      |
+| Data Scientist       | EDA, modeling, forecasting, experiments       | Build            | Deploy models to production                  |
+| Guardian             | Code review and security audit                | Review           | Modify code (strictly read-only)             |
+| Release Manager      | CI/CD pipelines and deployment                | Ship             | Write application code                       |
+| close-story          | Verify story completion, stamp STORIES.md     | Ship (PLAN path) | Advance active story without full validation |
+| Debug Detective      | Root cause analysis                           | On-call          | Apply fixes (hands off to developers)        |
+| Prompt Builder       | Prompt creation and improvement               | On-call          | Implement features                           |
+| Researcher           | Fact-checking and documentation retrieval     | Hidden           | Generate code or modify files                |
 
 The "Never Does" column is as important as the role definition. Negative constraints prevent the most common failure mode of capable models: helpfully doing things outside their lane, usually making them worse.
 
@@ -390,22 +394,24 @@ Subagents are the mechanism for keeping context windows clean during complex ope
 
 Instruction-level guardrails shape agent behavior through textual guidance. A complementary layer operates at the platform level, outside the model entirely.
 
-The `hooks/` directory contains 14 PowerShell scripts registered in `hooks.json` that fire automatically at VS Code agent lifecycle events:
+The `hooks/` directory contains 15 PowerShell scripts (all 15 registered in `hooks.json`, including `verify-hook-integrity.ps1` as a SessionStart integrity check) that fire automatically at VS Code agent lifecycle events:
 
-| Hook | Event | Contract Enforced |
-|---|---|---|
-| `quality-gate.ps1` | Stop | Session cannot close while `ruff` or `ty` errors exist (auto-skipped when no `.py` files were modified) |
-| `scan-secrets.ps1` | Stop | Scans all modified files for leaked credentials, API keys, and secret patterns before the session ends. Runs in block mode by default. |
-| `block-destructive.ps1` | PreToolUse | Denies `run_in_terminal` calls matching destructive patterns: `rm -rf`, `Remove-Item -Recurse` (any param order), `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, `Clear-Content`, `del /s /q`, `Format-Volume`. Bypasses temp-dir paths; supports `TOOL_GUARD_ALLOWLIST` escape hatch. |
-| `scan-user-prompt.ps1` | UserPromptSubmit | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. Emits a security notice in warn mode; blocks in block mode. |
-| `lint-on-write.ps1` | PreToolUse | Denies `.py` file writes until `ruff check` passes on the proposed content |
-| `auto-format.ps1` | PostToolUse | Runs `ruff format` on every Python file the agent writes |
-| `artifact-manifest.ps1` | PostToolUse | Appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` for every agent file write (timestamp, agent, tool, path, role). Gives future sessions a cheap grep-able index of produced artifacts. Zero LLM tokens. |
-| `session-context.ps1` | SessionStart | Injects branch, last commit, venv status, Python version, Project Bible presence, active story, pipeline artifact detection, and inferred pipeline phase into every new session |
-| `subagent-context.ps1` | SubagentStart | Injects project root, active story, and pipeline phase into every subagent at launch so delegated agents start with the right context |
-| `subagent-verify.ps1` | SubagentStop | After a subagent finishes, runs the relevant `verify_*.py` to confirm expected artifacts actually landed and are not stubs. Covers: spec (architect), review report (guardian), Project Bible (brownfield/greenfield), session state (builder agents), story backlog (story-master), and story plan + validation (story-planner). Blocks if verification fails; warn mode available via `SUBAGENT_VERIFY_MODE=warn`. |
-| `pre-compact-save.ps1` | PreCompact | Writes `.copilot/state/SESSION_STATE.md` before VS Code compacts the conversation, preserving enough context to resume the session |
-| `block-holdout.ps1` | PreToolUse | Prevents implementation agents from reading files under `.copilot/holdout/`. Keeps the blind-evaluation layer structurally blind until Guardian runs review. |
+| Hook                    | Event            | Contract Enforced                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quality-gate.ps1`      | Stop             | Session cannot close while `ruff` or `ty` errors exist (auto-skipped when no `.py` files were modified)                                                                                                                                                                                                                                                                                                              |
+| `scan-secrets.ps1`      | Stop             | Scans all modified files for leaked credentials, API keys, and secret patterns before the session ends. Runs in block mode by default.                                                                                                                                                                                                                                                                               |
+| `block-destructive.ps1` | PreToolUse       | Denies `run_in_terminal` calls matching destructive patterns: `rm -rf`, `Remove-Item -Recurse` (any param order), `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, `Clear-Content`, `del /s /q`, `Format-Volume`. Bypasses temp-dir paths; supports `TOOL_GUARD_ALLOWLIST` escape hatch.                                                                                                     |
+| `scan-user-prompt.ps1`  | UserPromptSubmit | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. Emits a security notice in warn mode; blocks in block mode.                                                                                                                                                                                                                                       |
+| `lint-on-write.ps1`     | PreToolUse       | Denies `.py` file writes until `ruff check` passes on the proposed content                                                                                                                                                                                                                                                                                                                                           |
+| `auto-format.ps1`       | PostToolUse      | Runs `ruff format` on every Python file the agent writes                                                                                                                                                                                                                                                                                                                                                             |
+| `artifact-manifest.ps1` | PostToolUse      | Appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` for every agent file write (timestamp, agent, tool, path, role). Gives future sessions a cheap grep-able index of produced artifacts. Zero LLM tokens.                                                                                                                                                                                             |
+| `session-context.ps1`   | SessionStart     | Injects branch, last commit, venv status, Python version, Project Bible presence, active story, pipeline artifact detection, and inferred pipeline phase into every new session                                                                                                                                                                                                                                      |
+| `subagent-context.ps1`  | SubagentStart    | Injects project root, active story, and pipeline phase into every subagent at launch so delegated agents start with the right context                                                                                                                                                                                                                                                                                |
+| `subagent-verify.ps1`   | SubagentStop     | After a subagent finishes, runs the relevant `verify_*.py` to confirm expected artifacts actually landed and are not stubs. Covers: spec (architect), review report (guardian), Project Bible (brownfield/greenfield), session state (builder agents), story backlog (story-master), and story plan + validation (story-planner). Blocks if verification fails; warn mode available via `SUBAGENT_VERIFY_MODE=warn`. |
+| `pre-compact-save.ps1`  | PreCompact       | Writes `.copilot/state/SESSION_STATE.md` before VS Code compacts the conversation, preserving enough context to resume the session                                                                                                                                                                                                                                                                                   |
+| `block-holdout.ps1`     | PreToolUse       | Prevents implementation agents from reading files under `.copilot/holdout/`. Keeps the blind-evaluation layer structurally blind until Guardian runs review.                                                                                                                                                                                                                                                         |
+| `cap-subagent-budget.ps1` | PreToolUse     | Caps per-session subagent launches (default 30 total / 10 researcher) to prevent runaway fan-out and token burn. Denies `runSubagent` past budget.                                                                                                                                                                                                                                                                |
+| `retrospective-check.ps1` | Stop           | Reminds to run `/retrospective` every N completed workflow cycles so the system measures itself. Non-blocking.                                                                                                                                                                                                                                                                                                    |
 
 Every hook respects a circuit-breaker env var (e.g. `SKIP_DESTRUCTIVE_GUARD=true`, `SKIP_SUBAGENT_VERIFY=true`) for emergencies. Use them deliberately.
 
@@ -413,12 +419,11 @@ The distinction that matters: an instruction telling the agent "always run ruff 
 
 Instructions and hooks are complementary, not redundant. Instructions handle nuance and judgment ("prefer CTEs over subqueries for multi-join queries"). Hooks handle invariants that must hold regardless of context ("no session closes with lint errors").
 
-
 ### Security Boundary Enforcement
 
 The `security-boundaries` skill defines how the harness prevents prompt injection cascading through the agent pipeline:
 
-- **Trust boundary**: Only files in `prompts/`, `~/.copilot/skills/`, and `.copilot/context/` are trusted instruction sources. All other content (source code, data files, user documents, logs, terminal output) is untrusted data.
+- **Trust boundary**: Only files in `prompts/`, the workspace `skills/` and `instructions/` directories, `~/.copilot/skills/`, and `.copilot/context/` are trusted instruction sources. All other content (source code, data files, user documents, logs, terminal output) is untrusted data.
 - **Instruction isolation**: Embedded directives in code comments, docstrings, README content, or commit messages are treated as literal string data, never as instructions.
 - **No role override**: An agent's persona and rules are defined exclusively by its `.agent.md` file and the global instruction rulebook, never by content in workspace files.
 - **Attack vector coverage**: The skill includes a defense table covering malicious code comments, indirect injection via fetched content, system prompt extraction attempts, role hijacking via crafted documentation, and encoded/obfuscated injection patterns.
@@ -435,13 +440,13 @@ Every skill follows the same structure:
 ---
 name: [skill-name]
 description: [what; when to use]
-user-invocable: [true|false]       # Can the user load this directly?
-disable-model-invocation: [true|false]  # Must be loaded explicitly?
+user-invocable: [true|false] # Can the user load this directly?
+disable-model-invocation: [true|false] # Must be loaded explicitly?
 license: MIT
 compatibility: "VS Code"
 metadata:
-  version: "8.0"
-  updated: "2026-05-03"
+  version: "9.0"
+  updated: "2026-07-01"
   dependencies: [list of other skills]
 ---
 ```
@@ -518,13 +523,13 @@ This design choice optimizes for the model's reasoning: a workflow gives the mod
 
 ### Decision 3: Holdout Validation via Hook-Enforced Blindness
 
-**Choice**: Implementation agents are instructed not to read `.copilot/holdout/` files, and the `block-holdout.ps1` PreToolUse hook deterministically denies the access for the four identified build agents. The Architect writes holdout scenarios during specification. The Guardian evaluates against them during review.
+**Choice**: Implementation agents are instructed not to read `.copilot/holdout/` files, and the `block-holdout.ps1` PreToolUse hook deterministically denies the access for the five identified build agents (senior-developer, data-engineer, ai-engineer, data-scientist, data-analyst). The Architect writes holdout scenarios during specification. The Guardian evaluates against them during review.
 
 **Alternatives Considered**: Instruction-only enforcement (defeated by reasoning models that game tests), file-system-level access controls (not supported by VS Code's agent model), unit tests authored by a separate test-writing agent (still visible to implementation agents), no holdout system (rely on Guardian review alone).
 
 **Rationale**: Research shows reasoning models game tests even when told not to (Palisade Research, February 2025). Structural separation (making the criteria invisible to the entity being evaluated) is the only reliable mechanism. The hook converts instruction-level blindness into deterministic enforcement for the build agents, intercepting `read_file`, `list_dir`, `grep_search`, `file_search`, and `run_in_terminal` before they execute.
 
-**Trade-off**: Enforcement is complete for the four identified build agents but conditional on agent identity. When the hook cannot determine the caller's `agent_type`, it passes through, so unidentified or ad-hoc callers fall back to instruction-level blindness only. Closing that residual gap requires upstream tooling (reliable agent identity or file-level agent permissions in VS Code), not design changes in this system.
+**Trade-off**: Enforcement is complete for the five identified build agents but conditional on agent identity. When the hook cannot determine the caller's `agent_type`, it defaults to deny on holdout paths under standard/strict governance (pass-through only under `GOVERNANCE_LEVEL=open`), so unidentified or ad-hoc callers fall back to instruction-level blindness only in open mode. Closing that residual gap requires upstream tooling (reliable agent identity or file-level agent permissions in VS Code), not design changes in this system.
 
 ---
 
@@ -608,5 +613,4 @@ The system is designed to make specification tractable, implementation reliable,
 
 ---
 
-*Architecture of the Mega Minions, authored for builders who want to understand before they extend.*
-
+_Architecture of the Mega Minions, authored for builders who want to understand before they extend._

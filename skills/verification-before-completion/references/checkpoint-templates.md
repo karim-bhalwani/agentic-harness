@@ -182,7 +182,7 @@ Use in addition to the Implementation Checkpoint for pipeline work.
 
 - Null counts on key columns: `<paste output>`
 - Row count delta (source vs. target): `<numbers>`
-- Duplicate check (unique key violation count or 0 duplicates found): `<paste output>`
+- Duplicate check (paste full check output, including violation count): `<paste output>`
 
 **Idempotency Test**
 

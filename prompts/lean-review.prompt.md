@@ -19,11 +19,7 @@ When this prompt completes, these conditions must be true:
 - Findings are ranked by severity with clear remediation steps
 - The review completes in under 5 minutes of human reading time
 
-{% if input:target %}
-Lean-review target: **${input:target}**
-{% else %}
-Lean-review target: **current staged diff** (if no target is specified, use `git diff --cached`; if no staged changes exist, fall back to the most recent agent file writes this session)
-{% endif %}
+Lean-review target: **${input:target}** - if no target was supplied (empty or omitted), use `git diff --cached`; if no staged changes exist, fall back to the most recent agent file writes this session.
 
 If the resolved target yields no content (empty diff, file not found), respond with: "No content to review - the target is empty or does not exist." and stop.
 

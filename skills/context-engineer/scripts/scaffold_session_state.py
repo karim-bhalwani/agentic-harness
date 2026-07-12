@@ -16,8 +16,28 @@ Reference: skills/context-engineer/references/session_state_schema.md
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# Allow running as a standalone script: ensure the repo root (which owns the
+# `tests` package) is importable regardless of the current working directory.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tests.contracts.schema_versions import CURRENT_SCHEMA_VERSIONS  # noqa: E402
+
+# Canonical machine contract: YAML frontmatter consumed by verify_session_state.py
+# and validated against tests/contracts/schemas/session_state.schema.json.
+_FRONTMATTER = """\
+---
+session_state_schema_version: {schema_version}
+status: {status}
+agent: {agent}
+---
+
+"""
 
 TEMPLATE = """\
 # Session State
@@ -52,7 +72,7 @@ None
 
 ## Context Pointers
 
--
+- .copilot/specs/SPEC.md
 
 ## Context Cache
 
@@ -82,8 +102,13 @@ def scaffold(state_dir: Path, agent: str, status: str) -> tuple[bool, Path]:
     if path.exists():
         return False, path
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    frontmatter = _FRONTMATTER.format(
+        schema_version=CURRENT_SCHEMA_VERSIONS["SESSION_STATE.md"],
+        status=status,
+        agent=agent,
+    )
     path.write_text(
-        TEMPLATE.format(timestamp=timestamp, agent=agent, status=status),
+        frontmatter + TEMPLATE.format(timestamp=timestamp, agent=agent, status=status),
         encoding="utf-8",
     )
     return True, path

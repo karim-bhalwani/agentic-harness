@@ -174,11 +174,16 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     $changed = & git status --porcelain 2>$null
     if ($LASTEXITCODE -eq 0 -and $changed) {
         foreach ($line in ($changed -split "`n")) {
-            # porcelain format: XY <path>; path starts at column 4
-            $filePath = $line.Substring(3).Trim().Trim('"')
-            if ($filePath -match '\.py$') { $pythonFiles.Add($filePath) }
-            elseif ($filePath -match '\.sql$') { $sqlFiles.Add($filePath) }
-            elseif ($filePath -match '\.(yaml|yml)$') { $yamlFiles.Add($filePath) }
+            # porcelain format: XY <path>; path starts at column 4. A rename
+            # entry yields "R  old -> new"; use only the new path (after the
+            # arrow) so the renamed file is still linted (H-07 fix).
+            $raw = $line.Substring(3).Trim().Trim('"')
+            if ($raw -match ' -> ') {
+                $raw = ($raw -split ' -> ')[-1]
+            }
+            if ($raw -match '\.py$') { $pythonFiles.Add($raw) }
+            elseif ($raw -match '\.sql$') { $sqlFiles.Add($raw) }
+            elseif ($raw -match '\.(yaml|yml)$') { $yamlFiles.Add($raw) }
         }
     }
 }

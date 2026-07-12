@@ -123,6 +123,8 @@ Agents are autonomous peers. Each works standalone or via handoff chains.
 
 **Calling convention:** Pass full task description, relevant context (schemas, errors, constraints), and expected output format. Agents delegate to the hidden `researcher` agent internally for fact-checking.
 
+**Built-in exploration agent:** `Explore` is the VS Code built-in codebase exploration agent (not a custom `*.agent.md` definition). It appears in the `agents:` frontmatter of `story-master` and `story-planner` to keep the main agent context lean during codebase scans. It is registered here for reference; do not remove it from those frontmatter lists.
+
 ### Task Routing Protocol
 
 **Default posture**: Prefer self-sufficiency. Delegation is a cost (context loss, token overhead, error amplification risk), not a free upgrade.
@@ -176,7 +178,7 @@ At the end of **any non-trivial task** where work may continue in a future sessi
 
 Load the `context-engineer` skill's `session_state_schema` reference for the full schema. Target under 60 lines. A missing state file means the next session starts blind.
 
-**Read-only agents** (e.g., Guardian) that cannot write files: output the session state block in your response and remind the user to save it.
+Guardian is source-file read-only but MAY write exactly two paths: `.copilot/artifacts/review-report.md` and `.copilot/state/SESSION_STATE.md`. Agents with no write access at all: output the session state block in your response and remind the user to save it.
 
 ---
 

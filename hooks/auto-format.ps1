@@ -59,16 +59,17 @@ $filePath = $env:TOOL_INPUT_FILE_PATH
 if (-not $filePath) {
     # Fallback: parse file path from stdin JSON
     $inputData = Read-MMHookInput
-    if ($inputData -and $inputData.tool_input) {
-        $filePath = $inputData.tool_input.filePath
+    if ($inputData -and (Get-MMProp $inputData 'tool_input')) {
+        $filePath = Get-MMProp (Get-MMProp $inputData 'tool_input') 'filePath' $null
     }
 }
 
 # Nothing to format
 if (-not $filePath) { exit 0 }
 
-# Path traversal guard
-if ($filePath -match '\.\.') {
+# Path traversal guard. Test for a path SEGMENT equal to '..' (not a substring),
+# so a benign filename like 'config..json' is formatted normally (H-03 fix).
+if (($filePath -split '[\\/]') -contains '..') {
     Write-MMHookLog -HookName 'auto-format' -Event 'path_traversal_skipped' -Decision 'skip' `
         -Extra @{ file = $filePath }
     [Console]::Error.WriteLine("auto-format: path traversal detected in file path, skipping.")

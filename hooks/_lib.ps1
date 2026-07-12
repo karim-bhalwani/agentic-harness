@@ -23,6 +23,14 @@
 #Requires -Version 7.0
 Set-StrictMode -Version Latest
 
+# Hook wall-clock timer: started when the hook dot-sources this library (the
+# first statement in every hook), read by Write-MMHookLog as duration_ms.
+$script:MMHookStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+# Last parsed stdin payload, stashed by Read-MMHookInput so Write-MMHookLog
+# can enrich entries with session/agent/tool without new parameters at every
+# call site.
+$script:MMHookInputData = $null
+
 # ---------- Governance --------------------------------------------------------
 
 function Get-MMGovernanceLevel {
@@ -72,7 +80,16 @@ function Read-MMHookInput {
     #>
     $raw = [Console]::In.ReadToEnd()
     if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
-    try { return $raw | ConvertFrom-Json } catch { return $null }
+    # Strip a UTF-8/UTF-16 BOM if the caller's pipe encoding prepended one.
+    # ConvertFrom-Json fails on a BOM-prefixed string, which previously made
+    # every guard hook return $null here and FAIL OPEN (H-F1 fix).
+    $raw = $raw.TrimStart([char]0xFEFF)
+    try {
+        $parsed = $raw | ConvertFrom-Json
+        $script:MMHookInputData = $parsed
+        return $parsed
+    }
+    catch { return $null }
 }
 
 function Test-MMStopReentry {
@@ -81,6 +98,8 @@ function Test-MMStopReentry {
     #>
     param([Parameter(Mandatory)]$InputData)
     if (-not $InputData) { return $false }
+    # Strict mode throws on missing-property access, so test existence first.
+    if (-not ($InputData.PSObject.Properties['stop_hook_active'])) { return $false }
     return [bool]($InputData.stop_hook_active)
 }
 
@@ -91,9 +110,37 @@ function Get-MMAgentType {
     #>
     param([Parameter(Mandatory)]$InputData)
     if (-not $InputData) { return '' }
-    if ($InputData.agent_type) { return $InputData.agent_type.ToLower().Trim() }
-    if ($InputData.agent_name) { return $InputData.agent_name.ToLower().Trim() }
+    if (($InputData.PSObject.Properties['agent_type']) -and $InputData.agent_type) { return ([string]$InputData.agent_type).ToLower().Trim() }
+    if (($InputData.PSObject.Properties['agent_name']) -and $inputData.agent_name) { return ([string]$InputData.agent_name).ToLower().Trim() }
     return ''
+}
+
+# ---------- Safe property access (H-08) -------------------------------------
+#
+# StrictMode throws on access to a property that does not exist on an object.
+# Hook payloads are untrusted and frequently omit optional fields, so every
+# optional-property read must go through this helper instead of `$obj.Field`.
+# A missing/null field returns $Default rather than throwing, which keeps
+# non-blocking hooks from crashing (and bypassing) on partial payloads.
+
+function Get-MMProp {
+    <#
+    .SYNOPSIS Safely read an optional property from an object.
+    .PARAMETER Object The object to read from (may be $null).
+    .PARAMETER Name The property name to read.
+    .PARAMETER Default Value returned when the property is absent or $null.
+    .OUTPUTS The property value, or $Default when absent/null.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][AllowNull()]$Object,
+        [Parameter(Mandatory)][string]$Name,
+        $Default = $null
+    )
+    if ($null -ne $Object -and $Object.PSObject.Properties[$Name]) {
+        return $Object.$Name
+    }
+    return $Default
 }
 
 # ---------- Logging -----------------------------------------------------------
@@ -128,31 +175,102 @@ function Write-MMHookLog {
         Every hook writes one line of JSON per decision. Common fields are filled
         in here; pass additional context through -Extra (hashtable). Logging
         errors are swallowed - a logging failure must never alter hook behavior.
+
+        Entries are automatically enriched with correlation and performance
+        fields:
+          session     - 8-char session id from stdin payload / COPILOT_SESSION_ID
+          agent       - agent identity from stdin payload / AGENT_ID / .active-agent
+          duration_ms - wall-clock ms since the hook dot-sourced _lib.ps1
+          tool        - tool_name from the stdin payload, when present
+          tokens_in / tokens_out / cost_usd - populated only when the host
+            payload carries usage data (VS Code does not emit this today);
+            omitted otherwise. Never fabricated.
     .PARAMETER HookName e.g. 'scan-secrets'
     .PARAMETER Event Short event tag, e.g. 'scan_complete' or 'findings_detected'.
-    .PARAMETER Decision One of: allow | deny | warn | block | skip.
+    .PARAMETER Decision One of: allow | deny | warn | skip.
     .PARAMETER Extra Hashtable of extra structured fields.
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$HookName,
         [Parameter(Mandatory)][string]$Event,
-        [Parameter(Mandatory)][string]$Decision,
+        [Parameter(Mandatory)][ValidateSet('allow', 'deny', 'warn', 'skip')][string]$Decision,
         [hashtable]$Extra
     )
     $path = Get-MMHookLogPath -HookName $HookName
     if (-not $path) { return }
-    $entry = [ordered]@{
-        timestamp  = (Get-Date).ToUniversalTime().ToString('o')
-        hook       = $HookName
-        event      = $Event
-        decision   = $Decision
-        governance = (Get-MMGovernanceLevel)
+
+    $inputData = $script:MMHookInputData
+
+    # Session id: stdin payload first, env fallback, 8-char prefix (mirrors
+    # artifact-manifest.ps1 so log entries join to manifest rows).
+    $session = ''
+    if ($inputData -and ($inputData.PSObject.Properties['session_id']) -and $inputData.session_id) { $session = [string]$inputData.session_id }
+    elseif ($inputData -and ($inputData.PSObject.Properties['sessionId']) -and $inputData.sessionId) { $session = [string]$inputData.sessionId }
+    elseif ($env:COPILOT_SESSION_ID) { $session = $env:COPILOT_SESSION_ID }
+    if ($session.Length -gt 8) { $session = $session.Substring(0, 8) }
+    if ([string]::IsNullOrWhiteSpace($session)) { $session = 'unknown' }
+
+    # Agent identity: same precedence chain as artifact-manifest.ps1
+    # (AGENT_ID -> tool_input.agent_type -> agent_type -> agent_name ->
+    # agent_id -> .active-agent -> unknown) so log rows join manifest rows.
+    $agent = ''
+    if ($env:AGENT_ID) { $agent = $env:AGENT_ID }
+    elseif ($inputData -and ($inputData.PSObject.Properties['tool_input']) -and $inputData.tool_input -and
+        ($inputData.tool_input.PSObject.Properties['agent_type']) -and $inputData.tool_input.agent_type) { $agent = [string]$inputData.tool_input.agent_type }
+    elseif ($inputData -and ($inputData.PSObject.Properties['agent_type']) -and $inputData.agent_type) { $agent = [string]$inputData.agent_type }
+    elseif ($inputData -and ($inputData.PSObject.Properties['agent_name']) -and $inputData.agent_name) { $agent = [string]$inputData.agent_name }
+    elseif ($inputData -and ($inputData.PSObject.Properties['agent_id']) -and $inputData.agent_id) { $agent = [string]$inputData.agent_id }
+    if ([string]::IsNullOrWhiteSpace($agent)) {
+        try {
+            $activeAgentPath = Join-Path (Get-MMRepoRoot) '.copilot\state\.active-agent'
+            if (Test-Path $activeAgentPath) {
+                $candidate = Get-Content $activeAgentPath -Raw -ErrorAction SilentlyContinue
+                if ($candidate) { $agent = $candidate.Trim() }
+            }
+        }
+        catch { }
     }
+    if ([string]::IsNullOrWhiteSpace($agent)) { $agent = 'unknown' }
+
+    $entry = [ordered]@{
+        timestamp   = (Get-Date).ToUniversalTime().ToString('o')
+        hook        = $HookName
+        event       = $Event
+        decision    = $Decision
+        governance  = (Get-MMGovernanceLevel)
+        session     = $session
+        agent       = $agent
+        duration_ms = if ($script:MMHookStopwatch) { $script:MMHookStopwatch.ElapsedMilliseconds } else { $null }
+    }
+
+    # Standardized tool field (previously ad hoc per hook via -Extra).
+    if ($inputData -and ($inputData.PSObject.Properties['tool_name']) -and $inputData.tool_name) {
+        $entry['tool'] = [string]$inputData.tool_name
+    }
+
+    # Opportunistic token/cost capture: only when the host payload carries a
+    # usage object (e.g. a future SubagentStop/Stop envelope). Never fabricated.
+    if ($inputData -and ($inputData.PSObject.Properties['usage']) -and $inputData.usage) {
+        $usage = $inputData.usage
+        if ($usage.PSObject.Properties['input_tokens']) { $entry['tokens_in'] = $usage.input_tokens }
+        if ($usage.PSObject.Properties['output_tokens']) { $entry['tokens_out'] = $usage.output_tokens }
+        if ($usage.PSObject.Properties['cost_usd']) { $entry['cost_usd'] = $usage.cost_usd }
+    }
+
     if ($Extra) {
         foreach ($key in $Extra.Keys) { $entry[$key] = $Extra[$key] }
     }
     try {
+        # Size guard: rotate once past 5 MB so a runaway session cannot exhaust
+        # disk between external compaction runs. One .old generation is kept
+        # (bounded at ~2x cap); ci/compact-hook-logs.py remains the real
+        # retention mechanism.
+        $maxBytes = 5MB
+        $fileInfo = Get-Item -Path $path -ErrorAction SilentlyContinue
+        if ($fileInfo -and $fileInfo.Length -gt $maxBytes) {
+            Move-Item -Path $path -Destination "$path.old" -Force -ErrorAction Stop
+        }
         Add-Content -Path $path -Value ($entry | ConvertTo-Json -Compress) -Encoding UTF8 -ErrorAction Stop
     }
     catch {
@@ -241,6 +359,10 @@ function Get-MMSecretPatterns {
         @{ Name = 'NPM_TOKEN'; Severity = 'high'; Regex = 'npm_[0-9A-Za-z]{36}' }
         @{ Name = 'JWT_TOKEN'; Severity = 'medium'; Regex = 'eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}' }
         @{ Name = 'CONNECTION_STRING'; Severity = 'high'; Regex = '(mongodb|postgres|mysql|redis|mssql)://[^\s''\"]{10,}' }
+        @{ Name = 'DATABRICKS_TOKEN'; Severity = 'critical'; Regex = 'dapi[0-9a-f]{32}' }
+        @{ Name = 'HUGGINGFACE_TOKEN'; Severity = 'high'; Regex = 'hf_[A-Za-z0-9]{30,}' }
+        @{ Name = 'SENDGRID_KEY'; Severity = 'critical'; Regex = 'SG\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}' }
+        @{ Name = 'TWILIO_API_KEY'; Severity = 'high'; Regex = '\bSK[0-9a-f]{32}\b' }
         @{ Name = 'GENERIC_SECRET'; Severity = 'high'; Regex = '(secret|token|password|api[_\-]?key)\s*[:=]\s*[''"]?[A-Za-z0-9_/+=~.\-]{16,}' }
     )
 }
@@ -249,15 +371,20 @@ function Get-MMSecretPlaceholderPattern {
     <#
     .SYNOPSIS Single regex that matches obvious placeholder / example values
              so both secret scanners can suppress false positives uniformly.
-    .NOTES The bare word 'example' is deliberately NOT included: many real
-           credential-shaped strings contain it as a substring (AWS's canonical
-           'AKIAIOSFODNN7EXAMPLE' key, the 'example.com' reserved TLD inside a
-           connection string), and silently suppressing those produces a false
-           negative on the security corpus. Placeholder markers must be
-           deliberate sentinels (brackets, your_/YOUR_ prefix, xxxx runs,
-           changeme, TODO/FIXME, replace_me, dummy, fake, sample, placeholder).
+    .NOTES The rule is WHOLE-VALUE anchored (^...$): a value is treated as a
+           placeholder only when the ENTIRE matched secret equals one of the
+           sentinel forms. A real credential that merely CONTAINS a sentinel
+           word (e.g. a key whose body includes 'sample') is NOT suppressed,
+           which closes the placeholder-substring evasion channel. The bare word
+           'example' is deliberately NOT included: many real credential-shaped
+           strings contain it as a substring (AWS's canonical 'AKIAIOSFODNN7EXAMPLE'
+           key, the 'example.com' reserved TLD inside a connection string), and
+           silently suppressing those produces a false negative on the security
+           corpus. Placeholder markers must be deliberate sentinels (brackets,
+           your_/YOUR_ prefix, xxxx runs, changeme, TODO/FIXME, replace_me, dummy,
+           fake, sample, placeholder).
     #>
-    return '<[^>]+>|\{[^}]+\}|placeholder|your[_\-]|YOUR_[A-Z]|x{4,}|changeme|TODO|FIXME|replace[_\-]?me|dummy|fake|sample'
+    return '^(x+|0+|\*+|<[^>]+>|\$\{[^}]+\}|%[A-Z_]+%|your[_-][a-z_]+|changeme|change[_-]me|replace[_-]?me|placeholder|dummy|fake|sample|todo|fixme)$'
 }
 
 function Get-MMInjectionPatterns {
@@ -348,13 +475,39 @@ function Invoke-MMLockedFileOp {
 
     $stream = $null
     try {
-        # Open or create the file with exclusive (FileShare.None) read/write.
-        $stream = [System.IO.FileStream]::new(
-            $Path,
-            [System.IO.FileMode]::OpenOrCreate,
-            [System.IO.FileAccess]::ReadWrite,
-            [System.IO.FileShare]::None
-        )
+        # Open or create the file with an exclusive *writer* lock. We use
+        # FileShare.Read so concurrent readers (editor, file watchers, other
+        # hook instances reading the file) do NOT block acquisition, while
+        # concurrent writers are still serialised (the security-relevant
+        # guarantee: the read-modify-write cannot race). Transient sharing
+        # violations (two hook instances racing, a briefly-held reader handle,
+        # an antivirus/indexer touch) are retried with backoff rather than
+        # failing closed, because they are contention, not corruption. Only a
+        # genuinely persistent lock (a stuck handle) exhausts the retries and
+        # returns $null, letting the caller fail closed as designed.
+        $maxAttempts = 5
+        $attempt = 0
+        $backoffMs = 20
+        while ($attempt -lt $maxAttempts) {
+            $attempt++
+            try {
+                $stream = [System.IO.FileStream]::new(
+                    $Path,
+                    [System.IO.FileMode]::OpenOrCreate,
+                    [System.IO.FileAccess]::ReadWrite,
+                    [System.IO.FileShare]::Read
+                )
+                break
+            }
+            catch [System.IO.IOException] {
+                # Sharing violation / lock held by another process. Retry
+                # unless this was the final attempt, then re-throw so the
+                # outer catch returns $null (caller fails closed).
+                if ($attempt -ge $maxAttempts) { throw }
+                Start-Sleep -Milliseconds $backoffMs
+                $backoffMs = [Math]::Min($backoffMs * 2, 300)
+            }
+        }
         # Read current content using a StreamReader with leaveOpen=true so
         # disposing the reader does NOT close the underlying stream. The
         # 4-arg constructor (Stream, Encoding, detectBom, bufferSize, leaveOpen)
@@ -408,6 +561,251 @@ function Invoke-MMLockedFileOp {
     finally {
         if ($stream) { $stream.Dispose() }
     }
+}
+
+# ---------- Tool capability registry (M-02) --------------------------------
+#
+# Single source of truth for what each tool is allowed to do. Every hook that
+# gates a write-capable tool must consult this registry so equivalent mutations
+# receive identical policy regardless of which tool performs them.
+
+function Get-MMWriteCapableTools {
+    <#
+    .SYNOPSIS The set of tools that can mutate files, state, or the environment.
+    #>
+    return @(
+        'write_file', 'create_file', 'replace_string_in_file',
+        'multi_replace_string_in_file', 'insert_edit_into_file',
+        'edit_notebook_file', 'run_in_terminal', 'run_notebook_cell'
+    )
+}
+
+function Get-MMToolCapability {
+    <#
+    .SYNOPSIS Return the capability classification for a tool name.
+    .OUTPUTS One of: read | write | execute | delegate | destructive | unknown
+    #>
+    param([Parameter(Mandatory)][string]$ToolName)
+    $map = [ordered]@{
+        read_file                    = 'read'
+        list_dir                     = 'read'
+        grep_search                  = 'read'
+        file_search                  = 'read'
+        read_notebook_cell_output    = 'read'
+        write_file                   = 'write'
+        create_file                  = 'write'
+        replace_string_in_file       = 'write'
+        multi_replace_string_in_file = 'write'
+        insert_edit_into_file        = 'write'
+        edit_notebook_file           = 'write'
+        run_in_terminal              = 'destructive'
+        run_notebook_cell            = 'execute'
+        runSubagent                  = 'delegate'
+    }
+    if ($map.ContainsKey($ToolName)) { return $map[$ToolName] }
+    return 'unknown'
+}
+
+# ---------- Untrusted agent identity (M-01) ---------------------------------
+#
+# VS Code hook payloads do not currently provide a cryptographically
+# authenticated agent identity. Until that changes, every identity field is
+# treated as untrusted display data, never as an authorization credential.
+
+function Get-MMUntrustedAgentIdentity {
+    <#
+    .SYNOPSIS Extract the self-asserted agent identity, explicitly marked untrusted.
+    .OUTPUTS PSCustomObject with .Name (lowercase) and .Trusted = $false.
+    #>
+    param([Parameter(Mandatory)]$InputData)
+    $name = if (-not $InputData) { '' }
+    elseif (($InputData.PSObject.Properties['agent_type']) -and $InputData.agent_type) { $InputData.agent_type }
+    elseif (($InputData.PSObject.Properties['agent_name']) -and $InputData.agent_name) { $InputData.agent_name }
+    else { '' }
+    return [PSCustomObject]@{
+        Name    = ($name -as [string]).ToLower().Trim()
+        Trusted = $false
+    }
+}
+
+# ---------- Path canonicalization (H-01, H-02) ------------------------------
+#
+# Resolve path-bearing tool inputs to a canonical, absolute form so traversal,
+# relative segments, and (where supported) symlinks cannot evade policy.
+
+function Resolve-MMCanonicalPath {
+    <#
+    .SYNOPSIS Best-effort canonical absolute path for a tool input value.
+    .OUTPUTS String absolute path, or $null when resolution fails.
+    .NOTES Handles both rooted and relative paths (including `..` traversal
+             segments) by resolving against the current location.
+    #>
+    param([Parameter(Mandatory)][string]$Value)
+    try {
+        $v = $Value.Trim().Trim('"', "'")
+        if ([string]::IsNullOrWhiteSpace($v)) { return $null }
+        # Normalize backslashes to the platform directory separator so paths
+        # authored with Windows separators still resolve correctly on Linux.
+        $v = $v.Replace('\', [System.IO.Path]::DirectorySeparatorChar)
+        # Resolve-Path correctly collapses `..` and relative segments for both
+        # existing and (with -ErrorAction SilentlyContinue) non-existing paths.
+        $resolved = Resolve-Path -Path $v -ErrorAction SilentlyContinue
+        if ($resolved) { return $resolved.ProviderPath }
+        # Fallback for paths that do not yet exist: build from current location
+        # and collapse `..` / relative segments with GetFullPath.
+        $base = if ([System.IO.Path]::IsPathRooted($v)) { $v } else { Join-Path (Get-Location).Path $v }
+        return [System.IO.Path]::GetFullPath($base)
+    }
+    catch { return $null }
+}
+
+function Test-MMPathUnderRoot {
+    <#
+    .SYNOPSIS True when the resolved path is at or beneath the canonical root.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Root
+    )
+    try {
+        $p = Resolve-MMCanonicalPath -Value $Path
+        $r = Resolve-MMCanonicalPath -Value $Root
+        if (-not $p -or -not $r) { return $false }
+        $sep = [System.IO.Path]::DirectorySeparatorChar
+        $pNorm = $p.TrimEnd($sep)
+        $rNorm = $r.TrimEnd($sep)
+        # On case-insensitive filesystems (Windows) the containment check must
+        # ignore case, otherwise `.copilot\HOLDOUT` evades a root of
+        # `.copilot\holdout` (S2 fix). Linux stays ordinal: /TMP and /tmp are
+        # genuinely different directories there.
+        $cmp = if ($IsWindows) { [System.StringComparison]::OrdinalIgnoreCase } else { [System.StringComparison]::Ordinal }
+        return $pNorm.Equals($rNorm, $cmp) -or $pNorm.StartsWith($rNorm + $sep, $cmp)
+    }
+    catch { return $false }
+}
+
+# ---------- Secret / command redaction (H-06) ------------------------------
+#
+# Persisted state, logs, manifests, and injected context must never contain
+# raw terminal commands or external absolute paths. Centralize the redaction
+# so every hook applies identical rules.
+
+function Get-MMRedactedCommand {
+    <#
+    .SYNOPSIS Replace credential-shaped substrings and external absolute paths
+             in a command with redaction markers. Returns safe text suitable
+             for logs (never for persisted state, which should use the
+             operation category instead).
+    #>
+    param([Parameter(Mandatory)][string]$Command)
+    $redacted = $Command
+    foreach ($s in (Get-MMSecretPatterns)) {
+        # The replacement must be built per-pattern with double-quoted string
+        # interpolation so $($s.Name) expands to the actual pattern name. A
+        # single-quoted replacement literal would emit the text
+        # '[REDACTED:$($s.Name)]' verbatim for every match (H-07 fix).
+        $replacement = "[REDACTED:$($s.Name)]"
+        $redacted = [regex]::Replace($redacted, $s.Regex, $replacement, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    }
+    # Redact external absolute paths (outside the current working directory).
+    $redacted = [regex]::Replace($redacted, '(?i)([a-z]:\\[^\s''"]+|/[^\s''"]+)', {
+            param($m)
+            $p = $m.Value
+            if (Test-MMPathUnderRoot -Path $p -Root (Get-Location).Path) { return $p }
+            return '[REDACTED:PATH]'
+        })
+    return $redacted
+}
+
+function Get-MMRedactedOperationCategory {
+    <#
+    .SYNOPSIS A short, non-sensitive category describing the operation, e.g.
+             'terminal:delete', 'terminal:git', 'file:write'. Never includes
+             arguments or raw command text. Safe to persist to state/logs.
+    #>
+    param([Parameter(Mandatory)][string]$ToolName, [string]$Command = '')
+    switch ($ToolName) {
+        'run_in_terminal' {
+            $c = $Command.ToLower()
+            if ($c -match 'rm\b|remove-item|del\b|format-volume|diskpart') { return 'terminal:delete' }
+            if ($c -match 'drop\b|truncate\b|delete\b') { return 'terminal:db-destructive' }
+            if ($c -match 'git ') { return 'terminal:git' }
+            if ($c -match 'chmod|chown|icacls|takeown') { return 'terminal:permissions' }
+            return 'terminal:execute'
+        }
+        default { return "file:$ToolName" }
+    }
+}
+
+# ---------- Fail-closed governance helper (H-08) ----------------------------
+#
+# Returns $true when a governance control must DENY on infrastructure failure
+# (missing dependency, lock/parse error) rather than fail open. Open governance
+# is the only tier that may degrade to allow for local recovery.
+
+function Test-MMFailClosed {
+    <#
+    .SYNOPSIS True when governance-critical controls must fail closed.
+    #>
+    param([Parameter(Mandatory)][string]$GovernanceLevel)
+    return $GovernanceLevel -ne 'open'
+}
+
+function Write-MMHookFailClosedDeny {
+    <#
+    .SYNOPSIS Emit a deny decision when a blocking guard crashes unexpectedly.
+    .DESCRIPTION
+        Used by the BLOCKING PreToolUse guards (block-destructive, block-holdout,
+        cap-subagent-budget, scan-secrets). When the guard's main body throws,
+        we must NOT let the tool call proceed silently (that would bypass the
+        guard). Under standard/strict/locked governance we emit the standard
+        PreToolUse deny JSON with reason 'hook_error_fail_closed' and exit 0.
+        Under open governance we log a warning and allow, so a local hook bug
+        does not hard-block a developer's session.
+    .PARAMETER HookName e.g. 'block-destructive'
+    .PARAMETER Exception The caught exception object (its message is surfaced).
+    .PARAMETER HookEvent The lifecycle event shape to emit: 'PreToolUse' (default,
+        permissionDecision envelope) or 'Stop' (decision=block envelope).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$HookName,
+        [Parameter(Mandatory)]$Exception,
+        [ValidateSet('PreToolUse', 'Stop')][string]$HookEvent = 'PreToolUse'
+    )
+    $governanceLevel = Get-MMGovernanceLevel
+    $message = if ($Exception -and $Exception.Exception -and $Exception.Exception.Message) {
+        $Exception.Exception.Message
+    }
+    elseif ($Exception -and $Exception.Message) {
+        $Exception.Message
+    }
+    else {
+        'unknown error'
+    }
+    if (Test-MMFailClosed -GovernanceLevel $governanceLevel) {
+        Write-MMHookLog -HookName $HookName -Event 'hook_error_fail_closed' -Decision 'deny' `
+            -Extra @{ note = "guard crashed; failing closed"; error = $message }
+        $failReason = "BLOCKED ($HookName): hook encountered an internal error and GOVERNANCE_LEVEL=$governanceLevel fails closed. Error: $message"
+        if ($HookEvent -eq 'Stop') {
+            $payload = [ordered]@{
+                hookSpecificOutput = [ordered]@{
+                    hookEventName = 'Stop'
+                    decision      = 'block'
+                    reason        = $failReason
+                }
+            } | ConvertTo-Json -Depth 5 -Compress:$false
+            Write-Output $payload
+        }
+        else {
+            Write-MMHookDecision -Decision 'deny' -Reason $failReason
+        }
+        exit 0
+    }
+    Write-MMHookLog -HookName $HookName -Event 'hook_error_fail_closed' -Decision 'warn' `
+        -Extra @{ note = "guard crashed; failing open (open governance)"; error = $message }
+    Write-Host "WARNING ($HookName): hook encountered an internal error but GOVERNANCE_LEVEL=open allows the call to proceed. Error: $message"
+    exit 0
 }
 
 # Export-ModuleMember is unnecessary for dot-sourced scripts; every function above

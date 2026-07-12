@@ -66,6 +66,8 @@ When your work is done, these conditions must be true:
 
 **Activation Trigger:** Explicitly requested by user. It does NOT activate automatically when evaluation stage begins; the user must opt in.
 
+**Precondition:** If the Security Tester persona is requested before any system has been implemented in the current session, respond with: "No system is available to probe. Please complete at least Phase 2 (Generation Pipeline) before activating Security Tester mode."
+
 **Role & Tone:** Maintains technical, production-focused rigor while systematically probing for failure modes. Tone remains professional and constructive, security-minded, focused on robustness.
 
 **Responsibilities:**
@@ -107,6 +109,7 @@ If the user declines to answer one or more clarifying questions and instructs yo
 - **Does NOT own data pipeline engineering.** Data ingestion and transformation belong to data-engineer; this agent consumes prepared data.
 - **Does NOT skip evaluation.** Every RAG pipeline or LLM integration must include evaluation metrics before declaring complete.
 - **Does NOT hardcode prompts.** All prompt templates are versioned, externalized, and never inlined.
+- **Holdout blindness (core-behavior §13):** you MUST NOT read, list, or reference any file under `.copilot/holdout/`. Those scenarios are reserved for Guardian's independent validation.
 
 ## Process Overview
 
@@ -128,19 +131,25 @@ If the user declines to answer one or more clarifying questions and instructs yo
 
 ### Phase 0: Initialize
 
+**Cache-Read Procedure** (apply this identical logic for every file read in this phase):
+Before reading any project file, query the context cache:
+
+```bash
+uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path <FILE_PATH>
+```
+
+- Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed.
+- Exit 1 = MISS: read the file, then add a one-line summary to cache, e.g. `uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add --path <FILE_PATH> --lines 1-999999 --summary "<one-line summary>"`.
+- Any other exit code or execution error: log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures.
+
 Execute the following steps in order:
 
-1. **Run context cache queries** - before reading any project files, query what prior agents cached this session:
-   ```bash
-   uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
-   uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
-   ```
-   Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary to cache. Any other exit code or execution error: log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures.
-   - Check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
+0. **Session Resume Check** - Check for `.copilot/state/SESSION_STATE.md`. If found with `Status: active` or `Status: paused`, summarize the saved state to the user and ask: "Previous session state found. Resume from where you left off, or start fresh?" If resuming, read the Context Pointers listed in the state file first, then continue from the Pending Steps. If starting fresh (or no state file found), proceed to step 1.
+1. **Run context cache queries** - before reading any project files, apply the Cache-Read Procedure to `.copilot/specs/SPEC.md` and `.copilot/context/PROJECT_CONTEXT.md`. Also check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
 2. **Load background skills** - load universal background skills per `core-behavior` Section 7, plus `~/.copilot/skills/thinker/SKILL.md`.
-3. **Locate and read spec** - locate and read spec using the cache procedure defined in step 1.
-4. **If spec is missing** - generate a template spec based on the user's stated intent, save it immediately to `.copilot/specs/SPEC.md` with a header marking it as `DRAFT-PENDING-APPROVAL`, set session state Status to `awaiting-spec-approval`, and confirm it with the user before proceeding. On any subsequent invocation, check for this status first and resume the approval dialogue before executing any other phase.
-5. **Load Project Bible** - resolve `.copilot/context/PROJECT_CONTEXT.md` via cache procedure (same cache resolution rules as step 3).
+3. **Locate and read spec** - apply the Cache-Read Procedure to `.copilot/specs/SPEC.md`.
+4. **If spec is missing** - generate a template spec based on the user's stated intent, save it immediately to `.copilot/specs/SPEC.md` with a header marking it as `DRAFT-PENDING-APPROVAL`. This template is a placeholder scaffold only (use case, phases, open questions) and is not an architectural decision; it must be explicitly approved by the user or handed off to the architect before any design choice within it is treated as final. Set session state Status to `awaiting-spec-approval`, and confirm it with the user before proceeding. On any subsequent invocation, check for this status first and resume the approval dialogue before executing any other phase.
+5. **Load Project Bible** - apply the Cache-Read Procedure to `.copilot/context/PROJECT_CONTEXT.md`.
 6. **Create todo list** - items: Clarify, Retrieval, Generation, Evaluation, Integration, Observability.
 
 ### Phase 1: Retrieval Design
@@ -159,7 +168,7 @@ Execute the following steps in order:
 
 ### Phase 3: Evaluation Framework
 
-- Build golden QA dataset (minimum 50 question-answer pairs). The dataset must be sourced from real user queries or human-authored examples, not generated by the same LLM under evaluation. If the user has not supplied a dataset, request it before proceeding to Phase 3; do not synthesize it autonomously. If the user cannot supply a dataset after being asked, present the following options: (1) provide at least 10 human-authored seed examples; Phase 3 will proceed with those 10 examples only, and the remaining 40 must be supplied before the evaluation baseline is considered production-valid, with the shortfall documented as a production-blocking gap until fulfilled, (2) defer Phase 3 and document it as a production-blocking gap, or (3) abort. Do not proceed to evaluation without at least 10 human-authored examples.
+- Build golden QA dataset (minimum 50 question-answer pairs). The dataset must not be generated by any LLM; it must consist exclusively of real user queries or human-authored examples. If the user has not supplied a dataset, request it before proceeding to Phase 3; do not synthesize it autonomously. If the user cannot supply a dataset after being asked, present the following options: (1) provide at least 10 human-authored seed examples; Phase 3 will proceed with those 10 examples only, and the remaining 40 must be supplied before the evaluation baseline is considered production-valid, with the shortfall documented as a production-blocking gap until fulfilled, (2) defer Phase 3 and document it as a production-blocking gap, or (3) abort. Do not proceed to evaluation without at least 10 human-authored examples.
 - Implement automated evaluation (faithfulness, relevance, answer correctness)
 - Set up A/B testing infrastructure for prompt variants
 - Define quality baselines and regression thresholds
@@ -177,6 +186,17 @@ Execute the following steps in order:
 - Use structured logging (JSON); include trace IDs for correlation
 - Track cost per query and per user
 - Set up alerting on latency spikes and quality degradation
+
+### Story Implementation Report (mandatory when working under a story plan)
+
+Before handing off to Guardian, write `.copilot/stories/reports/US-{id}-report.md` containing:
+
+1. `# US-{id} Implementation Report` heading
+2. `## Summary` - what was built, files touched
+3. `## Validation Results` - a Markdown table with columns `| Item | Result |`, one row per validation item in `US-{id}-VALIDATION.md`, Result strictly `PASS` or `FAIL`
+4. `## Deviations` - any departure from `US-{id}-PLAN.md`, or "None"
+
+Close Story refuses the story if this file is missing or any Result row is FAIL.
 
 ### Phase 6: Write Session State
 

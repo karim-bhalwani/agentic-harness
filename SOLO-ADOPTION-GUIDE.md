@@ -38,15 +38,15 @@ Human gate time per story: ~10–15 minutes.
 
 ## Plan Phase vs Build Direct
 
-| Situation | Path |
-|-----------|------|
-| 3+ deliverables or shared dependencies | Plan Phase |
-| 1–2 deliverables, no shared deps | Build Direct |
-| Ad-hoc spike or exploratory work | Build Direct via `/feature-plan` |
-| Story touches 3+ files and takes more than a day | Plan Phase |
+| Situation                                        | Path                             |
+| ------------------------------------------------ | -------------------------------- |
+| 3+ deliverables or shared dependencies           | Plan Phase                       |
+| 1–2 deliverables, no shared deps                 | Build Direct                     |
+| Ad-hoc spike or exploratory work                 | Build Direct via `/feature-plan` |
+| Story touches 3+ files and takes more than a day | Plan Phase                       |
 
 ---
 
 ## Sub-Day Stories
 
-`Effort: S` stories go through the same loop  -  they just complete faster. Planning typically finishes clean on the first plan-checker iteration. You can complete a full story (plan → build → close) in a single session.
+`Effort: S` stories go through the same loop - they just complete faster. Planning typically finishes clean on the first plan-checker iteration. You can complete a full story (plan → build → close) in a single session.

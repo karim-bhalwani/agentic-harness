@@ -47,16 +47,24 @@ POLL_INTERVAL = 0.5
 def _pid_alive(pid: int) -> bool:
     """Check whether a process with the given PID is still running."""
     if sys.platform == "win32":
-        # Windows: OpenProcess returns 0 for invalid PIDs
+        # Windows: OpenProcess may succeed for exited processes; verify exit code.
         import ctypes
 
         kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        STILL_ACTIVE = 259
+
         handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
-        if handle:
+        if not handle:
+            return False
+
+        try:
+            exit_code = ctypes.c_ulong()
+            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                return False
+            return exit_code.value == STILL_ACTIVE
+        finally:
             kernel32.CloseHandle(handle)
-            return True
-        return False
     else:
         # POSIX: signal 0 checks existence without killing
         try:
@@ -137,10 +145,11 @@ def release(lock_path: Path, *, force: bool = False) -> int:
         if info is not None:
             pid, _ = info
             if pid != os.getpid():
-                # In agent context the PID won't match between acquire and
-                # release calls (each uv run is a new process). Use --force
-                # which is the expected agent usage pattern.
-                pass  # Fall through to delete
+                print(
+                    f"Lock not owned by current process (owner PID {pid}, current PID {os.getpid()}). "
+                    "Use --force to release anyway."
+                )
+                return 1
 
     lock_path.unlink(missing_ok=True)
     print(f"Lock released: {lock_path}")

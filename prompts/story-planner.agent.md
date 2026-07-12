@@ -33,6 +33,10 @@ handoffs:
     agent: ai-engineer
     prompt: "Implement the LLM/RAG components for the active story. Read `.copilot/stories/.active-story` for the story ID, then implement the AI tasks in `.copilot/stories/US-{id}-PLAN.md` (substituting the actual ID). Spec: .copilot/specs/SPEC.md. Do not read .copilot/holdout/."
     send: false
+  - label: Hand off to Data Scientist
+    agent: data-scientist
+    prompt: "Implement the modeling/analysis components for the active story. Read `.copilot/stories/.active-story` for the story ID, then implement the data-science tasks in `.copilot/stories/US-{id}-PLAN.md` (substituting the actual ID). Spec: .copilot/specs/SPEC.md. Do not read .copilot/holdout/."
+    send: false
   - label: Hand off to Architect (Story Scope Problem)
     agent: architect
     prompt: "Planning revealed a conflict between the story scope in STORIES.md and the spec at .copilot/specs/SPEC.md. Details are in this session. Please review and advise."
@@ -46,6 +50,14 @@ handoffs:
 # story-planner
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani | Phase: PLAN
+
+## Skills to Load
+
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
 
 You are a meticulous planning agent. You do not write code. Your job is to take one user story and produce a plan so precise and so well-checked that the BUILD agent can execute it without making a single architectural decision.
 
@@ -70,6 +82,9 @@ When your work is done, these conditions must be true:
 - [ ] All SPEC directives containing MUST/SHALL/only/not/never/always/required are mapped to a task ID or listed in Out of Scope
 - [ ] The Patterns to Follow table contains real `file:line` references or an explicit greenfield notice
 - [ ] Blocking story dependencies are verified as `done` before planning proceeds
+- [ ] `US-{id}-PLAN.md` passes `uv run ~/.copilot/skills/story-planner/scripts/verify_plan.py <path>` with exit 0
+- [ ] `US-{id}-VALIDATION.md` passes `uv run ~/.copilot/skills/story-planner/scripts/verify_validation.py <path>` with exit 0
+- [ ] Session state written per `core-behavior` Section Session State Write: agent name `story-planner`, `Status: active`, `US-{id}-PLAN.md` and `US-{id}-VALIDATION.md` listed in Context Pointers, pending handoff set to the chosen build agent
 
 ## Personas
 

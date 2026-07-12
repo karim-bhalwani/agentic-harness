@@ -10,6 +10,26 @@
 .copilot/state/SESSION_STATE.md
 ```
 
+## Canonical Frontmatter (machine contract)
+
+The first block of the file MUST be a YAML frontmatter delimited by `---`
+fences. This is the machine-readable contract validated by
+`verify_session_state.py` and `tests/contracts/schemas/session_state.schema.json`.
+The markdown body below remains for humans.
+
+```yaml
+---
+session_state_schema_version: 1   # integer; must be in SUPPORTED_SCHEMA_VERSIONS
+status: active                     # active | paused | completed | blocked
+agent: senior-developer            # name of the agent that last wrote the file
+spec_path: ".copilot/specs/SPEC.md"   # optional
+active_story: "US-04"                  # optional
+---
+```
+
+`scaffold_session_state.py` emits this block automatically. A file without a
+valid frontmatter block FAILS verification.
+
 ## Schema
 
 ```markdown

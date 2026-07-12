@@ -16,7 +16,7 @@ For a comprehensive guide to what each hook does, lifecycle coverage, and config
 
 ## Hooks Included
 
-This package includes 14 hook scripts plus `hooks.json` configuration. See [README.md](README.md) for the complete hook inventory and what each one does.
+This package includes 15 PowerShell scripts (all 15 registered in `hooks.json`, including `verify-hook-integrity.ps1` as a SessionStart hook) and `hooks.json` configuration. See [README.md](README.md) for the complete hook inventory and what each one does.
 
 ## Installation
 
@@ -83,7 +83,7 @@ Add these to your VS Code `settings.json` (`Ctrl+Shift+P` → "Open User Setting
 2. Type `/hooks` in chat, or
 3. Open Command Palette (`Ctrl+Shift+P`) → "Chat: Configure Hooks"
 
-You should see the 14 hooks listed (Stop x3, PreToolUse x3, PostToolUse x2, SessionStart x1, SubagentStart x1, PreCompact x1, UserPromptSubmit x1, SubagentStop x1).
+You should see the 15 lifecycle hooks listed (Stop x3, PreToolUse x4, PostToolUse x2, SessionStart x2, SubagentStart x1, PreCompact x1, UserPromptSubmit x1, SubagentStop x1).
 
 ---
 
@@ -91,7 +91,7 @@ You should see the 14 hooks listed (Stop x3, PreToolUse x3, PostToolUse x2, Sess
 
 ### quality-gate.ps1 (Stop)
 
-Runs `ruff check .` and `ty check .` before the agent session can close. If either fails, the agent is blocked and told to fix the errors first.
+Runs `ruff check` and `ty check` scoped to changed files before the agent session can close. If either fails, the agent is blocked and told to fix the errors first.
 
 **Env vars:**
 
@@ -102,22 +102,6 @@ Runs `ruff check .` and `ty check .` before the agent session can close. If eith
 | `GUARD_MODE`        | `block` | Set `warn` to log errors without blocking                              |
 
 The wave check fires only when `.copilot/stories/STORIES.md` exists. It enforces: every story in wave N must reach `done` before any story in wave N+1 leaves `not-started`.
-
-holdout.ps1 (PreToolUse)
-
-Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent is a BUILD agent (senior-developer, data-engineer, ai-engineer, data-scientist). Converts the instruction-level holdout access boundary from the holdout-validation skill into a deterministic enforcement gate. Guardian, architect, holdout-validation, and other non-BUILD agents pass through. Unknown agent types also pass through (cannot enforce without identity).
-
-**Intercepted tools:** `read_file`, `list_dir`, `grep_search`, `file_search`, `run_in_terminal`
-
-**Env vars:**
-
-| Variable             | Default | Effect                                                                         |
-| -------------------- | ------- | ------------------------------------------------------------------------------ |
-| `SKIP_HOLDOUT_GUARD` | `false` | Set `true` to bypass entirely (invalidates holdout evaluation for the session) |
-| `GOVERNANCE_LEVEL`   | `standard` | `open` logs-only, `standard`/`strict`/`locked` deny BUILD-agent holdout access |
-| `HOOK_LOG_DIR`       | `.copilot/state/hook-logs` | Override JSONL log output directory |
-
-### block-
 
 ### block-holdout.ps1 (PreToolUse)
 
@@ -130,6 +114,8 @@ Denies file-read tool calls targeting `.copilot/holdout/` when the calling agent
 | Variable             | Default | Effect                                                                         |
 | -------------------- | ------- | ------------------------------------------------------------------------------ |
 | `SKIP_HOLDOUT_GUARD` | `false` | Set `true` to bypass entirely (invalidates holdout evaluation for the session) |
+| `GOVERNANCE_LEVEL`   | `standard` | `open` logs-only, `standard`/`strict`/`locked` deny BUILD-agent holdout access |
+| `HOOK_LOG_DIR`       | `.copilot/state/hook-logs` | Override JSONL log output directory |
 
 ### block-destructive.ps1 (PreToolUse)
 
@@ -284,6 +270,34 @@ Counts completed workflow cycles (story reports under `.copilot/stories/reports/
 | -------------------------- | ------- | --------------------------------------------------- |
 | `SKIP_RETROSPECTIVE_CHECK` | `false` | Set `true` to disable retrospective reminders       |
 | `RETROSPECTIVE_INTERVAL`   | `5`     | Number of completed cycles between reminders        |
+
+---
+
+## Hook Integrity Verification
+
+`verify-hook-integrity.ps1` protects against accidental or malicious modification of hook files after installation.
+
+**Generate the manifest (first run):**
+
+```powershell
+pwsh -NoProfile -File hooks/verify-hook-integrity.ps1
+```
+
+This computes SHA-256 hashes for all `.ps1` files in `hooks/` (excluding `tests/`) and `hooks.json`, then writes them to `hooks/hooks.manifest.json`. Re-running is idempotent: if the manifest already exists, all hashes are verified instead.
+
+**Verify deployed hooks against the repo manifest:**
+
+After copying hook files to `~/.copilot/hooks/`, compare against the repo manifest:
+
+```powershell
+pwsh -NoProfile -File hooks/verify-hook-integrity.ps1 `
+    -HooksDir "$env:USERPROFILE\.copilot\hooks" `
+    -ManifestPath hooks/hooks.manifest.json
+```
+
+Exits 0 if all hashes match. Exits 1 and prints mismatched files if any file was added, removed, or modified.
+
+> **Governance:** In `strict` or `locked` environments, run this check as part of CI and block deployments when the manifest is out of date.
 
 ---
 

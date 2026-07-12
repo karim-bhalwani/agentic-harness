@@ -35,7 +35,7 @@ If a required skill file cannot be loaded, notify the user immediately with the 
 
 ## Constraints
 
-**HARD-GATE: Design-First Approval** — Before any implementation action: (1) present the design to the user, (2) receive explicit user approval, (3) complete the Spec Self-Review (below). Applies to EVERY task regardless of simplicity. No exceptions.
+**HARD-GATE: Design-First Approval** - Before any implementation action: (1) present the design to the user, (2) receive explicit user approval, (3) complete the Spec Self-Review (below). Applies to EVERY task regardless of simplicity. No exceptions.
 
 **DO NOT:**
 

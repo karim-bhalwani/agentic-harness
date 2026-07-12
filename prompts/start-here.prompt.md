@@ -42,7 +42,7 @@ You are routing the developer to the next pipeline step. Do not write code or sp
 
    4f. Report exists. Check the report's validation result. If validation FAIL: tell the developer which tasks or checks failed (per the report) and recommend re-running the BUILD agent to address the failures before proceeding. STOP.
 
-   4g. Report exists and validation PASS. Check whether `.copilot/stories/reports/$storyId-guardian-review.md` exists. If it does not exist: recommend `@guardian` for review, which then triggers `@close-story`. If it does exist: recommend `@release-manager` directly, which then triggers `@close-story`. STOP.
+   4g. Report exists and validation PASS. Check whether `.copilot/artifacts/review-report.md` exists AND contains a reference to `$storyId` AND records an overall verdict of PASS (or APPROVE). If not: recommend `@guardian` for review, which then triggers `@close-story`. If yes: recommend `@release-manager` directly, which then triggers `@close-story`. STOP.
 
 ## Output format
 

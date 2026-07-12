@@ -142,6 +142,12 @@ Return the result using the exact output format specified below. Nothing else.
 
 ## Skills to Load
 
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
+
 - Load `prompt-library` skill for prompt patterns, templates, and best practices
 - Load `llm-mem` skill only when the user explicitly requests that the refined prompt or session context be saved for future reuse
 

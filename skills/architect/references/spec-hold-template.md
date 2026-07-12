@@ -1,4 +1,4 @@
-# SPEC.md Template — HOLD Mode (Feature Within Existing Architecture)
+# SPEC.md Template - HOLD Mode (Feature Within Existing Architecture)
 
 > Lightweight template for the Architect skill's HOLD mode output. Loaded by reference from `~/.copilot/skills/architect/SKILL.md` when scope_mode is HOLD.
 >

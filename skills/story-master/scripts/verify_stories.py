@@ -24,6 +24,19 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+# Allow running as a standalone script: ensure the repo root (which owns the
+# `tests` package) is importable regardless of the current working directory.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tests.contracts.schema_versions import (  # noqa: E402
+    CURRENT_SCHEMA_VERSIONS,
+    SUPPORTED_SCHEMA_VERSIONS,
+)
+
+_FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
 EXPECTED_COLUMNS: list[str] = [
     "ID",
     "Title",
@@ -127,6 +140,39 @@ def verify_stories(path: Path) -> list[Problem]:
 
     lines = text.splitlines()
 
+    # --- Check 1b: Frontmatter contract (canonical machine contract) ---
+    fm_match = _FRONTMATTER_RE.match(text)
+    if not fm_match:
+        problems.append(
+            Problem(
+                problem="STORIES.md has no YAML frontmatter block.",
+                fix=(
+                    "Prepend a '---\n<key>: <value>\n---' block with at least "
+                    "stories_schema_version, spec, and generated."
+                ),
+            )
+        )
+        return problems
+    fm_text = fm_match.group(1)
+    version_match = re.search(r"^\s*stories_schema_version\s*:\s*(\d+)", fm_text, re.MULTILINE)
+    if not version_match:
+        problems.append(
+            Problem(
+                problem="Frontmatter is missing 'stories_schema_version'.",
+                fix=(f"Add 'stories_schema_version: {CURRENT_SCHEMA_VERSIONS['STORIES.md']}' to the frontmatter."),
+            )
+        )
+        return problems
+    version = int(version_match.group(1))
+    if version not in SUPPORTED_SCHEMA_VERSIONS["STORIES.md"]:
+        problems.append(
+            Problem(
+                problem=f"stories_schema_version {version} is not supported.",
+                fix=(f"Set it to one of {sorted(SUPPORTED_SCHEMA_VERSIONS['STORIES.md'])}."),
+            )
+        )
+        return problems
+
     # --- Check 2: Summary table has all 12 expected columns ---
     header_cells, data_rows = _parse_summary_table(lines)
     if not header_cells:
@@ -146,8 +192,10 @@ def verify_stories(path: Path) -> list[Problem]:
                     )
                 )
 
-    # Build column index map for later checks
-    col_index: dict[str, int] = {col: i for i, col in enumerate(EXPECTED_COLUMNS)}
+    # Build column index map from the PARSED header so validation is
+    # independent of column order (a reordered-but-complete table must still
+    # validate correctly). Keep the missing-column error above as the gate.
+    col_index: dict[str, int] = {col: i for i, col in enumerate(header_cells)}
 
     # --- Checks 3-9: Validate enum fields per data row ---
     all_ids: set[str] = set()

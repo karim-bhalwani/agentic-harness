@@ -32,9 +32,9 @@ if (Test-MMCircuitBreaker -EnvVar 'SKIP_PRE_COMPACT_SAVE') {
 $inputData = Read-MMHookInput
 
 # --- Resolve paths ---
-$cwd = if ($inputData -and $inputData.cwd) { $inputData.cwd } else { (Get-Location).Path }
-$sessionId = if ($inputData -and $inputData.sessionId) { $inputData.sessionId }      else { 'unknown' }
-$transcriptPath = if ($inputData -and $inputData.transcript_path) { $inputData.transcript_path } else { $null }
+$cwd = if ($inputData -and (Get-MMProp $inputData 'cwd')) { (Get-MMProp $inputData 'cwd') } else { (Get-Location).Path }
+$sessionId = if ($inputData -and (Get-MMProp $inputData 'sessionId')) { (Get-MMProp $inputData 'sessionId') } else { 'unknown' }
+$transcriptPath = if ($inputData -and (Get-MMProp $inputData 'transcript_path')) { (Get-MMProp $inputData 'transcript_path') } else { $null }
 
 $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
 $timestampISO = Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'
@@ -44,7 +44,8 @@ $projectRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $projectRoot) { $projectRoot = $cwd }
 if ($PSVersionTable.Platform -eq 'Unix') {
     $projectRoot = $projectRoot.Trim()
-} else {
+}
+else {
     $projectRoot = ($projectRoot -replace '/', '\').Trim()
 }
 
@@ -57,7 +58,7 @@ if ($LASTEXITCODE -ne 0 -or -not $lastCommit) { $lastCommit = 'none' }
 
 # --- Parse transcript for last activity (best-effort, never fatal) ---
 $lastTool = 'unknown'
-$lastToolFile = ''
+$lastToolCategory = 'unknown'
 
 if ($transcriptPath -and (Test-Path $transcriptPath)) {
     try {
@@ -72,13 +73,9 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
                 $entry = $transcript[$i]
                 if ($entry.type -eq 'tool_use' -and $entry.name) {
                     $lastTool = $entry.name
-                    # Capture file path if it was a file-editing tool
-                    if ($entry.input -and $entry.input.filePath) {
-                        $lastToolFile = $entry.input.filePath
-                    }
-                    elseif ($entry.input -and $entry.input.command) {
-                        $lastToolFile = $entry.input.command
-                    }
+                    # Derive only a non-sensitive operation category.
+                    $cmd = if ($entry.input -and $entry.input.command) { $entry.input.command } else { '' }
+                    $lastToolCategory = Get-MMRedactedOperationCategory -ToolName $entry.name -Command $cmd
                     break
                 }
                 # Also check content arrays inside assistant messages
@@ -86,9 +83,8 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
                     $toolBlock = $entry.content | Where-Object { $_.type -eq 'tool_use' } | Select-Object -Last 1
                     if ($toolBlock -and $toolBlock.name) {
                         $lastTool = $toolBlock.name
-                        if ($toolBlock.input -and $toolBlock.input.filePath) {
-                            $lastToolFile = $toolBlock.input.filePath
-                        }
+                        $cmd = if ($toolBlock.input -and $toolBlock.input.command) { $toolBlock.input.command } else { '' }
+                        $lastToolCategory = Get-MMRedactedOperationCategory -ToolName $toolBlock.name -Command $cmd
                         break
                     }
                 }
@@ -100,7 +96,14 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
     }
 }
 
-$lastToolDesc = if ($lastToolFile) { "$lastTool ($lastToolFile)" } else { $lastTool }
+# raw command (which may contain tokens, connection strings, or paths) is never
+# written to state or emitted in the system message.
+$lastToolDesc = if ($lastToolCategory -and $lastToolCategory -ne 'unknown') {
+    "$lastTool ($lastToolCategory)"
+}
+else {
+    $lastTool
+}
 
 # --- State file path ---
 $stateDir = Join-Path $projectRoot '.copilot\state'
@@ -182,6 +185,13 @@ $completedSection
 - .copilot/context/PROJECT_CONTEXT.md
 - .copilot/specs/SPEC.md
 
+## Context Cache
+
+> Check here before reading a file. Add an entry after reading.
+> Managed by context_cache.py. Format: - [HASH]: path | L{start}-{end} | one-line summary
+
+-
+
 ## Decisions Made This Session
 
 - (Captured decisions not available — compaction occurred before summary could be written)
@@ -192,6 +202,12 @@ Compaction triggered at $timestamp (session: $sessionId, branch: $branch).
 Last recorded tool: $lastToolDesc. Last commit: $lastCommit.
 Re-read the conversation above this point before proceeding — the agent should have context
 in the remaining window. If starting a fresh session, read Context Pointers above first.
+
+## Pipeline Loop
+
+- **Iteration Count:** 1
+- **Loop Agents:**
+- **Recurring Failures:** none
 "@
 
     Set-Content -Path $statePath -Value $stateContent -Encoding UTF8

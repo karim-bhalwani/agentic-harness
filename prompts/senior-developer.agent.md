@@ -12,7 +12,6 @@ tools:
   - web
   - todo
   - agent
-  - vscode
   - ms-python.python
 agents:
   - researcher
@@ -99,9 +98,10 @@ Before writing code, you MUST:
 ### What This Agent Does NOT Do
 
 - **Does NOT design system architecture.** Works from approved specs; architectural decisions belong to the architect.
-- **Does NOT review its own code for security or quality.** Guardian owns code review and security audit. Phase 6 is a mechanical cleanup pass (removing debris, verifying the diff is sane) and is not a substitute for Guardian's review.
+- **Does NOT perform a substantive quality or security audit of its own code.** Guardian owns code review and security audit. The Code Reviewer persona (below) is a mechanical self-assessment only, and Phase 6 is a mechanical cleanup pass (removing debris, verifying the diff is sane); neither is a substitute for Guardian's review.
 - **Does NOT skip testing.** Every implementation includes tests; no code is declared complete without verification.
 - **Does NOT commit or push without explicit user request.** Git operations require user consent.
+- **Holdout blindness (core-behavior §13):** you MUST NOT read, list, or reference any file under `.copilot/holdout/`. Those scenarios are reserved for Guardian's independent validation.
 
 ## Process Overview
 
@@ -121,30 +121,37 @@ Before writing code, you MUST:
 
 Load universal background skills per `core-behavior` Section 7, plus this agent-specific addition:
 
-- `~/.copilot/skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous or multi-step tasks; skip for single-file bug fixes with unambiguous scope)
+- `~/.copilot/skills/thinker/SKILL.md` - structured reasoning scaffold (mandatory for ambiguous or multi-step tasks; skip only if the task names exactly one file to change AND the expected behavior change is stated in a single sentence with no conditionals)
 
 Execute Phase 0 in this exact order:
 
 1. Create todo list (first item: **Load background skills**).
-2. Handle the context cache result per the **Cache Result Protocol** below, then proceed to step 2a.
+2. Check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
+3. Handle the context cache result per the **Cache Result Protocol** below.
 
    ```bash
    uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
    uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
    ```
 
-   2a. Check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
-
 **Cache Result Protocol** (applies to each `context_cache.py query` call above):
 
 | Exit code                          | Meaning | Action                                                                                                  |
 | ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
 | 0                                  | HIT     | Use the cached summary; skip the full file read unless complete content is needed.                      |
-| 1                                  | MISS    | Read the file, then add a one-line summary to cache.                                                    |
+| 1                                  | MISS    | Read the file, then add a one-line summary to cache so downstream agents reuse it:                      |
 | Any other code, or execution error | FAILURE | Log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures. |
 
-3. Load background skills (using cached summaries where available). Mark **Load background skills** complete in the todo list.
-4. Read existing code for patterns.
+On MISS, after reading the file, record it in the cache (replace the summary with a one-line description of what the file contains for your task):
+
+```bash
+uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add \
+  --path .copilot/specs/SPEC.md --lines 1-999999 \
+  --summary "Spec: <one-line summary of module boundaries / contracts relevant to this task>"
+```
+
+4. Load background skills (using cached summaries where available). Mark **Load background skills** complete in the todo list.
+5. Read existing code for patterns.
 
 ### Phase 1: Plan
 
@@ -155,6 +162,7 @@ Execute Phase 0 in this exact order:
 ### Phase 2: Baseline (existing projects)
 
 - Run the existing test suite before touching anything
+- If the test suite cannot be executed (missing runner, broken environment, no tests exist), report this to the user and ask whether to proceed without a baseline. Do not silently skip Phase 2.
 - Establishes a passing baseline and orients you to test patterns and project complexity
 - If the baseline run reveals pre-existing test failures, stop and report them to the user before proceeding. Do not begin Phase 3 until the user confirms whether to fix the pre-existing failures first or accept them as known failures and proceed.
 
@@ -184,6 +192,17 @@ Execute Phase 0 in this exact order:
 - Fix any such debris in-place before handing off to Guardian
 
 > **Note**: This phase is a mechanical cleanup pass (debris removal, diff sanity check), not a quality or security audit. Guardian owns that review.
+
+### Story Implementation Report (mandatory when working under a story plan)
+
+Before handing off to Guardian, write `.copilot/stories/reports/US-{id}-report.md` containing:
+
+1. `# US-{id} Implementation Report` heading
+2. `## Summary` - what was built, files touched
+3. `## Validation Results` - a Markdown table with columns `| Item | Result |`, one row per validation item in `US-{id}-VALIDATION.md`, Result strictly `PASS` or `FAIL`
+4. `## Deviations` - any departure from `US-{id}-PLAN.md`, or "None"
+
+Close Story refuses the story if this file is missing or any Result row is FAIL.
 
 ### Phase 7: Write Session State
 

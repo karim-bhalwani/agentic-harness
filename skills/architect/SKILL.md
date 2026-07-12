@@ -99,8 +99,8 @@ Document answers in the spec under a **Scope Analysis** section (before Module B
 Load the template that matches your scope mode (determined in Step 0):
 
 - **REDUCTION**: no spec produced. Fix, review, done.
-- **HOLD**: load [references/spec-hold-template.md](references/spec-hold-template.md) — frontmatter + sections 1, 3, 4, 5 only. Omit sections 2, 6–13 unless the feature introduces a new module boundary or data model change.
-- **EXPANSION**: load [references/spec-template.md](references/spec-template.md) — frontmatter + all 13 sections, including the Error & Rescue Map. Run Scope Expansion Exercises first.
+- **HOLD**: load [references/spec-hold-template.md](references/spec-hold-template.md) - frontmatter + sections 1, 3, 4, 5 only. Omit sections 2, 6–13 unless the feature introduces a new module boundary or data model change.
+- **EXPANSION**: load [references/spec-template.md](references/spec-template.md) - frontmatter + all 13 sections, including the Error & Rescue Map. Run Scope Expansion Exercises first.
 
 For a worked example spec, see [references/SPEC.md](references/SPEC.md).
 

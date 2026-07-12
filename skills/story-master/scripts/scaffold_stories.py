@@ -26,7 +26,27 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+# Allow running as a standalone script: ensure the repo root (which owns the
+# `tests` package) is importable regardless of the current working directory.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tests.contracts.schema_versions import CURRENT_SCHEMA_VERSIONS  # noqa: E402
+
 _TODO = "<!-- TODO: fill in -->"
+
+
+# Canonical machine contract: YAML frontmatter consumed by verify_stories.py and
+# validated against tests/contracts/schemas/stories.schema.json.
+def _frontmatter(config: StoriesConfig) -> str:
+    return (
+        "---\n"
+        f"stories_schema_version: {CURRENT_SCHEMA_VERSIONS['STORIES.md']}\n"
+        f'spec: "{config.spec_path}"\n'
+        f'generated: "{config.generated_date}"\n'
+        "---\n\n"
+    )
 
 
 @dataclass
@@ -46,7 +66,9 @@ def scaffold_stories(config: StoriesConfig) -> str:
     str
         Markdown document string ready to write to STORIES.md.
     """
-    return f"""# User Story Backlog
+    return (
+        _frontmatter(config)
+        + f"""# User Story Backlog
 
 **Spec:** `{config.spec_path}`
 **Generated:** {config.generated_date}
@@ -88,6 +110,7 @@ list them here with the mandated merge order. story-master must justify each pai
 
 {_TODO}
 """
+    )
 
 
 def main() -> None:

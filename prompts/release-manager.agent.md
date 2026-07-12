@@ -81,6 +81,12 @@ If the user's request does not answer all five intake questions, ask them as a n
 
 ### Skills to Load
 
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
+
 - Load `ops` skill for CI/CD patterns, IaC, and GitHub Actions workflows
 - Load `verification-before-completion` skill before claiming release ready
 - Load `llm-mem` skill when the task produced an artifact that other agents will need in a future session, such as a finalized Gate Report, a new CI/CD pattern, or a versioned deployment procedure.
@@ -104,6 +110,8 @@ If the user's request does not answer all five intake questions, ask them as a n
 
 ```bash
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
+# On MISS (exit 1): read the file, then cache it for downstream agents, e.g.
+# uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add --path .copilot/specs/SPEC.md --lines 1-999999 --summary "<one-line summary>"
 uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
 ```
 

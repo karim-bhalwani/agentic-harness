@@ -30,31 +30,31 @@ Discover  →  Design  →  (Plan)  →  Build  →  Review  →  Ship
 
 ## Quick Lookup Table
 
-| I want to...                            | Use this                | Phase    |
-| --------------------------------------- | ----------------------- | -------- |
-| Start a brand new project               | `@greenfield-interview` | Discover |
-| Map an existing codebase                | `@brownfield-discovery` | Discover |
-| Explore data in a database              | `/sql-query`            | Discover |
-| Query my project mem                   | `/mem-query`           | Discover |
-| Design a feature or system              | `/design`               | Design   |
-| Plan implementation steps               | `/feature-plan`         | Design   |
-| Lock down acceptance criteria           | `/sprint-contract`      | Design   |
-| Break a spec into a story backlog       | `@story-master`         | Plan     |
-| Turn a story into an implementation plan| `@story-planner`        | Plan     |
-| Verify and stamp a story as done        | `@close-story`          | Plan     |
-| Build a feature from a spec             | `@senior-developer`     | Build    |
-| Build a data pipeline                   | `@data-engineer`        | Build    |
-| Build a RAG/AI system                   | `@ai-engineer`          | Build    |
-| Fix a small bug or typo                 | `/quick-fix`            | Build    |
-| Debug a failure or error                | `@debug-detective`      | Build    |
-| Refine a rough prompt                   | `@prompt-builder`       | Build    |
-| Review code before shipping             | `/code-review`          | Review   |
-| Audit docs for staleness                | `/doc-garden`           | Review   |
-| Health-check the project mem           | `/mem-lint`            | Review   |
-| Set up CI/CD and deploy                 | `@release-manager`      | Ship     |
-| Analyze code for fragility              | `/pre-mortem`           | Review   |
-| Run a retrospective                     | `/retrospective`        | Ship     |
-| Ingest a source into project mem       | `/mem-ingest`          | Ship     |
+| I want to...                             | Use this                | Phase    |
+| ---------------------------------------- | ----------------------- | -------- |
+| Start a brand new project                | `@greenfield-interview` | Discover |
+| Map an existing codebase                 | `@brownfield-discovery` | Discover |
+| Explore data in a database               | `/sql-query`            | Discover |
+| Query my project mem                     | `/mem-query`            | Discover |
+| Design a feature or system               | `/design`               | Design   |
+| Plan implementation steps                | `/feature-plan`         | Design   |
+| Lock down acceptance criteria            | `/sprint-contract`      | Design   |
+| Break a spec into a story backlog        | `@story-master`         | Plan     |
+| Turn a story into an implementation plan | `@story-planner`        | Plan     |
+| Verify and stamp a story as done         | `@close-story`          | Plan     |
+| Build a feature from a spec              | `@senior-developer`     | Build    |
+| Build a data pipeline                    | `@data-engineer`        | Build    |
+| Build a RAG/AI system                    | `@ai-engineer`          | Build    |
+| Fix a small bug or typo                  | `/quick-fix`            | Build    |
+| Debug a failure or error                 | `@debug-detective`      | Build    |
+| Refine a rough prompt                    | `@prompt-builder`       | Build    |
+| Review code before shipping              | `/code-review`          | Review   |
+| Audit docs for staleness                 | `/doc-garden`           | Review   |
+| Health-check the project mem             | `/mem-lint`             | Review   |
+| Set up CI/CD and deploy                  | `@release-manager`      | Ship     |
+| Analyze code for fragility               | `/pre-mortem`           | Review   |
+| Run a retrospective                      | `/retrospective`        | Ship     |
+| Ingest a source into project mem         | `/mem-ingest`           | Ship     |
 
 ---
 
@@ -178,27 +178,27 @@ Then re-review in another new session.
 
 #### Build Direct path (no Plan phase)
 
-| # | Phase    | Prompt                                                                 | New Session? |
-|---|----------|------------------------------------------------------------------------|--------------|
-| 1 | Discover | `@greenfield-interview I want to build a task tracker web app...`      | Yes          |
-| 2 | Design   | `/design Design the backend API for the task tracker...`               | Yes          |
-| 3 | Contract | `/sprint-contract task-tracker-api`                                    | Yes          |
-| 4 | Build    | `@senior-developer Implement from .copilot/specs/TASK-TRACKER-API...`  | Yes          |
-| 5 | Review   | `/code-review Review src/api/ and src/services/...`                    | Yes          |
-| 6 | Ship     | `@release-manager Set up GitHub Actions CI/CD...`                      | Yes          |
+| #   | Phase    | Prompt                                                                | New Session? |
+| --- | -------- | --------------------------------------------------------------------- | ------------ |
+| 1   | Discover | `@greenfield-interview I want to build a task tracker web app...`     | Yes          |
+| 2   | Design   | `/design Design the backend API for the task tracker...`              | Yes          |
+| 3   | Contract | `/sprint-contract task-tracker-api`                                   | Yes          |
+| 4   | Build    | `@senior-developer Implement from .copilot/specs/TASK-TRACKER-API...` | Yes          |
+| 5   | Review   | `/code-review Review src/api/ and src/services/...`                   | Yes          |
+| 6   | Ship     | `@release-manager Set up GitHub Actions CI/CD...`                     | Yes          |
 
 #### Plan Phase path (recommended for larger specs)
 
-| # | Phase    | Prompt                                                                         | New Session? |
-|---|----------|--------------------------------------------------------------------------------|--------------|
-| 1 | Discover | `@greenfield-interview I want to build a task tracker web app...`              | Yes          |
-| 2 | Design   | `/design Design the backend API for the task tracker...`                       | Yes          |
-| 3 | Contract | `/sprint-contract task-tracker-api`                                            | Yes          |
-| 4 | Plan     | `@story-master Decompose .copilot/specs/TASK-TRACKER-API-SPEC.md into stories` | Yes          |
-| 5 | Plan     | `@story-planner Plan US-001 from .copilot/stories/STORIES.md`                  | Yes (per story) |
-| 6 | Build    | `@senior-developer Build US-001 from .copilot/stories/US-001-PLAN.md`          | Yes (per story) |
-| 7 | Review   | `/code-review Review src/api/ and src/services/...`                            | Yes          |
-| 8 | Ship     | `@close-story US-001` then `@release-manager Set up GitHub Actions CI/CD...`   | Yes          |
+| #   | Phase    | Prompt                                                                         | New Session?    |
+| --- | -------- | ------------------------------------------------------------------------------ | --------------- |
+| 1   | Discover | `@greenfield-interview I want to build a task tracker web app...`              | Yes             |
+| 2   | Design   | `/design Design the backend API for the task tracker...`                       | Yes             |
+| 3   | Contract | `/sprint-contract task-tracker-api`                                            | Yes             |
+| 4   | Plan     | `@story-master Decompose .copilot/specs/TASK-TRACKER-API-SPEC.md into stories` | Yes             |
+| 5   | Plan     | `@story-planner Plan US-001 from .copilot/stories/STORIES.md`                  | Yes (per story) |
+| 6   | Build    | `@senior-developer Build US-001 from .copilot/stories/US-001-PLAN.md`          | Yes (per story) |
+| 7   | Review   | `/code-review Review src/api/ and src/services/...`                            | Yes             |
+| 8   | Ship     | `@close-story US-001` then `@release-manager Set up GitHub Actions CI/CD...`   | Yes             |
 
 > **Key takeaway**: You never copy-paste output between sessions. Agents write files (Project Bible, specs, contracts, stories, plans, code). The next agent reads those files. The file system is the handoff mechanism.
 
@@ -210,7 +210,7 @@ Then re-review in another new session.
 >
 > **Running example**: This is where we ran `@greenfield-interview` for the task tracker app. Output: `.copilot/context/PROJECT_CONTEXT.md`.
 
-### `@greenfield-interview`  -  Start a New Project
+### `@greenfield-interview` - Start a New Project
 
 The agent interviews you one question at a time to produce a full Project Bible.
 
@@ -232,7 +232,7 @@ The agent interviews you one question at a time to produce a full Project Bible.
 
 ---
 
-### `@brownfield-discovery`  -  Map an Existing Codebase
+### `@brownfield-discovery` - Map an Existing Codebase
 
 Use when you inherited a project, joined a team, or have zero documentation.
 
@@ -254,7 +254,7 @@ Use when you inherited a project, joined a team, or have zero documentation.
 
 ---
 
-### `/sql-query`  -  Explore Data
+### `/sql-query` - Explore Data
 
 Use for ad-hoc queries, schema discovery, or generating reports.
 
@@ -278,7 +278,7 @@ Use for ad-hoc queries, schema discovery, or generating reports.
 
 ---
 
-### `/mem-query`  -  Ask Your Project Mem
+### `/mem-query` - Ask Your Project Mem
 
 Use when the answer might already be documented in your team's mem.
 
@@ -304,7 +304,7 @@ Use when the answer might already be documented in your team's mem.
 >
 > **Running example**: New chat session. The Architect reads the Project Bible automatically, then we ran `/design` for the task tracker API. Output: `.copilot/specs/TASK-TRACKER-API-SPEC.md`.
 
-### `/design`  -  Design a Feature or System
+### `/design` - Design a Feature or System
 
 The Architect challenges scope, asks clarifying questions, then produces a full specification.
 
@@ -334,7 +334,7 @@ The Architect challenges scope, asks clarifying questions, then produces a full 
 
 ---
 
-### `/feature-plan`  -  Plan Before Implementing
+### `/feature-plan` - Plan Before Implementing
 
 Produces an actionable checklist without writing code. Good for medium-complexity changes where you want to think before coding.
 
@@ -360,7 +360,7 @@ Produces an actionable checklist without writing code. Good for medium-complexit
 
 ---
 
-### `/sprint-contract`  -  Lock Down Acceptance Criteria
+### `/sprint-contract` - Lock Down Acceptance Criteria
 
 Use after `/design` and before implementation. Creates a testable contract between builder and reviewer.
 
@@ -388,7 +388,7 @@ Use after `/design` and before implementation. Creates a testable contract betwe
 >
 > **Gate 0**: After Design, you decide. `@story-master` to enter the Plan Phase. Or hand the spec directly to a build agent.
 
-### `@story-master`  -  Decompose a Spec into a Story Backlog
+### `@story-master` - Decompose a Spec into a Story Backlog
 
 Reads the spec, groups work into user stories, assigns them to delivery waves, and writes `STORIES.md`.
 
@@ -412,7 +412,7 @@ Reads the spec, groups work into user stories, assigns them to delivery waves, a
 
 ---
 
-### `@story-planner`  -  Plan a Single Story
+### `@story-planner` - Plan a Single Story
 
 Takes one approved story and produces an atomic implementation plan plus a validation checklist.
 
@@ -436,7 +436,7 @@ Takes one approved story and produces an atomic implementation plan plus a valid
 
 ---
 
-### `@close-story`  -  Verify and Stamp a Story Done
+### `@close-story` - Verify and Stamp a Story Done
 
 After a story is built and reviewed, close-story validates all acceptance criteria and stamps the `STORIES.md` row as complete.
 
@@ -464,7 +464,7 @@ After a story is built and reviewed, close-story validates all acceptance criter
 >
 > **Plan Phase path**: If you ran `@story-planner`, point the build agent at `US-{id}-PLAN.md` instead of the spec directly. The plan file is the sole context anchor for that story's build session.
 
-### `@senior-developer`  -  General Features, Bug Fixes, Refactoring
+### `@senior-developer` - General Features, Bug Fixes, Refactoring
 
 Your go-to for most implementation work. Works best when given a spec or clear requirements.
 
@@ -492,7 +492,7 @@ Your go-to for most implementation work. Works best when given a spec or clear r
 
 ---
 
-### `@data-engineer`  -  Data Pipelines, PySpark, dbt, Airflow
+### `@data-engineer` - Data Pipelines, PySpark, dbt, Airflow
 
 Use for anything involving data movement, transformation, or orchestration.
 
@@ -522,7 +522,7 @@ Use for anything involving data movement, transformation, or orchestration.
 
 ---
 
-### `@ai-engineer`  -  RAG, LLM Agents, Embeddings, Azure OpenAI
+### `@ai-engineer` - RAG, LLM Agents, Embeddings, Azure OpenAI
 
 Use for anything involving language models, retrieval, or AI-powered features.
 
@@ -550,7 +550,7 @@ Use for anything involving language models, retrieval, or AI-powered features.
 
 ---
 
-### `/quick-fix`  -  Small, Obvious Fixes
+### `/quick-fix` - Small, Obvious Fixes
 
 Skips the full pipeline. Use for single-file changes under 20 lines with no architectural impact.
 
@@ -574,7 +574,7 @@ Skips the full pipeline. Use for single-file changes under 20 lines with no arch
 
 ---
 
-### `@debug-detective`  -  Debug Failures and Errors
+### `@debug-detective` - Debug Failures and Errors
 
 Use when something is broken and you don't know why. Always paste the actual error output.
 
@@ -606,7 +606,7 @@ sqlalchemy.exc.IntegrityError: UNIQUE constraint failed: orders.reference_id
 
 ---
 
-### `@prompt-builder`  -  Refine a Rough Prompt
+### `@prompt-builder` - Refine a Rough Prompt
 
 Use when you have a vague idea for a prompt and want a polished, production-ready version.
 
@@ -626,7 +626,7 @@ Use when you have a vague idea for a prompt and want a polished, production-read
 
 ---
 
-### `@data-analyst`  -  SQL Queries and Data Exploration
+### `@data-analyst` - SQL Queries and Data Exploration
 
 Use when you need complex SQL queries, schema exploration, or Data Vault querying patterns.
 
@@ -652,7 +652,7 @@ Use when you need complex SQL queries, schema exploration, or Data Vault queryin
 >
 > **Running example**: New chat session. We ran `/code-review` pointing at the implemented code and the original spec. Guardian produced a Gate Report.
 
-### `/code-review`  -  Review Code Before Merging
+### `/code-review` - Review Code Before Merging
 
 ```text
 /code-review Review src/auth/ before we merge to main
@@ -674,7 +674,7 @@ Use when you need complex SQL queries, schema exploration, or Data Vault queryin
 
 ---
 
-### `/doc-garden`  -  Audit Documentation Health
+### `/doc-garden` - Audit Documentation Health
 
 ```text
 /doc-garden Check all skills for broken cross-references and stale version numbers
@@ -692,7 +692,7 @@ Use when you need complex SQL queries, schema exploration, or Data Vault queryin
 
 ---
 
-### `/mem-lint`  -  Health-Check the Project Mem
+### `/mem-lint` - Health-Check the Project Mem
 
 ```text
 /mem-lint Run a health check on the project mem
@@ -712,7 +712,7 @@ Use when you need complex SQL queries, schema exploration, or Data Vault queryin
 >
 > **Running example**: New chat session. We used `@release-manager` to set up CI/CD, then `/retrospective` to capture lessons learned.
 
-### `@release-manager`  -  CI/CD, Deployment, Changelogs
+### `@release-manager` - CI/CD, Deployment, Changelogs
 
 ```text
 @release-manager Set up a GitHub Actions pipeline for lint → test → build → deploy to Azure
@@ -734,7 +734,7 @@ Use when you need complex SQL queries, schema exploration, or Data Vault queryin
 
 ---
 
-### `/retrospective`  -  Learn from the Cycle
+### `/retrospective` - Learn from the Cycle
 
 Run after a feature ships to capture what worked and what didn't.
 
@@ -754,7 +754,7 @@ Run after a feature ships to capture what worked and what didn't.
 
 ---
 
-### `/mem-ingest`  -  Capture Knowledge for Future Sessions
+### `/mem-ingest` - Capture Knowledge for Future Sessions
 
 Use after decisions are made, post-mortems are written, or research is completed.
 
@@ -776,23 +776,23 @@ Use after decisions are made, post-mortems are written, or research is completed
 
 ## Agent Reference Card
 
-| Agent                  | Phase    | Role                                       | Modifies Code? |
-| ---------------------- | -------- | ------------------------------------------ | -------------- |
-| `greenfield-interview` | Discover | Interview for new projects                 | No             |
-| `brownfield-discovery` | Discover | Map existing codebases                     | No             |
-| `architect`            | Design   | System design and specifications           | No             |
-| `story-master`         | Plan     | Decompose spec into story backlog          | No             |
-| `story-planner`        | Plan     | Per-story implementation plan + validation | No             |
-| `close-story`          | Plan/Ship| Verify acceptance criteria, stamp done     | No             |
-| `senior-developer`     | Build    | Features, bug fixes, refactoring           | Yes            |
-| `data-engineer`        | Build    | PySpark, Delta Lake, dbt, Airflow          | Yes            |
-| `ai-engineer`          | Build    | RAG, LLM agents, embeddings, Azure OpenAI  | Yes            |
-| `data-analyst`         | Any      | Natural language to T-SQL (utility)        | No (read-only) |
-| `guardian`             | Review   | Code review, security, performance         | No (read-only) |
-| `debug-detective`      | Build    | Root cause analysis                        | No (proposes)  |
-| `release-manager`      | Ship     | CI/CD, deployment, changelogs              | Yes            |
-| `prompt-builder`       | Build    | Refine rough prompts                       | No             |
-| `researcher`           | (any)    | Fact-checking (internal, not user-invoked) | No             |
+| Agent                  | Phase     | Role                                       | Modifies Code? |
+| ---------------------- | --------- | ------------------------------------------ | -------------- |
+| `greenfield-interview` | Discover  | Interview for new projects                 | No             |
+| `brownfield-discovery` | Discover  | Map existing codebases                     | No             |
+| `architect`            | Design    | System design and specifications           | No             |
+| `story-master`         | Plan      | Decompose spec into story backlog          | No             |
+| `story-planner`        | Plan      | Per-story implementation plan + validation | No             |
+| `close-story`          | Plan/Ship | Verify acceptance criteria, stamp done     | No             |
+| `senior-developer`     | Build     | Features, bug fixes, refactoring           | Yes            |
+| `data-engineer`        | Build     | PySpark, Delta Lake, dbt, Airflow          | Yes            |
+| `ai-engineer`          | Build     | RAG, LLM agents, embeddings, Azure OpenAI  | Yes            |
+| `data-analyst`         | Any       | Natural language to T-SQL (utility)        | No (read-only) |
+| `guardian`             | Review    | Code review, security, performance         | No (read-only) |
+| `debug-detective`      | Build     | Root cause analysis                        | No (proposes)  |
+| `release-manager`      | Ship      | CI/CD, deployment, changelogs              | Yes            |
+| `prompt-builder`       | Build     | Refine rough prompts                       | No             |
+| `researcher`           | (any)     | Fact-checking (internal, not user-invoked) | No             |
 
 ---
 
@@ -800,13 +800,13 @@ Use after decisions are made, post-mortems are written, or research is completed
 
 ### Bad vs. Good
 
-| Bad (vague)                        | Good (specific, actionable)                                                                  |
-| ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| "Fix the bug"                      | "The /api/orders endpoint returns 500 when quantity is 0. Here's the trace: [paste]"         |
-| "Build a pipeline"                 | "Build a PySpark pipeline: read Bronze orders, deduplicate by order_id, write to Silver"     |
-| "Review the code"                  | "Review src/auth/ before merge. Focus on security and input validation"                      |
-| "Design something for users"       | "Design a REST API for multi-tenant task management with isolated data per tenant"           |
-| "Make it faster"                   | "The dashboard query takes 15s. Here's the query and EXPLAIN plan: [paste]"                  |
+| Bad (vague)                  | Good (specific, actionable)                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| "Fix the bug"                | "The /api/orders endpoint returns 500 when quantity is 0. Here's the trace: [paste]"     |
+| "Build a pipeline"           | "Build a PySpark pipeline: read Bronze orders, deduplicate by order_id, write to Silver" |
+| "Review the code"            | "Review src/auth/ before merge. Focus on security and input validation"                  |
+| "Design something for users" | "Design a REST API for multi-tenant task management with isolated data per tenant"       |
+| "Make it faster"             | "The dashboard query takes 15s. Here's the query and EXPLAIN plan: [paste]"              |
 
 ### The Formula
 
@@ -835,5 +835,3 @@ Use after decisions are made, post-mortems are written, or research is completed
 9. **Give context, get quality.** The more you tell the agent (file paths, error messages, constraints, business rules), the better the output.
 10. **Chain agents, don't overload one.** A feature flow looks like: `/design` → `/sprint-contract` → (optional: `@story-master` → `@story-planner`) → `@senior-developer` → `/code-review` → `@release-manager`. Each step feeds the next.
 11. **New chat per phase.** Start a fresh chat session for each pipeline stage. Agents work best with a clean context. Long conversations accumulate noise and degrade quality.
-
-

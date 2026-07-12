@@ -69,8 +69,14 @@ $budgetSeed = [ordered]@{
     total         = 0
     by_agent      = @{}
 }
+# Reset under the same exclusive lock cap-subagent-budget.ps1 uses, closing the
+# TOCTOU window where a concurrent PreToolUse launch could read the half-written
+# file (H-07 fix).
 try {
-    ($budgetSeed | ConvertTo-Json -Depth 3) | Set-Content -Path $budgetPath -Encoding UTF8 -ErrorAction Stop
+    $null = Invoke-MMLockedFileOp -Path $budgetPath -ScriptBlock {
+        param($raw)
+        return ($budgetSeed | ConvertTo-Json -Depth 3)
+    }
 }
 catch { }
 
@@ -87,13 +93,11 @@ else {
 $specPath = Join-Path $projectRoot '.copilot\specs\SPEC.md'
 $reviewPath = Join-Path $projectRoot '.copilot\artifacts\review-report.md'
 $holdoutPath = Join-Path $projectRoot '.copilot\holdout\HOLDOUT.md'
-$featureProgressPath = Join-Path $projectRoot '.copilot\state\FEATURE_PROGRESS.json'
 
 $artifacts = @()
 if (Test-Path $specPath) { $artifacts += 'spec' }
 if (Test-Path $reviewPath) { $artifacts += 'review-report' }
 if (Test-Path $holdoutPath) { $artifacts += 'holdout' }
-if (Test-Path $featureProgressPath) { $artifacts += 'feature-progress' }
 
 # Infer pipeline phase from artifact presence
 $pipelinePhase = if ($artifacts -contains 'review-report') {
@@ -163,7 +167,7 @@ $ctx = @"
 - Pipeline phase: $pipelinePhase
 - Artifacts:     $artifactList
 - Active story:  $storyStatus
-- Hook harness:  v9.0 (14 hooks: quality-gate, scan-secrets, retrospective-check, block-holdout, block-destructive, lint-on-write, auto-format, artifact-manifest, session-context, subagent-context, pre-compact-save, scan-user-prompt, subagent-verify, cap-subagent-budget)
+- Hook harness:  v9.1 (15 hooks: quality-gate, scan-secrets, retrospective-check, block-holdout, block-destructive, lint-on-write, auto-format, artifact-manifest, session-context, subagent-context, pre-compact-save, scan-user-prompt, subagent-verify, cap-subagent-budget, verify-hook-integrity)
 "@
 
 if ($storyWarnings.Count -gt 0) {

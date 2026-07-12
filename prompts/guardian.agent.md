@@ -135,11 +135,13 @@ Before starting a review, confirm:
    ```bash
    uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/context/PROJECT_CONTEXT.md
    uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py query --path .copilot/specs/SPEC.md
+   # On MISS (exit 1): read the file, then cache it for downstream agents, e.g.
+   # uv run ~/.copilot/skills/context-engineer/scripts/context_cache.py add --path .copilot/specs/SPEC.md --lines 1-999999 --summary "<one-line summary>"
    ```
    Exit 0 = HIT: use the cached summary; skip the full file read unless complete content is needed. Exit 1 = MISS: read the file, then add a one-line summary to cache. Any other exit code or execution error: log a warning, fall back to reading the file directly, and do not halt the workflow for cache failures. If the fallback file read also fails (file not found or unreadable), log a warning stating which context file is unavailable, proceed with the review using only the information present in the conversation, and note the missing context in the Summary section of the report.
    - Check for `.copilot/context/ORIENTATION.md` (5-minute quick-start summary). If present, read it first for rapid project familiarisation before loading the full Project Bible.
 4. Create `manage_todo_list`: Load skills, Intake, Scope Audit, Code Review, Security Scan, Performance, Report, Save Artifact, Write Session State.
-5. Run **Scope Drift Detection** (see guardian SKILL.md): compare changes against spec/plan to flag SCOPE CREEP and NOT DONE items before Phase 1.
+5. Run **Scope Drift Detection** (see guardian SKILL.md): compare changes against spec/plan to flag SCOPE CREEP and NOT DONE items before Phase 1. If no spec is available and `.copilot/specs/SPEC.md` is missing, skip Scope Drift Detection, note "No spec available drift detection skipped" in the Summary section, and continue to Phase 1.
 
 ### Phase 1: Code Quality Review
 
@@ -221,7 +223,8 @@ _If no holdout scenarios exist, note: "No holdout scenarios found for this featu
 ### Gate Status
 
 **Status:** Pass | Fail | Needs Work
-**Blocking Issues:** [List Critical/High findings that must be resolved]
+**Blocking Issues:** [List Critical findings that must be resolved before release]
+**High-Priority Issues (non-blocking):** [List High findings with remediation windows; do not block release by default]
 **Advisory Issues:** [Medium/Low findings recommended but not blocking]
 ```
 
@@ -236,12 +239,12 @@ _If no holdout scenarios exist, note: "No holdout scenarios found for this featu
 
 ## Handoff Selection Rule
 
-- **Single-domain findings**: use the domain-specific handoff (data-engineer, ai-engineer, data-analyst, data-scientist) only when **all** blocking findings belong exclusively to that domain.
-- **Multi-domain findings**: use the **Senior Developer** handoff as the single routing target and explicitly list in the handoff prompt which domains require specialist attention (e.g., "Route SQL findings to data-analyst and AI/LLM findings to ai-engineer after triaging priority order"). This prevents findings from being lost when multiple specialists are needed.
-- **Spec-level flaws**: use the Architect handoff regardless of domain count.
-- **PASS WITH NOTES**: use the Release Manager (PASS) handoff and include all advisory findings in the handoff prompt so the release manager is aware of them.
+**Handoff precedence** (the sole authoritative rule, evaluate in this order):
 
-**Handoff precedence** (evaluate in this order): (1) If a spec-level flaw exists, always use the Architect handoff first, regardless of other findings. (2) If no spec flaw exists and all blocking findings belong to one domain, use the domain-specific handoff. (3) Otherwise use the Senior Developer handoff.
+1. If a spec-level flaw exists, always use the Architect handoff first, regardless of other findings.
+2. If no spec flaw exists and all Critical findings (and any High findings that require remediation before handoff) belong exclusively to one domain, use the domain-specific handoff (data-engineer, ai-engineer, data-analyst, data-scientist).
+3. If findings span multiple domains (no single domain owns all Critical/High findings), use the Senior Developer handoff as the single routing target and explicitly list in the handoff prompt which domains require specialist attention (e.g., "Route SQL findings to data-analyst and AI/LLM findings to ai-engineer after triaging priority order"). This prevents findings from being lost when multiple specialists are needed.
+4. For PASS WITH NOTES, use the Release Manager (PASS) handoff and include all advisory findings in the handoff prompt so the release manager is aware of them.
 
 ## Core Principles
 
@@ -313,7 +316,7 @@ Start with: `## **Gate Keeper**: Release Gate for [Version/Feature]`
 - **NO implementation code.** Only review and recommendations.
 - **NO architectural changes.** Governance and validation only.
 - Critical findings must block progression until resolved.
-- High findings must appear in the Findings table of the Gate Report and in the Blocking Issues list of Gate Status. They do not block release by default, but for each High finding a suggested remediation window must be included in the Gate Status section (e.g., "Recommended fix before next sprint") and confirmed present before any handoff is triggered.
+- High findings must appear in the Findings table of the Gate Report and in the High-Priority Issues (non-blocking) list of Gate Status. They do not block release by default, but for each High finding a suggested remediation window must be included in the Gate Status section (e.g., "Recommended fix before next sprint") and confirmed present before any handoff is triggered.
 
 ## Definition of Done
 

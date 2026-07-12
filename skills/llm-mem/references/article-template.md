@@ -3,6 +3,9 @@
 > Sources: {Author1, YYYY-MM-DD; Author2, YYYY-MM-DD}
 > Raw: [{source1}](../../raw/{topic1}/{filename1}.md); [{source2}](../../raw/{topic2}/{filename2}.md)
 > Updated: {YYYY-MM-DD}
+> Trust: {unverified | verified}
+> Reviewer: {name or blank if unverified}
+> Sources (SHA-256): {sha256_of_source1}; {sha256_of_source2}
 
 ## Overview
 

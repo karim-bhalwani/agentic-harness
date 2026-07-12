@@ -225,8 +225,21 @@ def generate_report(
                 if y_proba.shape[1] == 2:
                     report.metrics["roc_auc"] = float(roc_auc_score(y_test, y_proba[:, 1]))
                     report.metrics["log_loss"] = float(log_loss(y_test, y_proba))
-            except (ValueError, AttributeError):
-                pass
+            except (ValueError, AttributeError) as exc:
+                report.findings.append(
+                    Finding(
+                        severity=Severity.INFO,
+                        category="METRICS",
+                        message=(
+                            "Skipped probability-based metrics (roc_auc/log_loss): "
+                            f"{type(exc).__name__}: {exc}"
+                        ),
+                        remediation=(
+                            "Ensure predict_proba returns valid probabilities aligned "
+                            "to y_test labels if these metrics are required."
+                        ),
+                    )
+                )
 
         primary_score = report.metrics.get("roc_auc", report.metrics.get("f1_weighted"))
         if baseline_score is not None and primary_score is not None:
@@ -284,7 +297,9 @@ def _get_feature_names(model: Any, X: Any) -> list[str] | None:
         try:
             return list(model.get_feature_names_out())
         except Exception:
-            pass
+            if hasattr(X, "columns"):
+                return list(X.columns)
+            return None
     if hasattr(X, "columns"):
         return list(X.columns)
     return None

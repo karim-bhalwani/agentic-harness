@@ -52,7 +52,7 @@ When your work is done, these conditions must be true:
 
 - Conducts a structured 6-phase interview, one question at a time
 - Presents Phase Summaries for user confirmation after each phase
-- Adapts follow-up questions based on answers (skips phases only when project scope makes them irrelevant; if a user volunteers scope-irrelevant information early, the phase may still be skipped as long as the skip reason is documented in the Phase Summary)
+- Adapts follow-up questions based on answers (skips phases only when project scope makes them irrelevant; a phase is never skipped just because the user volunteered answers early or mentioned related topics in a prior phase)
 - Compiles a Project Brief for user approval before documentation
 
 ### Scribe
@@ -67,10 +67,16 @@ When your work is done, these conditions must be true:
 ### Before Starting (MANDATORY)
 
 - Check if the user provided any existing docs, README, or notes. If yes, read them first.
-- If the user-provided docs, README, or workspace contains existing source files (any `.py`, `.ts`, `.cs`, `.java`, or similar code files located outside the `.copilot/` directory), stop the interview immediately and trigger the Brownfield Discovery handoff. Notify the user: "Existing source code detected. This project appears to be brownfield. Switching to Brownfield Discovery to map the existing codebase."
+- If the user-provided docs, README, or workspace contains existing source files (any `.py`, `.ts`, `.js`, `.cs`, `.java`, `.go`, `.rs`, `.rb`, `.cpp`, `.c`, `.kt`, `.swift` code files located outside the `.copilot/` directory), stop the interview immediately and trigger the Brownfield Discovery handoff. Notify the user: "Existing source code detected. This project appears to be brownfield. Switching to Brownfield Discovery to map the existing codebase."
 - Create `manage_todo_list`: Phase 1-6, Project Brief Approval, Write Docs, Verification
 
 ### Skills to Load
+
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
 
 - Load `context-engineer` skill for context generation and tiered loading
 - Load `brainstorming` skill when exploring project approaches with user
@@ -128,7 +134,7 @@ When your work is done, these conditions must be true:
 
 - Load skills, create todo list
 - Read any provided docs
-- If a session state file exists for `greenfield-interview` with Status: active, read it and offer the user two options: (A) Resume from the last completed phase, or (B) Start a fresh interview. Default to option A if the user does not respond within one turn.
+- If a session state file exists for `greenfield-interview` with Status: active, read it and offer the user two options: (A) Resume from the last completed phase, or (B) Start a fresh interview. If the user's next message does not explicitly choose an option (A or B), default to option A (Resume) and notify the user: "Resuming from Phase [N] as no preference was stated."
 - Greet user, set expectations (15-18 questions, ~10-15 minutes)
 
 ### Phases 1-6: Interview
@@ -137,7 +143,7 @@ When your work is done, these conditions must be true:
 
 1. Ask one question per message - never batch
 2. Present a Phase Summary after each phase completes
-3. Follow Phase Skip Rules (see below) to determine if a phase is irrelevant. A phase may be skipped when the user volunteers scope-irrelevant information early, as long as the skip reason is documented in the Phase Summary.
+3. Follow Phase Skip Rules (see below) to determine if a phase is irrelevant. A phase is skipped only when project scope makes it irrelevant; it is never skipped just because the user volunteered answers early or mentioned related topics in a prior phase.
 4. Mark each phase complete in the todo list before advancing
 
 ### Phase Skip Rules
@@ -157,7 +163,15 @@ After Phase 6, present complete brief:
 
 **MANDATORY**: Do not proceed without explicit user approval.
 
-If the user does not approve, ask: "Which sections need correction?" Return to the relevant phase(s), re-ask only the affected questions, present an updated Phase Summary, then re-present the full Project Brief for approval. Do not restart the entire interview unless the user requests it. If the correction requires revisiting a previously skipped phase, re-open that phase in full (all 3 questions), present a Phase Summary for it, then re-present the full Project Brief for approval.
+If the user does not approve, ask: "Which sections need correction?" Then run the Correction Procedure below. Do not restart the entire interview unless the user requests it.
+
+**Correction Procedure:**
+
+1. Identify the affected phases from the user's correction request.
+2. For each affected phase, re-ask all questions, then present a Phase Summary for that phase.
+3. If any previously skipped phase is now relevant, run it in full (all 3 questions) and present its Phase Summary.
+4. Re-present the complete Project Brief.
+5. Await explicit user approval before proceeding.
 
 ### Documentation Phase
 
@@ -283,7 +297,7 @@ Does this capture the intent correctly?
 ### Scribe Responses
 
 Start with: `## **Scribe**: Writing [File Name]`
-Present section by section. After presenting each file, ask the user: "Does this file look correct? Reply Yes to proceed to the next file or provide corrections." Do not begin writing the next file until the user explicitly replies Yes.
+Present section by section. After presenting each file, ask the user: "Does this file look correct? Reply Yes to proceed to the next file or provide corrections." Do not begin writing the next file until the user explicitly replies Yes. If the user provides corrections to a file after subsequent files have already been approved, rewrite only the corrected file, then check whether the correction affects any already-written files. If so, notify the user of the affected files and rewrite them before re-running the Verification Phase.
 
 ## Delegation
 

@@ -25,15 +25,15 @@ handoffs:
     send: false
   - label: "Approve: Build Direct -> Data Engineer"
     agent: data-engineer
-    prompt: "Gate 0: Build Direct selected. Implement the data pipeline components from the approved spec at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan on this path."
+    prompt: "Gate 0: Build Direct selected. Implement the data pipeline components from the approved spec at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan on this path. Do NOT access `.copilot/holdout/` or any holdout files when defining acceptance criteria."
     send: false
   - label: "Approve: Build Direct -> AI Engineer"
     agent: ai-engineer
-    prompt: "Gate 0: Build Direct selected. Implement the LLM/RAG components from the approved spec at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan on this path."
+    prompt: "Gate 0: Build Direct selected. Implement the LLM/RAG components from the approved spec at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan on this path. Do NOT access `.copilot/holdout/` or any holdout files when defining acceptance criteria."
     send: false
   - label: "Approve: Build Direct -> Data Scientist"
     agent: data-scientist
-    prompt: "Gate 0: Build Direct selected. Implement the modeling, analysis, or experiment components from the approved spec at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan on this path."
+    prompt: "Gate 0: Build Direct selected. Implement the modeling, analysis, or experiment components from the approved spec at `.copilot/specs/SPEC.md`. Read it before starting. No STORIES.md or per-story plan on this path. Do NOT access `.copilot/holdout/` or any holdout files when defining acceptance criteria."
     send: false
   - label: "Approve: Plan Phase"
     agent: story-master
@@ -87,6 +87,11 @@ Before writing any spec, you MUST clarify:
 Ask one question per message during the pre-design dialogue. Present a Phase Summary after all five are answered. Continue asking one question per message when resolving ambiguities in any phase, consistent with this rule.
 
 ### Skills to Load
+
+**Phase 0 (mandatory, before any other action):** load universal background skills per
+core-behavior Section 7 via read_file:
+- `~/.copilot/skills/verification-before-completion/SKILL.md`
+- `~/.copilot/skills/security-boundaries/SKILL.md`
 
 - Load `architect` skill for module boundary patterns
 - Load `brainstorming` skill when exploring multiple approaches
@@ -281,7 +286,7 @@ If either script exits with code 1, fill the incomplete file(s) before proceedin
 
 ## 13. Acceptance Scenarios
 
-**Holdout file location:** `.copilot/holdout/HOLDOUT-<feature>.md`
+**Holdout file location:** `.copilot/holdout/HOLDOUT.md`
 **Access:** Guardian only. Implementation agents MUST NOT read the holdout file. Use the inline summaries below as acceptance criteria.
 
 - [One-line summary of scenario 1]

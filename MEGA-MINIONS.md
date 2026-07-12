@@ -2,7 +2,7 @@
 
 **Domain:** Data + AI Engineering  
 **Your AI-Powered Development Crew for VS Code**  
-**16 Agents • 26 Skills • 31 Prompts (16 agent definitions + 15 invocation templates) • 14 Hooks • 6-Phase Pipeline**
+**16 Agents • 26 Skills • 32 Prompts (16 agent definitions + 16 invocation templates) • 15 Hooks • 6-Phase Pipeline**
 
 ```text
   ╔╦╗╔═╗╔═╗╔═╗  ╔╦╗╦╔╗╔╦╔═╗╔╗╔╔═╗
@@ -18,7 +18,7 @@
 
 ## Welcome to the Team
 
-The **Mega Minions** are a collection of 16 custom AI agents, 26 specialized skills, 16 parameterized prompt files, and 14 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
+The **Mega Minions** are a collection of 16 custom AI agents, 26 specialized skills, 16 parameterized prompt files, and 15 automation hooks built for GitHub Copilot in VS Code. Together, they form a multi-agent development crew where each minion has a specific role, clear responsibilities, and knows exactly who to hand work off to next.
 
 Think of them as a squad of specialists, not a single jack-of-all-trades. The Architect draws the blueprints. The Senior Developer writes the code. The Guardian reviews it. The Release Manager ships it. Each one stays in their lane and passes the baton when it is time.
 
@@ -42,10 +42,10 @@ Think of them as a squad of specialists, not a single jack-of-all-trades. The Ar
 
 The prompts directory contains two file types that work together:
 
-- **`.agent.md` files (16)** — Full agent definitions with complete frontmatter (tools, model, handoffs), intent contracts, personas, and process workflows. These are the canonical agent definitions.
-- **`.prompt.md` files (15)** — Lightweight invocation templates that route to a specific agent via the `agent:` frontmatter field. These provide parameterized entry points (slash commands) for common tasks like `/quick-fix`, `/code-review`, `/sql-query`, and `/design`.
+- **`.agent.md` files (16)** - Full agent definitions with complete frontmatter (tools, model, handoffs), intent contracts, personas, and process workflows. These are the canonical agent definitions.
+- **`.prompt.md` files (16)** - Lightweight invocation templates that route to a specific agent via the `agent:` frontmatter field. These provide parameterized entry points (slash commands) for common tasks like `/quick-fix`, `/code-review`, `/sql-query`, and `/design`.
 
-Both types count toward the "31 Prompts" total. The `.agent.md` files define *who* the agent is; the `.prompt.md` files define *how* users invoke it.
+Both types count toward the "32 Prompts" total. The `.agent.md` files define _who_ the agent is; the `.prompt.md` files define _how_ users invoke it.
 
 ---
 
@@ -445,24 +445,24 @@ Both routes use the same underlying Minions. Prompt files are just pre-wired, op
 
 Use this matrix to find the prompt file that maps to a given agent (or vice versa). Prompts not listed are workflow-only (no single owning agent).
 
-| Prompt File          | Primary Agent       | Use Case                                                    |
-| -------------------- | ------------------- | ----------------------------------------------------------- |
-| `/start-here`        | (orientation)       | First-time setup; routes to the right agent                 |
-| `/design`            | `architect`         | Produce a SPEC for new functionality                        |
-| `/feature-plan`      | `story-planner`     | Decompose an approved spec into a task checklist            |
-| `/quick-fix`         | `senior-developer`  | Small, low-risk change; skips full pipeline                 |
-| `/code-review`       | `guardian`          | Read-only review of a PR / branch / file set                |
-| `/lean-review`       | `guardian`          | Lightweight review for trivial diffs                        |
-| `/pre-mortem`        | `architect`         | Surface failure modes before implementation                 |
-| `/retrospective`     | `release-manager`   | Post-ship retro and lessons-learned capture                 |
-| `/sprint-contract`   | `story-master`      | Negotiate the scope and DoD for an upcoming wave            |
-| `/sql-query`         | `data-analyst`      | Natural language → optimized T-SQL                          |
-| `/data-science`      | `data-scientist`    | EDA, modeling, forecasting, experiment design               |
-| `/data-narrative`    | `data-scientist`    | Turn an analysis into a stakeholder-ready narrative         |
-| `/doc-garden`        | (any)               | Documentation cleanup and link hygiene pass                 |
-| `/mem-ingest`        | (any)               | Add durable knowledge to the project mem                    |
-| `/mem-query`         | (any)               | Query the project mem before acting                         |
-| `/mem-lint`          | (any)               | Audit mem health and surface stale entries                  |
+| Prompt File        | Primary Agent      | Use Case                                            |
+| ------------------ | ------------------ | --------------------------------------------------- |
+| `/start-here`      | (orientation)      | First-time setup; routes to the right agent         |
+| `/design`          | `architect`        | Produce a SPEC for new functionality                |
+| `/feature-plan`    | `architect`        | Generate an atomic implementation plan / checklist  |
+| `/quick-fix`       | `senior-developer` | Small, low-risk change; skips full pipeline         |
+| `/code-review`     | `guardian`         | Read-only review of a PR / branch / file set        |
+| `/lean-review`     | `guardian`         | Lightweight review for trivial diffs                |
+| `/pre-mortem`      | `guardian`         | Surface failure modes before implementation         |
+| `/retrospective`   | `architect`        | Post-ship retro and lessons-learned capture         |
+| `/sprint-contract` | `architect`        | Negotiate the scope and DoD before implementation   |
+| `/sql-query`       | `data-analyst`     | Natural language → optimized T-SQL                  |
+| `/data-science`    | `data-scientist`   | EDA, modeling, forecasting, experiment design       |
+| `/data-narrative`  | `data-scientist`   | Turn an analysis into a stakeholder-ready narrative |
+| `/doc-garden`      | `guardian`         | Documentation cleanup and link hygiene pass         |
+| `/mem-ingest`      | `ai-engineer`      | Add durable knowledge to the project mem            |
+| `/mem-query`       | `ai-engineer`      | Query the project mem before acting                 |
+| `/mem-lint`        | `ai-engineer`      | Audit mem health and surface stale entries          |
 
 Agents without a dedicated prompt file (`brownfield-discovery`, `greenfield-interview`, `close-story`, `debug-detective`, `ai-engineer`, `data-engineer`, `prompt-builder`, `researcher`) are invoked directly from the agent dropdown or via `@agent-name` mentions.
 
@@ -527,24 +527,27 @@ Every AI model has a **context window**, a limited amount of text it can hold in
 
 ## Know Your Hooks
 
-The hook harness (`hooks/`, 14 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
+The hook harness (`hooks/`, 15 PS1 scripts) is the **enforcement layer** of the Mega Minions. Where agent instructions ask, hooks enforce - structurally, at the platform level, below the model.
 
 Copy the `hooks/` directory to `~/.copilot/hooks/` to activate them. They fire automatically on VS Code agent lifecycle events.
 
-| Hook | Event | What It Does |
-| ---- | ----- | ------------ |
-| `quality-gate.ps1` | `Stop` | Runs lint + typecheck before the agent declares done. Blocks completion if the project's quality commands fail. |
-| `scan-secrets.ps1` | `Stop` | Scans all staged files for credentials, API keys, and secret patterns. Blocks (or warns) before anything leaves the session. |
-| `block-destructive.ps1` | `PreToolUse` | Intercepts `run_in_terminal` calls and blocks dangerous commands: `rm -rf`, `Remove-Item -Recurse`, `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, and more. Allows temp-path bypasses and an allowlist escape hatch. |
-| `scan-user-prompt.ps1` | `UserPromptSubmit` | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them. |
-| `lint-on-write.ps1` | `PreToolUse` | Runs the project linter on any file the agent is about to write. Catches style and syntax errors before they land. |
-| `auto-format.ps1` | `PostToolUse` | Runs the project formatter on files the agent just wrote. Keeps diffs clean without agent involvement. |
-| `artifact-manifest.ps1` | `PostToolUse` | Appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` for every agent file write (timestamp, agent, tool, path, role). Gives future sessions a cheap grep-able index of produced artifacts. |
-| `session-context.ps1` | `SessionStart` | Injects Project Bible path, active story, branch, last commit, Python version, and pipeline phase into the agent's startup context. |
-| `subagent-context.ps1` | `SubagentStart` | Passes project root, active story, and pipeline phase to each subagent at launch, so delegated agents start with the right context. |
-| `subagent-verify.ps1` | `SubagentStop` | After a subagent finishes, runs the relevant `verify_*.py` script to confirm expected artifacts (spec, story backlog, plan, review report, session state) actually landed and are not stubs. Blocks if verification fails. |
-| `pre-compact-save.ps1` | `PreCompact` | Writes `.copilot/state/SESSION_STATE.md` before VS Code compacts the conversation. Preserves enough context to resume the session. |
-| `block-holdout.ps1` | `PreToolUse` | Prevents implementation agents from reading `.copilot/holdout/` acceptance scenarios - the blind-evaluation layer stays blind until Guardian runs. |
+| Hook                    | Event              | What It Does                                                                                                                                                                                                                                    |
+| ----------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quality-gate.ps1`      | `Stop`             | Runs lint + typecheck before the agent declares done. Blocks completion if the project's quality commands fail.                                                                                                                                 |
+| `scan-secrets.ps1`      | `Stop`             | Scans all staged files for credentials, API keys, and secret patterns. Blocks (or warns) before anything leaves the session.                                                                                                                    |
+| `block-destructive.ps1` | `PreToolUse`       | Intercepts `run_in_terminal` calls and blocks dangerous commands: `rm -rf`, `Remove-Item -Recurse`, `DROP TABLE`, `git push --force`, `reg delete`, `diskpart`, `cipher /w`, and more. Allows temp-path bypasses and an allowlist escape hatch. |
+| `scan-user-prompt.ps1`  | `UserPromptSubmit` | Scans incoming user prompts for prompt-injection markers and embedded credentials before the agent processes them.                                                                                                                              |
+| `lint-on-write.ps1`     | `PreToolUse`       | Runs the project linter on any file the agent is about to write. Catches style and syntax errors before they land.                                                                                                                              |
+| `auto-format.ps1`       | `PostToolUse`      | Runs the project formatter on files the agent just wrote. Keeps diffs clean without agent involvement.                                                                                                                                          |
+| `artifact-manifest.ps1` | `PostToolUse`      | Appends a JSONL entry to `.copilot/state/artifact-manifest.jsonl` for every agent file write (timestamp, agent, tool, path, role). Gives future sessions a cheap grep-able index of produced artifacts.                                         |
+| `session-context.ps1`   | `SessionStart`     | Injects Project Bible path, active story, branch, last commit, Python version, and pipeline phase into the agent's startup context.                                                                                                             |
+| `subagent-context.ps1`  | `SubagentStart`    | Passes project root, active story, and pipeline phase to each subagent at launch, so delegated agents start with the right context.                                                                                                             |
+| `subagent-verify.ps1`   | `SubagentStop`     | After a subagent finishes, runs the relevant `verify_*.py` script to confirm expected artifacts (spec, story backlog, plan, review report, session state) actually landed and are not stubs. Blocks if verification fails.                      |
+| `pre-compact-save.ps1`  | `PreCompact`       | Writes `.copilot/state/SESSION_STATE.md` before VS Code compacts the conversation. Preserves enough context to resume the session.                                                                                                              |
+| `block-holdout.ps1`     | `PreToolUse`       | Prevents implementation agents from reading `.copilot/holdout/` acceptance scenarios - the blind-evaluation layer stays blind until Guardian runs.                                                                                              |
+| `cap-subagent-budget.ps1` | `PreToolUse`     | Enforces per-session caps on subagent launches (default 30 total / 10 Researcher) to prevent runaway fan-out and token burn. Denies `runSubagent` past budget.                                                                             |
+| `retrospective-check.ps1` | `Stop`            | Counts completed workflow cycles and emits a visible reminder when a `/retrospective` is due. Non-blocking nudge.                                                                                                                                                            |
+| `verify-hook-integrity.ps1` | `SessionStart`  | Verifies the SHA-256 manifest of hook files at session start; reports (detect-only) if tampered. Also runnable manually / in CI.                                                                                                                                            |
 
 **Circuit breakers**: every hook respects an escape hatch env var (e.g. `SKIP_DESTRUCTIVE_GUARD=true`, `SKIP_SUBAGENT_VERIFY=true`) for emergencies. Use them deliberately; do not leave them set.
 
@@ -562,14 +565,14 @@ The Mega Minions are not magic. They are **well-structured prompts that guide AI
 
 3. **Hallucination risk** - solved by evidence gates (verification-before-completion), read-only review (Guardian), and the researcher agent for fact-checking.
 
-4. **Quality contract reliability** - solved by the hook harness (14 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, post-subagent artifact verification, and artifact manifest logging at the platform level. Instructions ask; hooks enforce.
+4. **Quality contract reliability** - solved by the hook harness (15 PS1 scripts in `hooks/`), which enforces lint gates, formatting, secrets scanning, destructive command blocking, prompt-injection detection, post-subagent artifact verification, and artifact manifest logging at the platform level. Instructions ask; hooks enforce.
 
 The beauty is in the composition. No single Mega Minion is extraordinary on its own. But when they work together (discovery feeds design, design feeds implementation, implementation feeds review, review feeds release) the whole becomes significantly greater than the sum of the parts.
 
-This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 14 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
+This approach has a name: **harness engineering**. Just as prompt engineering refined how we talk to models, and context engineering refined what models know, harness engineering refines the environments, feedback loops, and control systems that keep agents reliable. The Mega Minions are a harness. The Project Bible is its context layer. The spec-first pipeline and Guardian review are its constraint layer. The doc-garden prompt and retrospective process are its maintenance layer. The hook harness (`hooks/`, 15 PS1 scripts) is its enforcement layer: quality gates, destructive command blocking, secrets scanning, prompt-injection detection, and post-subagent artifact verification that run structurally at the platform level below the model. Instructions ask; hooks enforce.
 
 **Give them context. Let them specialize. Verify their output. Ship with confidence.**
 
 ---
 
-_The Mega Minions, 16 agents, 26 skills, 16 prompts, 14 hooks, one team._
+_The Mega Minions, 16 agents, 26 skills, 32 prompts (16 agents + 16 templates), 15 hooks, one team._

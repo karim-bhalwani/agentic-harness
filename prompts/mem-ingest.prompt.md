@@ -6,7 +6,7 @@ tools:
   - read
   - search
   - edit
-  - web/fetch
+  - web
 ---
 
 > Version: 9.0 | Updated: 01-July-2026 | Architect: Karim Bhalwani |

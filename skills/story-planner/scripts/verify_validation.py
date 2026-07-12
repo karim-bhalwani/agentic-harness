@@ -36,6 +36,13 @@ TASK_MATRIX_COLUMNS: list[str] = [
     "Status",
 ]
 
+
+def _is_todo_placeholder(val: str) -> bool:
+    """Allow only explicit TODO placeholder formats."""
+    normalized = val.strip()
+    return normalized == "TODO" or normalized.startswith("TODO:")
+
+
 PLAN_CHECKER_COLUMNS: list[str] = [
     "Iteration",
     "(a) AC coverage",
@@ -177,7 +184,7 @@ def verify_validation(path: Path) -> list[Problem]:
 
             if 0 <= status_idx < len(row):
                 val = row[status_idx].strip()
-                if val and val not in VALID_STATUSES and "TODO" not in val:
+                if val and val not in VALID_STATUSES and not _is_todo_placeholder(val):
                     problems.append(
                         Problem(
                             problem=(f"Task Validation Matrix has invalid Status value: '{val}'."),
@@ -187,7 +194,7 @@ def verify_validation(path: Path) -> list[Problem]:
 
             if 0 <= infra_idx < len(row):
                 val = row[infra_idx].strip()
-                if val and val not in VALID_INFRASTRUCTURE and "TODO" not in val:
+                if val and val not in VALID_INFRASTRUCTURE and not _is_todo_placeholder(val):
                     problems.append(
                         Problem(
                             problem=(f"Task Validation Matrix has invalid Infrastructure value: '{val}'."),

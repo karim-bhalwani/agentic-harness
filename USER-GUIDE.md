@@ -14,7 +14,7 @@ Your architect has handed you a standardised AI development system built into Gi
 - **16 custom AI agents**, specialist assistants for each phase of development
 - **26 skills**, knowledge packs agents load automatically when needed
 - **16 prompt shortcuts**, slash commands that wire structured workflows to the right agent
-- **14 hooks**, automation scripts for quality gates, secret scanning, holdout access enforcement, destructive command blocking, prompt-injection detection, post-subagent artifact verification, retrospective reminders, subagent budget caps, and artifact manifest logging
+- **15 hooks**, automation scripts (all registered in `hooks.json`, including `verify-hook-integrity.ps1` as a SessionStart integrity check) for quality gates, secret scanning, holdout access enforcement, destructive command blocking, prompt-injection detection, post-subagent artifact verification, retrospective reminders, subagent budget caps, and artifact manifest logging
 - **Reference documents**: philosophy, architecture, and comprehensive pattern guides for the whole team
 
 This is your team's **standard**. Everyone uses the same agents, the same patterns, and the same quality bar. That is the point.
@@ -51,11 +51,11 @@ The skills and prompts need to be copied to two specific locations on your machi
 
 #### Where things go
 
-| What                                    | Source (unzipped folder) | Destination on your machine            |
-| --------------------------------------- | ------------------------ | -------------------------------------- |
-| **Prompts** (agents + shortcuts)        | `prompts/`               | `%APPDATA%\Code\User\prompts\`      |
-| **Skills** (knowledge packs)            | `skills/`                | `%USERPROFILE%\.copilot\skills\`    |
-| **Instructions** (coding standards)     | `instructions/`          | `%USERPROFILE%\.copilot\instructions\` |
+| What                                | Source (unzipped folder) | Destination on your machine            |
+| ----------------------------------- | ------------------------ | -------------------------------------- |
+| **Prompts** (agents + shortcuts)    | `prompts/`               | `%APPDATA%\Code\User\prompts\`         |
+| **Skills** (knowledge packs)        | `skills/`                | `%USERPROFILE%\.copilot\skills\`       |
+| **Instructions** (coding standards) | `instructions/`          | `%USERPROFILE%\.copilot\instructions\` |
 
 **Full paths on Windows:**
 
@@ -136,14 +136,14 @@ The work flows in a pipeline:
 Discover  →  Design  →  [Plan]  →  Build  →  Review  →  Ship
 ```
 
-| Stage        | Who You Call                                          | What They Do                                    |
-| ------------ | ----------------------------------------------------- | ----------------------------------------------- |
-| **Discover** | `greenfield-interview` or `brownfield-discovery`      | Document what exists / what you plan to build   |
-| **Design**   | `architect`                                           | Turn requirements into a detailed specification |
-| **Plan**     | `story-master`, then `story-planner`                  | Decompose SPEC into stories and per-story plans (Gate 0: Plan Phase path only) |
-| **Build**    | `senior-developer`, `data-engineer`, `data-scientist`, or `ai-engineer` | Implement from the spec                         |
-| **Review**   | `guardian`                                            | Read-only audit for quality and security        |
-| **Ship**     | `release-manager`                                     | CI/CD, changelogs, deployment                   |
+| Stage        | Who You Call                                                            | What They Do                                                                   |
+| ------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Discover** | `greenfield-interview` or `brownfield-discovery`                        | Document what exists / what you plan to build                                  |
+| **Design**   | `architect`                                                             | Turn requirements into a detailed specification                                |
+| **Plan**     | `story-master`, then `story-planner`                                    | Decompose SPEC into stories and per-story plans (Gate 0: Plan Phase path only) |
+| **Build**    | `senior-developer`, `data-engineer`, `data-scientist`, or `ai-engineer` | Implement from the spec                                                        |
+| **Review**   | `guardian`                                                              | Read-only audit for quality and security                                       |
+| **Ship**     | `release-manager`                                                       | CI/CD, changelogs, deployment                                                  |
 
 You do not skip stages. The Architect produces a spec before anyone writes code. When Gate 0 routes to Plan Phase (3 or more deliverables, shared dependencies, or a Scope change), the PLAN phase runs before any BUILD agent touches code. The Guardian reviews before anything ships. It is the discipline that makes AI-generated code reliable.
 
@@ -314,12 +314,12 @@ After the Architect produces `SPEC.md` and you review it at Gate 0, you choose w
 
 ### Build Direct vs Plan Phase: Which Path?
 
-| Signal | Recommended path |
-| ------ | ---------------- |
+| Signal                                                         | Recommended path                                                              |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `Scope: HOLD`, 2 or fewer deliverables, no shared dependencies | Build Direct - pick the matching specialist (Senior Dev, Data Eng, or AI Eng) |
-| `Scope: HOLD`, 3 or more deliverables, or shared dependencies | Plan Phase |
-| `Scope: EXPANSION` or `REDUCTION` (any size) | Plan Phase |
-| Used `/feature-plan` directly (no `SPEC.md` exists) | Build Direct |
+| `Scope: HOLD`, 3 or more deliverables, or shared dependencies  | Plan Phase                                                                    |
+| `Scope: EXPANSION` or `REDUCTION` (any size)                   | Plan Phase                                                                    |
+| Used `/feature-plan` directly (no `SPEC.md` exists)            | Build Direct                                                                  |
 
 These are the Architect's recommendations only. You have final say by clicking the button that matches your intent at Gate 0.
 
@@ -378,11 +378,11 @@ Always share the Project Bible path. Always paste the spec.
 The more context you give, the better the output.
 ```
 
-> **Data Analyst routing:** `data-analyst` is a utility agent, not a BUILD phase specialist. Reach it via `@data-analyst` (direct), `/sql-query`, a Guardian rework handoff, or peer delegation from Senior Developer or Data Engineer. The Architect no longer routes to Data Analyst at Gate 0 in v8.0 (changed per RD-1).
+> **Data Analyst routing:** `data-analyst` is a utility agent, not a BUILD phase specialist. Reach it via `@data-analyst` (direct), `/sql-query`, a Guardian rework handoff, or peer delegation from Senior Developer or Data Engineer. The Architect no longer routes to Data Analyst at Gate 0 (changed per RD-1).
 
 ## How Skills Work (You Do Not Touch These)
 
-Skills are knowledge packs  -  folders of instructions, scripts, and examples  -  that agents load automatically when relevant. You will never need to type a skill name to benefit from them. For example, when you ask Guardian to audit AI code, it automatically loads the `genai-security` skill containing the OWASP Top 10 for LLMs. You did not ask for it; the agent knew it was relevant.
+Skills are knowledge packs - folders of instructions, scripts, and examples - that agents load automatically when relevant. You will never need to type a skill name to benefit from them. For example, when you ask Guardian to audit AI code, it automatically loads the `genai-security` skill containing the OWASP Top 10 for LLMs. You did not ask for it; the agent knew it was relevant.
 
 Six skills operate entirely in the background:
 
@@ -392,7 +392,7 @@ Six skills operate entirely in the background:
 | `verification-before-completion` | Forces the agent to prove work is done (run the tests, show the output) before claiming done |
 | `holdout-validation`             | Keeps acceptance criteria hidden from implementation agents to prevent gaming of tests       |
 | `context-engineer`               | Project Bible generation, tiered context loading, and session state management               |
-| `security-boundaries`            | Prompt injection defense  -  treats all file and tool content as data, never instructions      |
+| `security-boundaries`            | Prompt injection defense - treats all file and tool content as data, never instructions      |
 | `task-routing`                   | 6-check delegation protocol ensuring agents make efficient, well-reasoned hand-off decisions |
 
 For a full skills breakdown and how they compose, see [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -544,13 +544,13 @@ Agents are instructed not to claim work is done without running verification. If
 
 **Q: Do I need to read all the `.md` files in this shared folder?**
 
-Not immediately. Start with this guide and `mega-minions.md` for the agent roster. Read `CORE_PRINCIPLES.md` when you want to understand why the system is designed the way it is. The skill files in `skills/` are for agents, not for you to read manually.
+Not immediately. Start with this guide and `MEGA-MINIONS.md` for the agent roster. Read `CORE_PRINCIPLES.md` when you want to understand why the system is designed the way it is. The skill files in `skills/` are for agents, not for you to read manually.
 
 ---
 
 **Q: Can I just use Copilot normally without invoking agents?**
 
-Yes. The team's standards are defined in the `instructions/` folder (`core-behavior.instructions.md`, `python-standards.instructions.md`, `sql-standards.instructions.md`, `yaml-standards.instructions.md`, `powershell-standards.instructions.md`, `typescript-standards.instructions.md`, `markdown-standards.instructions.md`, and `json-standards.instructions.md`). Once you have copied these files to `.copilot\instructions\` (as described in Step 4), they apply automatically to **all** Copilot interactions in your editor, even if you don't explicitly switch to a Mega Minion agent. However, using the specific agents will provide much deeper reasoning and specialized tools for their respective tasks.
+Yes. The team's standards are defined in the `instructions/` folder (`core-behavior.instructions.md`, `python-standards.instructions.md`, `sql-standards.instructions.md`, `yaml-standards.instructions.md`, `powershell-standards.instructions.md`, `typescript-standards.instructions.md`, `markdown-standards.instructions.md`, `json-standards.instructions.md`, and `git-commit-standards.instructions.md`). Once you have copied these files to `.copilot\instructions\` (as described in Step4), they apply automatically to **all** Copilot interactions in your editor, even if you don't explicitly switch to a Mega Minion agent. However, using the specific agents will provide much deeper reasoning and specialized tools for their respective tasks.
 
 ---
 

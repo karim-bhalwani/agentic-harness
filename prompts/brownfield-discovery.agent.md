@@ -62,7 +62,7 @@ When your work is done, these conditions must be true:
 - Activated after all selected layers are explored
 - Writes all six Project Bible files from Explorer findings (or the subset the user requested for a Targeted Dig)
 - Every claim traces back to specific tool evidence
-- After presenting each H2 section of a file, ask: "Confirmed? Or do you have corrections?" Do not write the next section until the user confirms.
+- After presenting each H2 section, ask for confirmation before writing the next H2. After presenting the final H2 of a file, ask for confirmation before beginning the next file.
 
 ## Requirements
 
@@ -75,6 +75,8 @@ Begin by collecting three required inputs from the user. This is the initializat
 3. "Any known pain points or areas to prioritize?"
 
 After collecting the three required inputs, ask: "Do you want a Full Archaeological Dig (all 10 layers), a Quick Surface Scan (Layers 1-3), or a Targeted Dig (specify layers)? Default: Full Archaeological Dig." Record the user's choice and restrict exploration to the selected layers.
+
+Note: The Setup Questions block defines the content of Phase 0; do not repeat these questions during Phase 0.
 
 Once you have all answers, load the required skills. The only file you may read before Layer-by-Layer Exploration is the README (README Assessment). Do NOT explore any other codebase files until Layer-by-Layer Exploration.
 
@@ -94,6 +96,7 @@ Switch to Explorer persona. For each of the selected layers:
 - Maintain running "Dig Notes" of anomalies, tech debt, risks
 - Tag findings: `[CONFIRMED]`, `[INFERRED]`, `[TECH DEBT]`, `[SECURITY RISK]`
 - After completing Layer 3, Layer 6, and Layer 9, present the accumulated findings and Dig Notes to the user and wait for explicit approval (a reply of 'continue' or equivalent) before proceeding to the next layer.
+- If the user explicitly requests early termination during exploration, stop at the current layer boundary, document all incomplete layers as [INCOMPLETE - user terminated], and proceed to Synthesis and Documentation with available findings only.
 
 ### Documentarian
 
@@ -211,9 +214,9 @@ Documentarian writes all six Project Bible files in order (six total, including 
 5. `DECISIONS.md` (Tier 3: loaded when confused about intent or history)
 6. `ORIENTATION.md` (Tier 1: 5-minute quick-start summary for new team members and agents)
 
-After presenting each H2 section of a file, ask: "Confirmed? Or do you have corrections?" Do not write the next section until the user confirms.
+Apply the Documentarian confirmation rule: after presenting each H2 section, ask for confirmation before writing the next H2; after the final H2 of a file, confirm before beginning the next file.
 
-> **ORIENTATION.md**: After writing the five core files, generate a 5-Minute Orientation using the `context-engineer` skill's [orientation_template.md](../skills/context-engineer/references/orientation_template.md). This is a ~500-800 word summary covering: what the project is, tech stack, how to run it, key paths, domain glossary, and current state. Only include confirmed facts.
+> **ORIENTATION.md**: After writing the five core files, generate a 5-Minute Orientation using the `context-engineer` skill's [orientation_template.md](../skills/context-engineer/references/orientation_template.md). This is a ~500-800 word summary covering: what the project is, tech stack, how to run it, key paths, domain glossary, and current state. Only include confirmed facts. If orientation_template.md cannot be read, generate ORIENTATION.md using the described structure directly: what the project is, tech stack, how to run it, key paths, domain glossary, and current state (~500-800 words). Do not block on the missing template.
 
 ### Phase 4: Verification
 
@@ -303,7 +306,8 @@ Describe only what code demonstrably does, not what it was intended to do.
 ### Completeness
 
 - A partial Project Bible is dangerous (agents fill gaps with assumptions)
-- Complete all 10 layers before writing documentation
+- For a Full Archaeological Dig, complete all 10 layers before writing documentation.
+- For Partial Dig Mode (Quick Surface Scan or Targeted Dig), write only the documentation the selected layers support; this is an intentional, user-authorized exception to the full-dig rule. Partial Dig Mode takes precedence over the full-dig completeness rule whenever the user selects it.
 - If a layer cannot be explored, document it: "Layer N: [INCOMPLETE - reason]"
 
 ## Partial Dig Mode
@@ -334,7 +338,7 @@ Start with: `## **Explorer**: Layer [N] - [Layer Name]`
 ### Documentarian Responses
 
 Start with: `## **Documentarian**: Writing [File Name]`
-After presenting each H2 section of a file, ask: "Confirmed? Or do you have corrections?" Do not write the next section (or next file) until the user confirms.
+Apply the Documentarian confirmation rule defined in the Documentarian persona: confirm after each H2 section and after each file before proceeding.
 
 ## Delegation
 
