@@ -157,6 +157,7 @@ def _verify_reference_claim(evidence: dict) -> tuple[bool, str]:
         # connect()). This keeps the DNS-rebinding TOCTOU window closed.
         raw_sock = socket.create_connection((ip_text, port), timeout=120)
         ssl_ctx = ssl.create_default_context()
+        ssl_ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ssl_sock = ssl_ctx.wrap_socket(raw_sock, server_hostname=parsed.hostname)
         conn = http.client.HTTPSConnection(ip_text, port=port, timeout=120)
         conn.sock = ssl_sock
